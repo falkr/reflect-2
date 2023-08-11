@@ -1,0 +1,516 @@
+<script lang="ts">
+	import { goto, invalidate } from '$app/navigation';
+	import { PUBLIC_API_URL } from '$env/static/public';
+	import {
+		AccordionItem,
+		Accordion,
+		Button,
+		Label,
+		Input,
+		Modal,
+		Select,
+		Toast
+	} from 'flowbite-svelte';
+	import { createForm } from 'felte';
+	import {
+		validateEmailAddresses,
+		validateInviteRole,
+		// validateUnitSeqNumber,
+		validateUnitTitle
+	} from '$lib/validation';
+	import { DateInput } from 'date-picker-svelte';
+	import { AlertCircleIcon, CheckCircleIcon } from 'svelte-feather-icons';
+	import { slide } from 'svelte/transition';
+
+	export let data;
+	let selectedInviteRole: string;
+
+	let roles = [
+		{ value: 'student', name: 'Student' },
+		{ value: 'lecturer', name: 'Lecturer' },
+		{ value: 'teaching assistant', name: 'Teaching Assistant' }
+	];
+
+	//dates for datePicker
+	let date = new Date();
+	let minDate = new Date();
+	let maxDate = new Date(new Date().setFullYear(new Date().getFullYear() + 2));
+	let stringDate = date.toISOString().split('T')[0];
+
+	const teaching_assistants = data.course.users.filter(
+		(enrollment) => enrollment.role === 'teaching assistant'
+	);
+	const students = data.course.users.filter((enrollment) => enrollment.role === 'student');
+	const lecturers = data.course.users.filter((enrollment) => enrollment.role === 'lecturer');
+
+	let unitModal = false;
+	let emailModal = false;
+
+	let showError: boolean = false;
+
+	let showSuccess: boolean = false;
+
+	let counter: number = 6;
+	let toastBody: string = '';
+
+	async function _sendMail(form: FormData) {
+		// post request to
+		const course_ID = data.course.id;
+
+		let email_addresses = form.get('email');
+		// To send emails, the email addresses has to include "@stud.ntnu.no" and not only "@ntnu.no"
+
+		let email = '';
+		if (email_addresses instanceof File) {
+			// Handle file input
+			email = email_addresses.name;
+		} else if (typeof email_addresses === 'string') {
+			// Handle regular string input
+			email = email_addresses;
+		}
+
+		let emails_list = email.split(' ');
+		let invitation_ids: number[] = [];
+		let response;
+
+		// Create row in invitation table
+		for (let i = 0; i < emails_list.length; i++) {
+			response = await createUserInvitation(emails_list[i], selectedInviteRole);
+			if (response.status == 200) {
+				invitation_ids.push(response.result.id);
+			} else {
+				// If one POST request fails, delete all the invitations that were created
+				for (let i = 0; i < invitation_ids.length; i++) {
+					deleteInvitation(invitation_ids[i]);
+				}
+				return response;
+			}
+		}
+		return response;
+		// Because of trouble with the server, we are not sending emails for now
+		// TODO: Contact IT Drift to enable sending of emails
+
+		// const response = await fetch(`${PUBLIC_API_URL}/invitation_email/${course_ID}`, {
+		// 	method: 'POST',
+		// 	credentials: 'include',
+		// 	headers: {
+		// 		'Content-Type': 'application/json'
+		// 	},
+		// 	body: JSON.stringify({
+		// 		email: emails_list
+		// 	})
+		// });
+		// const js = await response.json();
+		// return { js };
+	}
+
+	async function createUserInvitation(email: string, role: string) {
+		const course_id = data.course.id;
+
+		const response = await fetch(`${PUBLIC_API_URL}/create_invitation`, {
+			method: 'POST',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				email: email,
+				course_id: course_id,
+				course_semester: data.course.semester,
+				role: role
+			})
+		});
+		const status = response.status;
+		const result = await response.json();
+		return { result, status };
+	}
+
+	//function for creating unit
+	async function createUnit(form: FormData) {
+		const title = form.get('title');
+		// const date_available = form.get('date_available');
+		// const seq_no = form.get('seq_no');
+
+		const response = await fetch(`${PUBLIC_API_URL}/create_unit`, {
+			method: 'POST',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				title: title,
+				date_available: date.toISOString().split('T')[0],
+				course_id: data.course.id,
+				course_semester: data.course.semester
+			})
+		});
+		const status = response.status;
+		const result = await response.json();
+		invalidate('app:courseOverview');
+		return { result, status };
+	}
+
+	//Form for creating unit
+	const { form, errors, isSubmitting } = createForm({
+		//on submit, create a course
+		onSubmit: async (values, { form }) => {
+			const formData = new FormData(form as HTMLFormElement);
+			return createUnit(formData);
+		},
+		onSuccess(response) {
+			if (response.status == 200) {
+				unitModal = false;
+				triggerToast('Unit successfully created!', 'success');
+			}
+			if (response.status == 409) {
+				unitModal = true;
+				triggerToast('Could not create unit', 'error');
+			}
+		},
+
+		//validates the form on submitting
+		validate: (values) => {
+			const errors = {};
+
+			if ($isSubmitting) {
+				errors.title = validateUnitTitle(values.title);
+				//errors.seq_no = validateUnitSeqNumber(values.seq_no);
+				return errors;
+			}
+		}
+	});
+
+	//form for inviting students
+	const {
+		form: inviteForm,
+		errors: inviteErrors,
+		isSubmitting: inviteFormIsSubmitting
+	} = createForm({
+		//on submit, create a course
+		onSubmit: async (values, { form }) => {
+			const formData = new FormData(form as HTMLFormElement);
+			return _sendMail(formData);
+		},
+		onSuccess(response) {
+			if (response.status == 200) {
+				emailModal = false;
+				triggerToast('Invitations has been sent!', 'success');
+			}
+			if (response.status == 409) {
+				emailModal = true;
+				triggerToast('Could not create invitation', 'error');
+			}
+		},
+
+		//validates the form on submitting
+		validate: (values) => {
+			const errors = {};
+			if ($inviteFormIsSubmitting) {
+				errors.email = validateEmailAddresses(values.email);
+				errors.role = validateInviteRole(values.role);
+				return errors;
+			}
+		}
+	});
+
+	// function for deleting invitation, using DELETE method
+	async function deleteInvitation(invitation_id: number) {
+		const response = await fetch(`${PUBLIC_API_URL}/delete_invitation/${invitation_id}`, {
+			method: 'DELETE',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		const js = await response.json();
+	}
+
+	function getUnitName(number: number) {
+		return data.course.units.find((unit) => unit.id == number)?.title;
+	}
+
+	function triggerToast(body: string, type: string) {
+		if (type == 'success') {
+			showSuccess = true;
+		} else {
+			showError = true;
+		}
+		counter = 6;
+		toastBody = body;
+		timeout();
+	}
+
+	function timeout(): number {
+		if (--counter > 0) return window.setTimeout(timeout, 1000);
+		showError = false;
+		showSuccess = false;
+		return counter;
+	}
+</script>
+
+<main class="flex-shrink-0">
+	<div class="relative ">
+		<div class="flex justify-center items-center pl-4 pr-4 pt-10">
+			<div class="header border-teal-12 mt-5 flex flex-col border-b-2 pb-3">
+				<h3 class="headline text-teal-12 flex text-left text-xl font-bold">
+					{data.course.id}
+					<p class="ml-3 mr-3">-</p>
+					<p class="text-teal-12 text-xl font-medium" style="word-break: break-word">{data.course.name}</p>
+				</h3>
+			</div>
+			<Button
+				on:click={() => goto(`/app/courseview/`)}
+				class=" hover:text-teal-8 absolute left-0 top-0 mt-2 w-52"
+				outline
+				color="alternative"
+				><svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="2"
+					stroke="currentColor"
+					class="h-4 w-4"
+				>
+					<path
+						stroke-linecap="inherit"
+						stroke-linejoin="inherit"
+						d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+					/>
+				</svg>
+				<p class="ml-2 text-left">Back to overview</p>
+			</Button>
+		</div>
+		<div class="flex flex-col  md:gap-y-4">
+			{#if data.role === 'lecturer'}
+				<div class="buttonContainer flex justify-center pt-10">
+					<Button
+						on:click={() => (unitModal = true)}
+						class="bg-teal-8 border-teal-8 hover:border-teal-7 hover:bg-teal-7 w-[190px] rounded-full"
+						size="xl"
+					>
+						+ Create new unit
+					</Button>
+					<div class="w-2"></div>
+					<Button
+						on:click={() => (emailModal = true)}
+						class="bg-teal-8 border-teal-8 hover:border-teal-7 hover:bg-teal-7 w-[190px] rounded-full "
+						size="xl"
+					>
+						+ Invite
+					</Button>
+				</div>
+			{/if}
+
+			<!-- <NewCourseModal {isOpen} {toggleIsOpen} /> -->
+			<Modal bind:open={unitModal} size="xs" autoclose={false} class="w-full">
+				<form class="flex flex-col space-y-6" use:form>
+					<h3 class="text-teal-12 p-0 text-xl font-medium dark:text-white">Create unit</h3>
+					<Label class="space-y-2">
+						<span>Unit name</span>
+						<Input type="text" name="title" placeholder="title" required />
+					</Label>
+
+					<small>
+						{#if $errors.title}
+							{#each $errors.title as error}
+								<p class="text-red-500">{error}</p>
+							{/each}
+						{/if}
+					</small>
+
+					<Label class="space-y-0">
+						<span>Date available from</span>
+					</Label>
+
+					<DateInput
+						bind:value={date}
+						max={maxDate}
+						min={minDate}
+						format="yyyy-MM-dd"
+						closeOnSelection={true}
+					/>
+					<Button
+						type="submit"
+						data-modal-target="unitModal"
+						data-modal-toggle="unitModal"
+						class="w-full1 bg-teal-9 hover:bg-teal-8">Submit</Button
+					>
+				</form>
+			</Modal>
+
+			<Modal bind:open={emailModal} size="xs" autoclose={false} class="w-full">
+				<form class="flex flex-col space-y-6" use:inviteForm>
+					<h3 class="p-0 text-xl font-medium text-gray-900 dark:text-white">Invite Users</h3>
+					<Label class="space-y-2">
+						<span><b>Email</b></span>
+						<p>To invite multiple users, insert space-separated email addresses</p>
+						<Input type="text" name="email" placeholder="example@ntnu.no" required />
+						<Input type="hidden" name="user" value={data.user.email} />
+					</Label>
+					<small>
+						{#if $inviteErrors.email}
+							{#each $inviteErrors.email as error}
+								<p class="text-red-500">{error}</p>
+							{/each}
+						{/if}
+					</small>
+					<Label class="space-y-2">
+						<span><b>Role</b></span>
+						<Select
+							class="mt-2"
+							items={roles}
+							required
+							name="role"
+							bind:value={selectedInviteRole}
+						/>
+					</Label>
+					<small>
+						{#if $inviteErrors.role}
+							{#each $inviteErrors.role as error}
+								<p class="text-red-500">{error}</p>
+							{/each}
+						{/if}
+					</small>
+					<Button
+						type="submit"
+						data-modal-target="emailModal"
+						data-modal-toggle="emailModal"
+						class="w-full1 bg-teal-9 hover:bg-teal-8">Submit</Button
+					>
+				</form>
+			</Modal>
+
+			<section class="flex justify-center items-center pt-12">
+				<Accordion
+					class="b-teal-12 border-teal-12 bg-teal-1 mt-16 w-[300px] border-2 md:mt-2 md:w-2/3"
+					activeClasses="bg-teal-1 dark:bg-fifthly text-fifthly-600 dark:text-white"
+					inactiveClasses="bg-white text-gray-500 dark:text-gray-400 hover:bg-fifthly-100 dark:hover:bg-fifthly-800"
+				>
+					{#if data.role === 'lecturer'}
+						<AccordionItem class="border-teal-12 border-b-2">
+							<span slot="header" class="text-teal-12 text-[18px] font-semibold">View Reports</span>
+							<p class="">
+								{#each data.course.reports as report}
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<li
+										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+										on:click={() => goto(`${data.course_name}/reports/${report.unit_id}`)}
+									>
+										<p class="text-teal-12 mt-3 font-semibold ">
+											Report for unit "{getUnitName(report.unit_id)}"
+										</p>
+									</li>
+								{/each}
+							</p>
+						</AccordionItem>
+					{/if}
+					<AccordionItem open class="border-teal-12 border-b-2">
+						<span slot="header" class="text-teal-12 text-[18px] font-semibold">View units</span>
+						<p class="">
+							{#each data.course.units as unit}
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								{#if data.role === 'student'}
+									<li
+										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+										on:click={() => goto(`${data.course_name}/${unit.id}`)}
+									>
+										<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
+
+										<div class="justify-end self-center">
+											{#if data.user.reflections
+												.map((reflection) => reflection.unit_id)
+												.includes(unit.id)}
+												<div class=" border-teal-12 flex justify-end  rounded">
+													<span class=" font-semibold text-[#32431b]">Answered</span>
+												</div>
+											{:else}
+												<div class=" flex justify-end rounded ">
+													<span class=" font-semibold text-[#902c2c] ">Unanswered</span>
+												</div>
+											{/if}
+											{#if unit.date_available.toString() > stringDate}
+												<span>Availble from: {unit.date_available}</span>
+											{:else}
+												<span>Available</span>
+											{/if}
+										</div>
+									</li>
+								{:else if data.role === 'lecturer' || data.role === 'teaching assistant'}
+									<li
+										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+										on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
+									>
+										<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
+
+										<div class="self-center text-right">
+											{#if data.role === 'lecturer' || data.role === 'teaching assistant'}
+												<div class="">Response count: {unit.reflections.length / 2}</div>
+											{/if}
+											{#if unit.date_available.toString() > stringDate}
+												<span class="text-sm italic">Available from: {unit.date_available}</span>
+											{:else}
+												<span class="text-sm italic">Available</span>
+											{/if}
+										</div>
+									</li>
+								{/if}
+							{/each}
+						</p>
+					</AccordionItem>
+
+					{#if data.role === 'lecturer' || data.role === 'teaching assistant'}
+						<AccordionItem class="border-teal-12 border-b-2">
+							<span slot="header" class="text-teal-12 text-[18px] font-semibold"
+								>Teaching assistant</span
+							>
+							<p class="">
+								{#each teaching_assistants as ta}
+									<li class="text-teal-12 mt-3 font-bold">
+										{ta.user_email}
+									</li>
+								{/each}
+							</p>
+						</AccordionItem>
+						<AccordionItem class="border-teal-3 border-b-2">
+							<span slot="header" class="text-teal-12 text-[18px] font-semibold">Students</span>
+							<p class="text-teal-12 mt-3 font-bold">
+								{#each students as student}
+									<li class=" list-none p-2">{student.user_email}</li>
+								{/each}
+							</p>
+						</AccordionItem>
+					{/if}
+				</Accordion>
+			</section>
+		</div>
+		<div class="z-50">
+			<Toast
+				position="bottom-right"
+				simple
+				transition={slide}
+				bind:open={showSuccess}
+				divClass="w-full max-w-sm p-5"
+			>
+				<svelte:fragment slot="icon">
+					<CheckCircleIcon />
+				</svelte:fragment>
+				<div class="text-[1.5em]">{toastBody}</div>
+			</Toast>
+
+			<Toast position="bottom-right" simple transition={slide} bind:open={showError}>
+				<svelte:fragment slot="icon">
+					<AlertCircleIcon />
+				</svelte:fragment>
+				<div class="text-[1.5em]">{toastBody}</div>
+			</Toast>
+		</div>
+	</div>
+</main>
+
+<!-- on:click={() => goto(`${data.course_name}/`)} -->
+<style>
+	:root {
+		--date-picker-background: #f6f7f8;
+		--date-picker-foreground: #10302b;
+	}
+</style>
