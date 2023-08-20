@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import {
 		AccordionItem,
@@ -23,6 +23,9 @@
 	import { slide } from 'svelte/transition';
 
 	export let data;
+	export let units: Unit[];
+	$: units = data.units;
+
 	let selectedInviteRole: string;
 
 	let roles = [
@@ -226,7 +229,7 @@
 	}
 
 	function getUnitName(number: number) {
-		return data.course.units.find((unit) => unit.id == number)?.title;
+		return units.find((unit) => unit.id == number)?.title;
 	}
 
 	function triggerToast(body: string, type: string) {
@@ -245,6 +248,22 @@
 		showError = false;
 		showSuccess = false;
 		return counter;
+	}
+
+	async function update_hidden(unit_id: number, hidden: boolean) {
+		const response = await fetch(`${PUBLIC_API_URL}/update_hidden_unit`, {
+			method: 'PATCH',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				id: unit_id,
+				hidden: hidden
+			})
+		});
+		const js = await response.json();
+		invalidateAll()
 	}
 </script>
 
@@ -407,9 +426,9 @@
 					<AccordionItem open class="border-teal-12 border-b-2">
 						<span slot="header" class="text-teal-12 text-[18px] font-semibold">View units</span>
 						<p class="">
-							{#each data.course.units as unit}
+							{#each units as unit}
 								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								{#if data.role === 'student'}
+								{#if data.role === 'student' && !unit.hidden}
 									<li
 										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
 										on:click={() => goto(`${data.course_name}/${unit.id}`)}
@@ -436,23 +455,59 @@
 										</div>
 									</li>
 								{:else if data.role === 'lecturer' || data.role === 'teaching assistant'}
-									<li
-										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
-										on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
-									>
-										<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
+									{#if !unit.hidden}
+										<li
+											class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
+										>
+											<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
 
-										<div class="self-center text-right">
-											{#if data.role === 'lecturer' || data.role === 'teaching assistant'}
-												<div class="">Response count: {unit.reflections.length / 2}</div>
-											{/if}
-											{#if unit.date_available.toString() > stringDate}
-												<span class="text-sm italic">Available from: {unit.date_available}</span>
-											{:else}
-												<span class="text-sm italic">Available</span>
-											{/if}
-										</div>
-									</li>
+											<div class="self-center text-right">
+												{#if data.role === 'lecturer' || data.role === 'teaching assistant'}
+													<div class="">Response count: {unit.reflections.length / 2}</div>
+												{/if}
+												{#if unit.date_available.toString() > stringDate}
+													<span class="text-sm italic">Available from: {unit.date_available}</span>
+												{:else}
+													<span class="text-sm italic">Available</span>
+												{/if}
+											</div>
+
+										</li>
+										<Button
+											on:click={() => (update_hidden(unit.id, true))}
+											class="bg-orange-600 hover:bg-orange-700 w-[90px] h-[40px] rounded-full"
+											size="s"
+										>
+											- Hide unit
+										</Button>
+									{:else}
+										<li
+											class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
+										>
+											<p class="text-teal-12 mt-3 font-semibold ">{"[HIDDEN] " + unit.title}</p>
+
+											<div class="self-center text-right">
+												{#if data.role === 'lecturer' || data.role === 'teaching assistant'}
+													<div class="">Response count: {unit.reflections.length / 2}</div>
+												{/if}
+												{#if unit.date_available.toString() > stringDate}
+													<span class="text-sm italic">Available from: {unit.date_available}</span>
+												{:else}
+													<span class="text-sm italic">Available</span>
+												{/if}
+											</div>
+
+										</li>
+										<Button
+											on:click={() => (update_hidden(unit.id, false))}
+											class="bg-teal-7 hover:bg-teal-8 w-[90px] h-[40px] rounded-full "
+											size="s"
+										>
+											+ Show unit
+										</Button>
+									{/if}
 								{/if}
 							{/each}
 						</p>

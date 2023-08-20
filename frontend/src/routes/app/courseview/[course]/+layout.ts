@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { PUBLIC_API_URL, PUBLIC_CURRENT_SEMESTER } from '$env/static/public';
 
 //fetches course
 export const load = async ({ parent, params, fetch, depends }) => {
@@ -21,6 +21,20 @@ export const load = async ({ parent, params, fetch, depends }) => {
 	
 	//parse course
 	const course = (await response.json()) as unknown as Course;
+
+	//fetch units
+	const unit_res = await fetch(`${PUBLIC_API_URL}/units?course_id=${params.course}&course_semester=${PUBLIC_CURRENT_SEMESTER}`, {
+		credentials: 'include', 
+	});
+	
+	
+	//if course not found, throw error
+	if (unit_res.status === 404) {
+		throw error(404, 'Course for units not found');
+	}
+	
+	//parse units
+	const units = (await unit_res.json()) as unknown as Unit[];
 	
 	//parse user
 	let user_parsed = user as unknown as User;
@@ -33,5 +47,5 @@ export const load = async ({ parent, params, fetch, depends }) => {
 	}
 	
 	depends('app:courseOverview');
-	return { user: user as unknown as User, course, course_name: params.course, role };
+	return { user: user as unknown as User, course, course_name: params.course, role, units };
 };

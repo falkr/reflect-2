@@ -35,6 +35,7 @@ class ReflectionDetail(ReflectionBase):
 
 
 class UnitBase(BaseModel):
+    hidden: bool
     title: str
     date_available: date
     course_id: str
@@ -47,6 +48,10 @@ class UnitBase(BaseModel):
 class UnitCreate(UnitBase):
     pass
 
+class UnitHidden(BaseModel):
+    id: int
+    hidden: bool
+
 
 class Unit(UnitBase):
     id: int
@@ -54,7 +59,6 @@ class Unit(UnitBase):
 
     class Config:
         orm_mode = True
-
 
 class QuestionBase(BaseModel):
     id: int
@@ -71,9 +75,7 @@ class Question(QuestionBase):
     class Config:
         orm_mode = True
 
-
 class CourseBase(BaseModel):
-    name: str
     id: str
     semester: str
 
@@ -169,10 +171,10 @@ class ReportCreate(ReportBase):
 
 
 class Course(CourseBase):
+    name: str
     responsible: str
     website: str
     questions: list[QuestionBase] = []
-    units: list[Unit] = []
     users: list[EnrollmentBase] = []
     reports: list[ReportBase] = []
 

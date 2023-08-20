@@ -139,6 +139,22 @@ def create_unit(
 def get_unit(db: Session, unit_id: int):
     return db.query(model.Unit).filter(model.Unit.id == unit_id).first()
 
+def get_units(db: Session, course_id: int, course_semester):
+    return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester).all()
+
+
+def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
+    unit = get_unit(db, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    setattr(unit, "hidden", hidden)
+    db.add(unit)
+    db.commit()
+    db.refresh(unit)
+    return unit
+    
+    
+
 
 def create_question(db: Session, question: str, comment: str):
     db_obj = model.Question(question=question, comment=comment)

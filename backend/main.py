@@ -247,7 +247,10 @@ async def create_reflection(
 
     unit = crud.get_unit(db, ref.unit_id)
     if unit is None:
-        raise HTTPException(403, detail="Unit cannot be found")
+        raise HTTPException(404, detail="Unit cannot be found")
+    
+    if unit.hidden:
+        raise HTTPException(403, detail="Unit cannot be reflected when hidden")
 
     number_of_questions = crud.get_number_of_unit_questions(db, ref.unit_id)
 
@@ -369,6 +372,26 @@ async def enroll(
     raise HTTPException(403, detail="User not allowed to enroll")
 
 
+@app.get("/units", response_model=List[schemas.Unit])
+async def get_units(
+    request: Request, course_id: str, course_semester: str, db: Session = Depends(get_db)
+):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+
+    user = request.session.get("user")
+    email: str = user.get("eduPersonPrincipalName")
+    course = crud.get_course(db, course_id, course_semester)
+    if course is None:
+        raise HTTPException(404, detail="Course not found")
+    enrollment = crud.get_enrollment(db, course_id, course_semester, email)
+    if enrollment is None:
+        raise HTTPException(401, detail="You are not enrolled in the course")
+    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
+        return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester).all()
+    else:
+        return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester, model.Unit.hidden == False).all()
+        
 
 
 @app.post("/create_unit", response_model=schemas.Unit)
@@ -380,14 +403,38 @@ async def create_unit(
 
     user = request.session.get("user")
     email: str = user.get("eduPersonPrincipalName")
-    priv_inv = crud.get_priv_invitations_course(db, email, ref.course_id, ref.course_semester)
-    if len(priv_inv) != 0 or is_admin(db,request):
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, user.email)
+    if enrollment is None:
+        raise HTTPException(401, detail="You are not enrolled in the course")
+    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         return crud.create_unit(
             db=db,
             title=ref.title,
             date_available=ref.date_available,
             course_id=ref.course_id,
             course_semester=semester,
+        )
+
+@app.patch("/update_hidden_unit", response_model=schemas.Unit)
+async def update_hidden_unit(
+    request: Request, ref: schemas.UnitHidden, db: Session = Depends(get_db)
+):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+
+    user = request.session.get("user")
+    email: str = user.get("eduPersonPrincipalName")
+    unit = crud.get_unit(db, ref.id)
+    if not unit:
+        raise HTTPException(404, detail="Unit not found")
+    enrollment = crud.get_enrollment(db, unit.course_id, unit.course_semester, email)
+    if enrollment is None:
+        raise HTTPException(401, detail="You are not enrolled in the course")
+    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
+        return crud.update_unit_hidden(
+            db=db,
+            unit_id=unit.id,
+            hidden=ref.hidden
         )
     raise HTTPException(403, detail="You do not have permission to create a unit for this course")
 
@@ -417,8 +464,10 @@ async def edit_created_report(
 
     user = request.session.get("user")
     email: str = user.get("eduPersonPrincipalName")
-    priv_inv = crud.get_priv_invitations_course(db, email, ref.course_id, ref.course_semester)
-    if len(priv_inv) != 0 or is_admin(db,request):
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, user.email)
+    if enrollment is None:
+        raise HTTPException(401, detail="You are not enrolled in the course")
+    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         return crud.edit_created_report(
             db, ref.course_id, ref.unit_id, ref.report_content, course_semester=semester
         )
@@ -440,7 +489,7 @@ async def create_invitation(
     enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, user.email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
-    if not is_admin(db, request) or enrollment.role == "student":
+    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         raise HTTPException(403, detail="You are not allowed to invite to this course")
     try:
         return crud.create_invitation(db, invitation=ref.dict())

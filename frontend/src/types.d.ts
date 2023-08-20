@@ -17,7 +17,6 @@ type Course = {
 	semester: string;
 	responsible: string;
 	website: string;
-	units: Unit[];
 	questions: Question[];
 	users: Enrollment[];
 	reports: Report[];
@@ -25,6 +24,7 @@ type Course = {
 
 type Unit = {
 	id: number;
+	hidden: boolean;
 	seq_no: number;
 	title: string;
 	date_available: Date;

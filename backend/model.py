@@ -55,6 +55,7 @@ class Unit(Base):
     __tablename__ = "units"
 
     id = Column(Integer, primary_key=True)
+    hidden = Column(Boolean, default=False)
     title = Column(String)
     date_available = Column(Date)
     course_id = Column(String)
