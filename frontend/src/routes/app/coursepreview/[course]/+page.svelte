@@ -5,6 +5,8 @@
 	export let units: Unit[];
 	$: units = data.units;
 
+	console.log(units);
+
 </script>
 
-<UnitOverview data={data} units={units} role={data.role} />
+<UnitOverview data={data} units={units} role={"student"} />

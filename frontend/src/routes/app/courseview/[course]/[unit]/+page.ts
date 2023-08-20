@@ -2,11 +2,11 @@ import { error, redirect } from '@sveltejs/kit';
 import { PUBLIC_API_URL } from '$env/static/public';
 
 export const load = async ({ params, parent, depends }) => {
-	const { course, user } = await parent();
+	const { course, user, units } = await parent();
 	let course_type = course as Course;
 
 	//check if unit exists in course, if not redirect to courseview
-	if (course_type.units.filter((unit) => unit.id == parseInt(params.unit)).length > 0 === false) {
+	if (units.filter((unit) => unit.id == parseInt(params.unit)).length > 0 === false) {
 		//redirects the user to the courseview page
 		throw redirect(302, `/app/courseview/${params.course}`);
 	}
@@ -19,7 +19,7 @@ export const load = async ({ params, parent, depends }) => {
 	let today = new Date();
 
 	//date of unit
-	let unitDate = course.units.filter((unit) => unit.id == parseInt(params.unit))[0].date_available;
+	let unitDate = units.filter((unit) => unit.id == parseInt(params.unit))[0].date_available;
 
 	let date = new Date(unitDate);
 
@@ -31,6 +31,7 @@ export const load = async ({ params, parent, depends }) => {
 		course: course as unknown as Course,
 		unit_id: params.unit as unknown as number,
 		reflected: reflected,
-		available: available
+		available: available,
+		units: units as unknown as Unit[]
 	};
 };

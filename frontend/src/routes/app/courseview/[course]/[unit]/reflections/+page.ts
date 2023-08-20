@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
-	const { user, course } = await parent();
+	const { user, course, units } = await parent();
 
 	const parsedUser = user as unknown as User;
 	const parsedCourse = course as unknown as Course;
@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	}
 
 	const unitID = params.unit as unknown as number;
-	const unitName = parsedCourse.units.find((unit) => unit.id == unitID)?.title;
+	const unitName = units.find((unit) => unit.id == unitID)?.title;
 	const answers: Reflection[] = [];
 
 	type answers_by_questions = {
@@ -26,7 +26,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	};
 
 	// create an object to store the answers for each question
-	const units: Unit[] = course.units;
 	const questions = course.questions;
 	const reports = course.reports as unknown as Report[];
 	const users = course.users;

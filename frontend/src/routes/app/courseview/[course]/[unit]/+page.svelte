@@ -97,11 +97,11 @@
 				<h3 class="headline text-teal-12 flex text-left text-xl font-bold">
 					{data.course.id}
 					<p class="ml-3 mr-3">-</p>
-					<p class="text-teal-12 text-xl font-medium" style="word-break: break-word">{data.course.units.find((unit) => unit.id == data.unit_id)?.title}</p>
+					<p class="text-teal-12 text-xl font-medium" style="word-break: break-word">{data.units.find((unit) => unit.id == data.unit_id)?.title}</p>
 				</h3>
 			</div>
 			<Button
-				on:click={() => goto(`/app/courseview/` + data.course.id + "/")}
+				on:click={() => (history.back())}
 				class=" hover:text-teal-8 absolute left-0 top-1 mt-2 w-52"
 				outline
 				color="alternative"
