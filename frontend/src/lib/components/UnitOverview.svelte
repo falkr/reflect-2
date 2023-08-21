@@ -146,7 +146,8 @@
 				title: title,
 				date_available: date.toISOString().split('T')[0],
 				course_id: data.course.id,
-				course_semester: data.course.semester
+				course_semester: data.course.semester,
+				hidden: false
 			})
 		});
 		const status = response.status;

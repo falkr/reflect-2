@@ -403,7 +403,7 @@ async def create_unit(
 
     user = request.session.get("user")
     email: str = user.get("eduPersonPrincipalName")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, user.email)
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
@@ -464,7 +464,7 @@ async def edit_created_report(
 
     user = request.session.get("user")
     email: str = user.get("eduPersonPrincipalName")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, user.email)
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
@@ -486,7 +486,7 @@ async def create_invitation(
     user = crud.get_user(db, user_email=email)
     if user is None:
         raise HTTPException(401, detail="Cannot find your user")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, user.email)
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
