@@ -344,7 +344,6 @@ async def enroll(
         raise HTTPException(401, detail="Cannot find your user")
     if ref.role == "student":
         try:
-
             return crud.create_enrollment(
                 db,
                 role=ref.role,

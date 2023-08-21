@@ -23,7 +23,7 @@ export const load = async ({ parent, params, fetch, depends }) => {
 	});
 	console.log(response.body);
 
-	if (response.ok) {
+	if (response.ok || response.status === 409) {
 		goto(`/app/courseview/${params.course}`);
 	} else {
 		throw error(401, 'User could not be registered for this course');
