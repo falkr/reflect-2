@@ -84,7 +84,7 @@ class CourseBase(BaseModel):
 
 
 class CourseCreate(CourseBase):
-    pass
+    name: str
 
 
 class EnrollmentBase(BaseModel):

@@ -79,7 +79,7 @@ else:
     BASE_URL = "http://127.0.0.1:5173"
 
 course_id: str = "TDT4100"
-semester: str = "fall2023"
+semester: str = "spring2024"
 course_name: str = "Informasjonsteknologi grunnkurs"
 
 
@@ -488,7 +488,7 @@ async def create_invitation(
     enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
-    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
+    if not is_admin(db, request) or not enrollment.role in ["lecturer", "teaching assistant"]:
         raise HTTPException(403, detail="You are not allowed to invite to this course")
     try:
         return crud.create_invitation(db, invitation=ref.dict())
