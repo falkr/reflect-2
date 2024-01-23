@@ -33,6 +33,11 @@ Felte is a framework for handling forms in Svelte. Error handling in forms, aswe
 The backend is split into 3 main parts.
 This consist of FastAPI, SqlAlchemy and Postgres. [FastAPI](https://fastapi.tiangolo.com/) is a framework for creating APIs in python. [SqlAlchemy](https://docs.sqlalchemy.org) is an ORM (Object Relational Mapper) that makes it easy to work with databases in python. [Postgres](https://www.postgresql.org/docs/) is the database used in production. In development, sqlite is used.
 
+## Enrollment
+
+Students can enroll in a course at the endpoint: `/app/enroll/<semester>/<course id>` or by invitation in the application.
+Teaching assistants can only be enrolled via invitation.
+
 
 # Setup & running
 
@@ -130,13 +135,13 @@ Therefore, windows users using VS code, could install the extension `Powershell`
 2. Then go into `backend/venv/Scripts/Activate.ps1` and run the script.
 
 
-![Step 2.1 windows](../docs/Pictures/troubleshooting_1.PNG)
-![Step 2.2 windows](../docs/Pictures/troubleshooting_2.PNG)
+![Step 2.1 windows](docs/Pictures/troubleshooting_1.PNG)
+![Step 2.2 windows](docs/Pictures/troubleshooting_2.PNG)
 
 3. Click this file and run it. If you see a green `(venv)` in the terminal, then the virtual environment is activates. You can now run the rest of the commands above. 
 
 
-![Step 3 windows](../docs/Pictures/troubleshooting_3.PNG)
+![Step 3 windows](docs/Pictures/troubleshooting_3.PNG)
 
 4. You can now run the rest of the commands to setup and run backend
 ```bash
@@ -171,11 +176,11 @@ In the `backend` folder, create`.env` containing the following:
 
 **the client secrets corresponds to your feide instance**
 - the following postgres variables is set: `POSTGRES_USER`, `POSTGRES_PASSWORD`,  `POSTGRES_DB`.
-- REDIRECT_URI = "https://ref2.iik.ntnu.no/auth"
-- BASE_URL = "https://ref2.iik.ntnu.no"
+- REDIRECT_URI = "https://ref.iik.ntnu.no/auth"
+- BASE_URL = "https://ref.iik.ntnu.no"
 
 In `frontend` folder:
-- create `.env.production` with PUBLIC_API_URL="https://ref2.iik.ntnu.no/api" and PUBLIC_CURRENT_SEMESTER.
+- create `.env.production` with PUBLIC_API_URL="https://refeiik.ntnu.no/api" 
 
 *See .env.template for what to include in the .env file!*
 
@@ -194,9 +199,11 @@ If you have a firewall on the production server, make sure port 443 is open.
 
 Frontend is running on URL/
 Backend api is running on URL/api/
+Backend docs is running on URL/api/docs
 Backend auth is running on URL/auth
 
 #### Setting up certificates
+
 This section is for how to set up a certificate for a production server. Only use this if theres a need for hosting the application on a new server. 
 In order for the server to use HTTPS, a TLS certificate is needed. 
 Instructions: 
@@ -206,7 +213,7 @@ Instructions:
 3. Create a new CSR file using this [tutorial](https://www.ssl.com/how-to/manually-generate-a-certificate-signing-request-csr-using-openssl/). You need [openSSL](https://www.openssl.org/source/) in order to do this.
 4. When creating the CSR file, you will be asked to fill in some information. Some of these you dont need to fill in. You should rather not fill in organization details in CSR. The important ones is: 
     1. `country(CO)`. Set this to `"NO"`.
-    2. `CN (Common Name)`. Set this to the domain name of the server. In our case `"ref2.iik.ntnu.no"`
+    2. `CN (Common Name)`. Set this to the domain name of the server. In our case `"ref.iik.ntnu.no"`
     3. The rest is filled out automatically using the information stored on NTNU on sectigo. In case the fields are obligatory, it is important that you fill in; `organization(O)`, `organization unit(OU)`, `city(L)`, `state or province(ST)`. 
     `O` is `"Norges Teknisk-Naturvitenskapelige Universitet NTNU"`, `L` is `"Trondheim"`, `ST` is `"Trøndelag"`.
     4. For those who need it, prefix www. is added to the GÉANT OV SSL-certificate type.
@@ -220,19 +227,10 @@ Instructions:
     ```bash
     tls:
     certificates:
-        - certFile: /certs/ref2_iik_ntnu_no.pem
-        keyFile: /certs/ref2PRIVATEKEY_nopass.key
+        - certFile: /certs/ref_iik_ntnu_no.pem
+        keyFile: /certs/refPRIVATEKEY_nopass.key
     ```
 10. The application should now be able to run on the new server.
-
-
-#### Troubleshooting
-
-Sometimes the volume of postgres needs to be deleted before running the containers, this is because the backend failes when it tires to insert duplicate data:
-
-```
- docker volume rm ntnu_reflect_db-data
-```
 
 
 #### Useful docker commands
