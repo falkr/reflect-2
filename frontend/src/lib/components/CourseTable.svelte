@@ -12,19 +12,19 @@
 	} from 'flowbite-svelte';
 </script>
 
-<div class="w-1/3 overflow-x-auto shadow-md sm:rounded-lg">
+<div class="w-1/2 overflow-x-auto shadow-md sm:rounded-lg">
 	<Table>
 		<TableHead>
-			<TableHeadCell class="text-teal-2 bg-teal-8 text-center text-base">{role}</TableHeadCell>
+			<TableHeadCell class="bg-teal-8 text-center text-base text-teal-2">{role}</TableHeadCell>
 		</TableHead>
 		<TableBody tableBodyClass="divide-y">
 			{#each courses as course}
-				<TableBodyRow class="dark:bg-teal-12 border-b bg-white dark:border-gray-700">
+				<TableBodyRow class="border-b bg-white dark:border-gray-700 dark:bg-teal-12">
 					<TableBodyCell
-						class="hover:bg-teal-1 cursor-pointer py-3 pl-4 text-center"
-						on:click={() => goto(`/app/courseview/${course.course_id}`)}
+						class="cursor-pointer py-3 pl-4 text-center hover:bg-teal-1"
+						on:click={() => goto(`/app/courseview/${course.course_semester}/${course.course_id}`)}
 					>
-						<p class="text-base">{course.course_id}</p></TableBodyCell
+						<p class="text-base">({course.course_semester}) {course.course_id}</p></TableBodyCell
 					>
 				</TableBodyRow>
 			{/each}
@@ -32,20 +32,23 @@
 	</Table>
 </div>
 
-{#if role == "Lecturer"}
-	<div class="w-1/3 overflow-x-auto shadow-md sm:rounded-lg">
+{#if role == 'Lecturer'}
+	<div class="w-1/2 overflow-x-auto shadow-md sm:rounded-lg">
 		<Table>
 			<TableHead>
-				<TableHeadCell class="text-teal-2 bg-teal-8 text-center text-base">Student Preview (as Lecturer)</TableHeadCell>
+				<TableHeadCell class="bg-teal-8 text-center text-base text-teal-2"
+					>Student Preview (as Lecturer)</TableHeadCell
+				>
 			</TableHead>
 			<TableBody tableBodyClass="divide-y">
 				{#each courses as course}
-					<TableBodyRow class="dark:bg-teal-12 border-b bg-white dark:border-gray-700">
+					<TableBodyRow class="border-b bg-white dark:border-gray-700 dark:bg-teal-12">
 						<TableBodyCell
-							class="hover:bg-teal-1 cursor-pointer py-3 pl-4 text-center"
-							on:click={() => goto(`/app/coursepreview/${course.course_id}`)}
+							class="cursor-pointer py-3 pl-4 text-center hover:bg-teal-1"
+							on:click={() =>
+								goto(`/app/coursepreview/${course.course_semester}/${course.course_id}`)}
 						>
-							<p class="text-base">{course.course_id}</p></TableBodyCell
+							<p class="text-base">({course.course_semester}) {course.course_id}</p></TableBodyCell
 						>
 					</TableBodyRow>
 				{/each}

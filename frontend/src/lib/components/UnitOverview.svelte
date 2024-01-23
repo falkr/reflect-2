@@ -281,7 +281,7 @@
 				</h3>
 			</div>
 			<Button
-				on:click={() => goto(`/app/courseview/`)}
+				on:click={() => goto(`/app/overview/`)}
 				class=" hover:text-teal-8 absolute left-0 top-0 mt-2 w-52"
 				outline
 				color="alternative"
@@ -434,7 +434,7 @@
 								{#if role === 'student' && !unit.hidden}
 									<li
 										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
-										on:click={() => goto(`/app/courseview/${data.course_name}/${unit.id}`)}
+										on:click={() => goto(`${data.course_name}/${unit.id}`)}
 									>
 										<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
 

@@ -78,9 +78,6 @@ else:
     REDIRECT_URI = "http://localhost/auth"
     BASE_URL = "http://127.0.0.1:5173"
 
-course_id: str = "TDT4100"
-semester: str = "spring2024"
-course_name: str = "Informasjonsteknologi grunnkurs"
 
 
 def get_db():
@@ -132,6 +129,9 @@ def is_admin(db, request):
 # Adds dummy data if in development mode
 def start_db():
     print("init database")
+    course_id: str = "TDT4100"
+    semester: str = "fall2023"
+    course_name: str = "Informasjonsteknologi grunnkurs"
     db = SessionLocal()
     course = crud.get_course(db, course_id=course_id, course_semester=semester)
 
@@ -267,12 +267,12 @@ async def create_reflection(
 
 @app.get("/course", response_model=schemas.Course)
 async def course(
-    request: Request, course_id: str, db: Session = Depends(get_db)
+    request: Request, course_id: str, course_semester: str, db: Session = Depends(get_db)
 ):
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in ")
 
-    course = crud.get_course(db, course_id=course_id, course_semester=semester)
+    course = crud.get_course(db, course_id=course_id, course_semester=course_semester)
     if course is None:
         raise HTTPException(404, detail="Course not found")
 
@@ -333,7 +333,7 @@ async def enroll(
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in ")
 
-    course = crud.get_course(db, course_id=ref.course_id, course_semester=semester)
+    course = crud.get_course(db, course_id=ref.course_id, course_semester=ref.course_semester)
 
     if course == None:
         raise HTTPException(404, detail="Course not found")
@@ -348,7 +348,7 @@ async def enroll(
                 db,
                 role=ref.role,
                 course_id=ref.course_id,
-                course_semester=semester,
+                course_semester=ref.course_semester,
                 user_email=email,
             )
         except IntegrityError:
@@ -363,7 +363,7 @@ async def enroll(
                     db,
                     role=ref.role,
                     course_id=ref.course_id,
-                    course_semester=semester,
+                    course_semester=ref.course_semester,
                     user_email=email,
                 )
             except IntegrityError:
@@ -411,7 +411,7 @@ async def create_unit(
             title=ref.title,
             date_available=ref.date_available,
             course_id=ref.course_id,
-            course_semester=semester,
+            course_semester=ref.course_semester,
         )
 
 @app.patch("/update_hidden_unit", response_model=schemas.Unit)
@@ -468,7 +468,7 @@ async def edit_created_report(
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         return crud.edit_created_report(
-            db, ref.course_id, ref.unit_id, ref.report_content, course_semester=semester
+            db, ref.course_id, ref.unit_id, ref.report_content, course_semester=ref.course_semester
         )
     raise HTTPException(403, detail="You do not have permission to edit report for this course")
 

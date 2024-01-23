@@ -23,12 +23,12 @@
 		let currentYear = new Date().getFullYear();
 		for (let i = 0; i < 5; i++) {
 			semesterOptions.push({
-				value: 'fall' + (currentYear + i),
-				name: 'Fall ' + (currentYear + i)
-			});
-			semesterOptions.push({
 				value: 'spring' + (currentYear + i),
 				name: 'Spring ' + (currentYear + i)
+			});
+			semesterOptions.push({
+				value: 'fall' + (currentYear + i),
+				name: 'Fall ' + (currentYear + i)
 			});
 		}
 	}
