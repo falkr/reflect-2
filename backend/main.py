@@ -114,6 +114,9 @@ def is_logged_in(request):
     return user is not None
 
 def is_admin(db, request):
+    if config("isAdmin", cast=bool, default=False):
+        return True
+    
     user = request.session.get("user")
     if user is None: 
         return False
@@ -305,6 +308,9 @@ async def user(request: Request, db: Session = Depends(get_db)):
     if user == None:
         request.session.pop("user")
         raise HTTPException(404, detail="User not found")
+
+    if config("isAdmin", cast=bool, default=False):
+        user.admin = True
 
     return user
 
