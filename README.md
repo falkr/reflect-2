@@ -68,8 +68,14 @@ In **`frontend`** folder:
 
 *See .env.template for what to include in the .env file!*
 
-#### Running Backend:
+#### Running Backend :
 
+##### Alternative 1:
+```bash
+docker-compose up backend
+```
+
+#### Alternative 2:
 ```bash
 cd backend
 
