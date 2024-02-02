@@ -50,18 +50,18 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
-# email_config = ConnectionConfig(
-#     MAIL_USERNAME = config("MAIL_USERNAME", cast=str),
-#     MAIL_PASSWORD = config("MAIL_PASSWORD", cast=str),
-#     MAIL_FROM = config("MAIL_USERNAME", cast=str),
-#     MAIL_PORT = 587,
-#     MAIL_SERVER = "smtp.office365.com",
-#     MAIL_FROM_NAME="NTNU Reflection",
-#     MAIL_STARTTLS = True,
-#     MAIL_SSL_TLS = False,
-#     USE_CREDENTIALS = True,
-#     VALIDATE_CERTS = True
-# )
+email_config = ConnectionConfig(
+    MAIL_USERNAME = "noreply+ref@iik.ntnu.no",
+    MAIL_PASSWORD = "",
+    MAIL_FROM = "noreply+ref@iik.ntnu.no",
+    MAIL_PORT = 25,
+    MAIL_SERVER = "smtp.ansatt.ntnu.no",
+    MAIL_FROM_NAME = "Reflect Tool Project",
+    MAIL_STARTTLS = False,
+    MAIL_SSL_TLS = False,
+    USE_CREDENTIALS = False,
+    VALIDATE_CERTS = False
+)
 
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -533,6 +533,22 @@ async def delete_invitation(request: Request, id: int, db: Session = Depends(get
 
     return crud.delete_invitation(db, id=id)
 
+
+@app.get("/test_email/{mail}")
+async def send_email(mail: str) -> JSONResponse:
+    try:
+        message = MessageSchema(
+            subject="Hello World from Reflect Tool Project",
+            recipients=[mail],
+            body="This is a test email with the content 'hello world'.",
+            subtype="html"
+        )
+        fm = FastMail(email_config)        
+        await fm.send_message(message)
+        return JSONResponse(status_code=200, content={"message": "email has been sent"})
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return JSONResponse(status_code=500, content={"message": "An error occurred while sending the email"})
 
 # ---------------------------------Code that was meant to send email to students --------#
 # @app.post("/invitation_email/{course_id}")
