@@ -145,8 +145,10 @@ def start_db():
     course = crud.create_course(
         db, course={"name": course_name, "id": course_id, "semester": semester}
     )
+    
+    USER_EMAIL = config("USER_EMAIL", cast=str)
 
-    user = crud.create_user(db, user_email="theodorm@ntnu.no")
+    user = crud.create_user(db, user_email=USER_EMAIL)
     user0 = crud.create_user(db, user_email="test2@test.no")
     user1 = crud.create_user(db, user_email="test3@test.no")
 
@@ -201,7 +203,7 @@ def start_db():
         course_id="TDT4100",
         course_semester=semester,
         role="student",
-        user_email="theodorm@ntnu.no",
+        user_email=USER_EMAIL,
     )
 
     db.commit()

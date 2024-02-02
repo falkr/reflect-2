@@ -138,3 +138,5 @@ node_modules/
 storage-state/
 
 playwright/.auth
+
+test.py
