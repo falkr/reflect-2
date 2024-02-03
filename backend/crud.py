@@ -255,3 +255,16 @@ def edit_created_report(db: Session, course_id: int, unit_id: int, report: list[
     db.refresh(db_obj)
     return db_obj
 
+def get_users_without_reflection_on_unit(db: Session, course_id: str, unit_id: int):
+    return (
+        db.query(model.User.email)
+        .join(model.Enrollment, model.Enrollment.user_email == model.User.email)
+        .outerjoin(
+            model.Reflection,
+            (model.Reflection.user_id == model.User.email) &
+            (model.Reflection.unit_id == unit_id)
+        )
+        .filter(model.Enrollment.course_id == course_id)
+        .filter(model.Reflection.id.is_(None))
+        .all()
+    )
