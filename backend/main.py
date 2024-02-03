@@ -56,7 +56,7 @@ email_config = ConnectionConfig(
     MAIL_FROM = "noreply+ref@iik.ntnu.no",
     MAIL_PORT = 25,
     MAIL_SERVER = "smtp.ansatt.ntnu.no",
-    MAIL_FROM_NAME = "Reflect Tool Project",
+    MAIL_FROM_NAME = "Reflection Tool",
     MAIL_STARTTLS = False,
     MAIL_SSL_TLS = False,
     USE_CREDENTIALS = False,
@@ -536,21 +536,53 @@ async def delete_invitation(request: Request, id: int, db: Session = Depends(get
     return crud.delete_invitation(db, id=id)
 
 
-@app.get("/test_email/{mail}")
-async def send_email(mail: str) -> JSONResponse:
-    try:
-        message = MessageSchema(
-            subject="Hello World from Reflect Tool Project",
-            recipients=[mail],
-            body="This is a test email with the content 'hello world'.",
-            subtype="html"
-        )
-        fm = FastMail(email_config)        
-        await fm.send_message(message)
-        return JSONResponse(status_code=200, content={"message": "email has been sent"})
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return JSONResponse(status_code=500, content={"message": "An error occurred while sending the email"})
+@app.post("/send-notifications")
+async def send_notifications(course_id: str, unit_id: int, db: Session = Depends(get_db)):
+    result = await send_notification_emails(course_id, unit_id, db)
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": f"Notifications sent. Success: {result['success']}, Errors: {result['errors']}"
+        }
+    )
+
+
+async def send_notification_emails(course_id: str, unit_id: int, db: Session):
+    users = crud.get_users_without_reflection_on_unit(db=db, course_id=course_id, unit_id=unit_id)
+    course = db.query(model.Course).filter(model.Course.id == course_id).first()
+
+    success_count = 0
+    error_count = 0
+
+    for user_tuple in users:
+        user_email = user_tuple[0]
+        try:
+            unit = crud.get_unit(db=db, unit_id=unit_id)
+            unit_title = unit.title
+            unit_link = f"https://ref.iik.ntnu.no/app/courseview/{course.semester}/{course_id}/{unit_id}"
+
+            email_content = f"""<p>Dear student,</p>
+            <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit_title}"</b>.</p>
+            <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
+            <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
+            <p>Best regards,<br/>The Reflection Tool Team</p>"""
+
+            message = MessageSchema(
+                subject=f"Reminder: Provide Feedback to \"{unit_title}\"",
+                recipients=[user_email],
+                body=email_content,
+                subtype="html"
+            )
+
+            fm = FastMail(email_config)
+            await fm.send_message(message)
+            success_count += 1
+        except Exception as e:
+            error_count += 1
+            continue
+
+    return {"success": success_count, "errors": error_count}
+
 
 # ---------------------------------Code that was meant to send email to students --------#
 # @app.post("/invitation_email/{course_id}")
@@ -582,3 +614,4 @@ async def send_email(mail: str) -> JSONResponse:
 #     fm = FastMail(email_config)
 #     await fm.send_message(message)
 #     return JSONResponse(status_code=200, content={"message": "email has been sent"})
+
