@@ -27,7 +27,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse, Response, JSONResponse
 
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-
+from fastapi.responses import FileResponse
 
 model.Base.metadata.create_all(bind=engine)
 
@@ -445,6 +445,37 @@ async def update_hidden_unit(
         )
     raise HTTPException(403, detail="You do not have permission to create a unit for this course")
 
+# For deleting a unit after it has been created
+class FileResponseWithDeletion(FileResponse):
+    def __init__(self, path: str, filename: str, **kwargs):
+        super().__init__(path, filename=filename, **kwargs)
+
+    async def __call__(self, scope, receive, send):
+        await super().__call__(scope, receive, send)
+        os.remove(self.path)
+
+@app.get("/download")
+async def download_file(
+    # request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
+    ):
+    # if not is_logged_in(request):
+    #     raise HTTPException(401, detail="You are not logged in")
+
+    # user = request.session.get("user")
+    # email: str = user.get("eduPersonPrincipalName")
+    # enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
+    if (
+        True
+        # is_admin(db, request) or enrollment.role in ["lecturer"]
+        ):
+        # TODO: Code that gets the data from ai.
+        with open('hello.txt', 'w') as f:
+            f.write(f'Hello world!')
+
+        path = os.getcwd() + "/hello.txt"
+        return FileResponseWithDeletion(path, filename='hello.txt')
+    
+    return Response(status_code=403)
 
 """
 @app.post("/report", response_model=schemas.Report)
