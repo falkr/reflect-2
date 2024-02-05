@@ -537,51 +537,52 @@ async def delete_invitation(request: Request, id: int, db: Session = Depends(get
 
 
 @app.post("/send-notifications")
-async def send_notifications(course_id: str, unit_id: int, db: Session = Depends(get_db)):
-    result = await send_notification_emails(course_id, unit_id, db)
+async def send_notifications(db: Session = Depends(get_db)):
+    units = crud.get_all_units(db)
+    results = []
+
+    for unit in units:
+        course_id = unit.course_id
+        unit_id = unit.id
+
+        course = crud.get_course(db, course_id=course_id, course_semester=unit.course_semester)
+        users_without_reflection = crud.get_users_without_reflection_on_unit(db=db, course_id=course_id, unit_id=unit_id)
+
+        for user_tuple in users_without_reflection:
+            # temporary fix, will get email from the user after feide API is updated
+            user_email = adjust_email_address(user_tuple[0])
+
+            try:
+                unit_link = f"https://ref.iik.ntnu.no/app/courseview/{course.semester}/{course_id}/{unit_id}"
+                email_content = f"""<p>Dear student,</p>
+                <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit.title}"</b>.</p>
+                <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
+                <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
+                <p>Best regards,<br/>The Reflection Tool Team</p>"""
+
+                message = MessageSchema(
+                    subject=f"Reminder: Provide Feedback to \"{unit.title}\"",
+                    recipients=[user_email],
+                    body=email_content,
+                    subtype="html"
+                )
+
+                fm = FastMail(email_config)
+                await fm.send_message(message)
+                results.append({"unit_id": unit_id, "email": user_email, "status": "success"})
+            except Exception as e:
+                results.append({"unit_id": unit_id, "email": user_email, "status": "error", "message": str(e)})
+
     return JSONResponse(
         status_code=200,
-        content={
-            "message": f"Notifications sent. Success: {result['success']}, Errors: {result['errors']}"
-        }
+        content=results
     )
 
 
-async def send_notification_emails(course_id: str, unit_id: int, db: Session):
-    users = crud.get_users_without_reflection_on_unit(db=db, course_id=course_id, unit_id=unit_id)
-    course = db.query(model.Course).filter(model.Course.id == course_id).first()
-
-    success_count = 0
-    error_count = 0
-
-    for user_tuple in users:
-        user_email = user_tuple[0]
-        try:
-            unit = crud.get_unit(db=db, unit_id=unit_id)
-            unit_title = unit.title
-            unit_link = f"https://ref.iik.ntnu.no/app/courseview/{course.semester}/{course_id}/{unit_id}"
-
-            email_content = f"""<p>Dear student,</p>
-            <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit_title}"</b>.</p>
-            <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
-            <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
-            <p>Best regards,<br/>The Reflection Tool Team</p>"""
-
-            message = MessageSchema(
-                subject=f"Reminder: Provide Feedback to \"{unit_title}\"",
-                recipients=[user_email],
-                body=email_content,
-                subtype="html"
-            )
-
-            fm = FastMail(email_config)
-            await fm.send_message(message)
-            success_count += 1
-        except Exception as e:
-            error_count += 1
-            continue
-
-    return {"success": success_count, "errors": error_count}
+def adjust_email_address(email: str) -> str:
+    if email.endswith("@ntnu.no"):
+        return email.replace("@ntnu.no", "@stud.ntnu.no")
+    return email
 
 
 # ---------------------------------Code that was meant to send email to students --------#

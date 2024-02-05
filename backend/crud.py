@@ -142,6 +142,9 @@ def get_unit(db: Session, unit_id: int):
 def get_units(db: Session, course_id: int, course_semester):
     return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester).all()
 
+def get_all_units(db: Session):
+    return db.query(model.Unit).all()
+
 
 def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
     unit = get_unit(db, unit_id)
