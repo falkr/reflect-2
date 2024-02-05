@@ -51,16 +51,16 @@ app.add_middleware(
 )
 
 email_config = ConnectionConfig(
-    MAIL_USERNAME = "noreply+ref@iik.ntnu.no",
-    MAIL_PASSWORD = "",
-    MAIL_FROM = "noreply+ref@iik.ntnu.no",
-    MAIL_PORT = 25,
-    MAIL_SERVER = "smtp.ansatt.ntnu.no",
-    MAIL_FROM_NAME = "Reflect Tool Project",
-    MAIL_STARTTLS = False,
-    MAIL_SSL_TLS = False,
-    USE_CREDENTIALS = False,
-    VALIDATE_CERTS = False
+    MAIL_USERNAME="noreply+ref@iik.ntnu.no",
+    MAIL_PASSWORD="",
+    MAIL_FROM="noreply+ref@iik.ntnu.no",
+    MAIL_PORT=25,
+    MAIL_SERVER="smtp.ansatt.ntnu.no",
+    MAIL_FROM_NAME="Reflect Tool Project",
+    MAIL_STARTTLS=False,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=False,
+    VALIDATE_CERTS=False,
 )
 
 templates = Jinja2Templates(directory="templates")
@@ -77,7 +77,6 @@ if is_prod():
 else:
     REDIRECT_URI = "http://localhost/auth"
     BASE_URL = "http://127.0.0.1:5173"
-
 
 
 def get_db():
@@ -113,19 +112,19 @@ def is_logged_in(request):
     user = request.session.get("user")
     return user is not None
 
+
 def is_admin(db, request):
     if config("isAdmin", cast=bool, default=False):
         return True
-    
+
     user = request.session.get("user")
-    if user is None: 
+    if user is None:
         return False
     email: str = user.get("eduPersonPrincipalName")
     user = crud.get_user(db, user_email=email)
     if user is None:
         return False
     return user.admin
-
 
 
 @app.on_event("startup")
@@ -145,7 +144,7 @@ def start_db():
     course = crud.create_course(
         db, course={"name": course_name, "id": course_id, "semester": semester}
     )
-    
+
     USER_EMAIL = config("USER_EMAIL", cast=str)
 
     user = crud.create_user(db, user_email=USER_EMAIL)
@@ -253,7 +252,7 @@ async def create_reflection(
     unit = crud.get_unit(db, ref.unit_id)
     if unit is None:
         raise HTTPException(404, detail="Unit cannot be found")
-    
+
     if unit.hidden:
         raise HTTPException(403, detail="Unit cannot be reflected when hidden")
 
@@ -268,11 +267,12 @@ async def create_reflection(
     return crud.create_reflection(db, reflection=ref.dict())
 
 
-
-
 @app.get("/course", response_model=schemas.Course)
 async def course(
-    request: Request, course_id: str, course_semester: str, db: Session = Depends(get_db)
+    request: Request,
+    course_id: str,
+    course_semester: str,
+    db: Session = Depends(get_db),
 ):
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in ")
@@ -316,6 +316,7 @@ async def user(request: Request, db: Session = Depends(get_db)):
 
     return user
 
+
 @app.get("/is_admin", response_model=schemas.UserAdmin)
 async def user(request: Request, db: Session = Depends(get_db)):
     if not is_logged_in(request):
@@ -331,7 +332,6 @@ async def user(request: Request, db: Session = Depends(get_db)):
     return user.admin
 
 
-
 # enroll self in course
 @app.post("/enroll", response_model=schemas.Enrollment)
 async def enroll(
@@ -341,7 +341,9 @@ async def enroll(
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in ")
 
-    course = crud.get_course(db, course_id=ref.course_id, course_semester=ref.course_semester)
+    course = crud.get_course(
+        db, course_id=ref.course_id, course_semester=ref.course_semester
+    )
 
     if course == None:
         raise HTTPException(404, detail="Course not found")
@@ -363,8 +365,10 @@ async def enroll(
             raise HTTPException(409, detail="User already enrolled in this course")
     invitations = crud.get_invitations(db, email)
     if invitations is not None:
-        priv_inv = crud.get_priv_invitations_course(db, email, ref.course_id, ref.course_semester)
-        if len(priv_inv) != 0 or is_admin(db,request):
+        priv_inv = crud.get_priv_invitations_course(
+            db, email, ref.course_id, ref.course_semester
+        )
+        if len(priv_inv) != 0 or is_admin(db, request):
             try:
 
                 return crud.create_enrollment(
@@ -381,7 +385,10 @@ async def enroll(
 
 @app.get("/units", response_model=List[schemas.Unit])
 async def get_units(
-    request: Request, course_id: str, course_semester: str, db: Session = Depends(get_db)
+    request: Request,
+    course_id: str,
+    course_semester: str,
+    db: Session = Depends(get_db),
 ):
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
@@ -395,10 +402,24 @@ async def get_units(
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
-        return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester).all()
+        return (
+            db.query(model.Unit)
+            .filter(
+                model.Unit.course_id == course_id,
+                model.Unit.course_semester == course_semester,
+            )
+            .all()
+        )
     else:
-        return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester, model.Unit.hidden == False).all()
-        
+        return (
+            db.query(model.Unit)
+            .filter(
+                model.Unit.course_id == course_id,
+                model.Unit.course_semester == course_semester,
+                model.Unit.hidden == False,
+            )
+            .all()
+        )
 
 
 @app.post("/create_unit", response_model=schemas.Unit)
@@ -422,6 +443,7 @@ async def create_unit(
             course_semester=ref.course_semester,
         )
 
+
 @app.patch("/update_hidden_unit", response_model=schemas.Unit)
 async def update_hidden_unit(
     request: Request, ref: schemas.UnitHidden, db: Session = Depends(get_db)
@@ -438,12 +460,11 @@ async def update_hidden_unit(
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
-        return crud.update_unit_hidden(
-            db=db,
-            unit_id=unit.id,
-            hidden=ref.hidden
-        )
-    raise HTTPException(403, detail="You do not have permission to create a unit for this course")
+        return crud.update_unit_hidden(db=db, unit_id=unit.id, hidden=ref.hidden)
+    raise HTTPException(
+        403, detail="You do not have permission to create a unit for this course"
+    )
+
 
 # For deleting a unit after it has been created
 class FileResponseWithDeletion(FileResponse):
@@ -454,10 +475,11 @@ class FileResponseWithDeletion(FileResponse):
         await super().__call__(scope, receive, send)
         os.remove(self.path)
 
+
 @app.get("/download")
 async def download_file(
     # request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
-    ):
+):
     # if not is_logged_in(request):
     #     raise HTTPException(401, detail="You are not logged in")
 
@@ -467,15 +489,16 @@ async def download_file(
     if (
         True
         # is_admin(db, request) or enrollment.role in ["lecturer"]
-        ):
+    ):
         # TODO: Code that gets the data from ai.
-        with open('hello.txt', 'w') as f:
-            f.write(f'Hello world!')
+        with open("hello.txt", "w") as f:
+            f.write(f"Hello world!")
 
         path = os.getcwd() + "/hello.txt"
-        return FileResponseWithDeletion(path, filename='hello.txt')
-    
+        return FileResponseWithDeletion(path, filename="hello.txt")
+
     return Response(status_code=403)
+
 
 """
 @app.post("/report", response_model=schemas.Report)
@@ -492,7 +515,8 @@ async def create_report(
     return crud.create_report(db, report=ref.dict())
 """
 
-# Also created new report if not created 
+
+# Also created new report if not created
 @app.post("/edit_created_report", response_model=schemas.Report)
 async def edit_created_report(
     request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
@@ -507,9 +531,15 @@ async def edit_created_report(
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         return crud.edit_created_report(
-            db, ref.course_id, ref.unit_id, ref.report_content, course_semester=ref.course_semester
+            db,
+            ref.course_id,
+            ref.unit_id,
+            ref.report_content,
+            course_semester=ref.course_semester,
         )
-    raise HTTPException(403, detail="You do not have permission to edit report for this course")
+    raise HTTPException(
+        403, detail="You do not have permission to edit report for this course"
+    )
 
 
 # create new invitation
@@ -527,7 +557,10 @@ async def create_invitation(
     enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
-    if not is_admin(db, request) or not enrollment.role in ["lecturer", "teaching assistant"]:
+    if not is_admin(db, request) or not enrollment.role in [
+        "lecturer",
+        "teaching assistant",
+    ]:
         raise HTTPException(403, detail="You are not allowed to invite to this course")
     try:
         return crud.create_invitation(db, invitation=ref.dict())
@@ -574,14 +607,18 @@ async def send_email(mail: str) -> JSONResponse:
             subject="Hello World from Reflect Tool Project",
             recipients=[mail],
             body="This is a test email with the content 'hello world'.",
-            subtype="html"
+            subtype="html",
         )
-        fm = FastMail(email_config)        
+        fm = FastMail(email_config)
         await fm.send_message(message)
         return JSONResponse(status_code=200, content={"message": "email has been sent"})
     except Exception as e:
         print(f"An error occurred: {e}")
-        return JSONResponse(status_code=500, content={"message": "An error occurred while sending the email"})
+        return JSONResponse(
+            status_code=500,
+            content={"message": "An error occurred while sending the email"},
+        )
+
 
 # ---------------------------------Code that was meant to send email to students --------#
 # @app.post("/invitation_email/{course_id}")

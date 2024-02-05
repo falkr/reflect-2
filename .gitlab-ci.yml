@@ -1,0 +1,13 @@
+before_script:
+  - python --version
+  - pip install --upgrade pip
+stages:
+  - lint
+
+lint backend:
+  stage: lint
+  image: python:3.11
+  script:
+    - pip install black
+    - cd backend
+    - black --check .

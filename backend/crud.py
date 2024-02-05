@@ -84,12 +84,18 @@ def get_course(db: Session, course_id: str, course_semester: str):
         .first()
     )
 
+
 # --- Enrollment ---
+
 
 def get_enrollment(db: Session, course_id: str, course_semester: str, user_email: str):
     return (
         db.query(model.Enrollment)
-        .filter(model.Enrollment.course_id == course_id, model.Enrollment.course_semester == course_semester, model.Enrollment.user_email == user_email)
+        .filter(
+            model.Enrollment.course_id == course_id,
+            model.Enrollment.course_semester == course_semester,
+            model.Enrollment.user_email == user_email,
+        )
         .first()
     )
 
@@ -139,8 +145,16 @@ def create_unit(
 def get_unit(db: Session, unit_id: int):
     return db.query(model.Unit).filter(model.Unit.id == unit_id).first()
 
+
 def get_units(db: Session, course_id: int, course_semester):
-    return db.query(model.Unit).filter(model.Unit.course_id == course_id, model.Unit.course_semester == course_semester).all()
+    return (
+        db.query(model.Unit)
+        .filter(
+            model.Unit.course_id == course_id,
+            model.Unit.course_semester == course_semester,
+        )
+        .all()
+    )
 
 
 def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
@@ -152,8 +166,6 @@ def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
     db.commit()
     db.refresh(unit)
     return unit
-    
-    
 
 
 def create_question(db: Session, question: str, comment: str):
@@ -197,8 +209,20 @@ def create_invitation(db: Session, invitation: schemas.InvitationBase):
 def get_invitations(db: Session, email: str):
     return db.query(model.Invitation).filter(model.Invitation.email == email).all()
 
-def get_priv_invitations_course(db: Session, email: str, course_id: str, course_semester: str):
-    return db.query(model.Invitation).filter(model.Invitation.email == email, model.Invitation.course_id == course_id, model.Invitation.course_semester == course_semester, model.Invitation.role != "student").all()
+
+def get_priv_invitations_course(
+    db: Session, email: str, course_id: str, course_semester: str
+):
+    return (
+        db.query(model.Invitation)
+        .filter(
+            model.Invitation.email == email,
+            model.Invitation.course_id == course_id,
+            model.Invitation.course_semester == course_semester,
+            model.Invitation.role != "student",
+        )
+        .all()
+    )
 
 
 def delete_invitation(db: Session, id: int):
@@ -239,7 +263,9 @@ def get_report(db: Session, user_id: str, unit_id: int):
     )
 
 
-def edit_created_report(db: Session, course_id: int, unit_id: int, report: list[dict], course_semester: str):
+def edit_created_report(
+    db: Session, course_id: int, unit_id: int, report: list[dict], course_semester: str
+):
 
     db_obj = (
         db.query(model.Report)
@@ -254,4 +280,3 @@ def edit_created_report(db: Session, course_id: int, unit_id: int, report: list[
     db.commit()
     db.refresh(db_obj)
     return db_obj
-
