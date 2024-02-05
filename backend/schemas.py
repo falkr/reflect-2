@@ -48,6 +48,7 @@ class UnitBase(BaseModel):
 class UnitCreate(UnitBase):
     pass
 
+
 class UnitHidden(BaseModel):
     id: int
     hidden: bool
@@ -59,6 +60,7 @@ class Unit(UnitBase):
 
     class Config:
         orm_mode = True
+
 
 class QuestionBase(BaseModel):
     id: int
@@ -74,6 +76,7 @@ class Question(QuestionBase):
 
     class Config:
         orm_mode = True
+
 
 class CourseBase(BaseModel):
     id: str
@@ -98,6 +101,7 @@ class EnrollmentBase(BaseModel):
 
 class EnrollmentCreate(EnrollmentBase):
     pass
+
 
 class EnrollUser(EnrollmentBase):
     user_email: str
