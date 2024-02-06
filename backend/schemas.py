@@ -162,6 +162,7 @@ class User(UserBase):
 
 class ReportBase(BaseModel):
     report_content: list[dict] = []
+    number_of_answers: int
     unit_id: int
     course_id: str
     course_semester: str

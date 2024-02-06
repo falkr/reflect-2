@@ -105,6 +105,8 @@ class Report(Base):
     id = Column(Integer, primary_key=True)
     report_content = Column(JSON)
 
+    number_of_answers = Column(Integer)
+
     unit_id = Column(Integer, ForeignKey("units.id"))
     unit = relationship("Unit", back_populates="reports")
 

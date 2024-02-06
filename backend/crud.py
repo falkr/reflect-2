@@ -246,9 +246,23 @@ def get_number_of_unit_questions(db: Session, unit_id: int):
 
 # --- Report ---
 def create_report(db: Session, report: schemas.ReportCreate):
-    db_obj = model.Report(**report)
-    print("creating report")
-    db.add(db_obj)
+    existing_report = (
+        db.query(model.Report)
+        .filter(
+            model.Report.course_id == report.get("course_id"),
+            model.Report.unit_id == report.get("unit_id"),
+        )
+        .first()
+    )
+
+    if existing_report:
+        existing_report.report_content = report.get("report_content")
+        existing_report.number_of_answers = report.get("number_of_answers")
+        db_obj = existing_report
+    else:
+        db_obj = model.Report(**report)
+        db.add(db_obj)
+
     db.commit()
     db.refresh(db_obj)
     return db_obj

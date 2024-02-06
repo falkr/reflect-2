@@ -500,19 +500,11 @@ async def download_file(
     return Response(status_code=403)
 
 
-"""
 @app.post("/report", response_model=schemas.Report)
-async def create_report(
-    request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
-):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
-    number_of_questions = crud.get_number_of_unit_questions(db, ref.unit_id)
+async def create_report(ref: schemas.ReportCreate, db: Session = Depends(get_db)):
+    return crud.create_report(db, report=ref.model_dump())
 
-    if len(crud.get_report(db, ref.user_id, ref.unit_id)) >= number_of_questions:
-        raise HTTPException(403, detail="You have already reflected this unit")
 
-    return crud.create_report(db, report=ref.dict())
 """
 
 
