@@ -500,6 +500,55 @@ async def download_file(
     return Response(status_code=403)
 
 
+# Get unit data with course and semester required, better error handling/security (unit_id is just an incrementing number)
+# Example: /unit_data?course_id=TDT4100&course_semester=fall2023&unit_id=1
+@app.get("/unit_data", response_model=schemas.Unit)
+async def get_unit_data(
+    request: Request,
+    course_id: str,
+    course_semester: str,
+    unit_id: int,
+    db: Session = Depends(get_db),
+):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+
+    user = request.session.get("user")
+    email: str = user.get("eduPersonPrincipalName")
+    course = crud.get_course(db, course_id, course_semester)
+    if course is None:
+        raise HTTPException(404, detail="Course not found")
+    enrollment = crud.get_enrollment(db, course_id, course_semester, email)
+    if enrollment is None:
+        raise HTTPException(401, detail="You are not enrolled in the course")
+    if db.query(model.Unit).filter(model.Unit.id == unit_id).first():
+        if is_admin(db, request) or enrollment.role in [
+            "lecturer",
+            "teaching assistant",
+        ]:
+            return (
+                db.query(model.Unit)
+                .filter(
+                    model.Unit.course_id == course_id,
+                    model.Unit.course_semester == course_semester,
+                    model.Unit.id == unit_id,
+                )
+                .first()
+            )
+        else:
+            return (
+                db.query(model.Unit)
+                .filter(
+                    model.Unit.course_id == course_id,
+                    model.Unit.course_semester == course_semester,
+                    model.Unit.id == unit_id,
+                    model.Unit.hidden == False,
+                )
+                .first()
+            )
+    raise HTTPException(404, detail="Unit not found")
+
+
 @app.post("/report", response_model=schemas.Report)
 async def create_report(ref: schemas.ReportCreate, db: Session = Depends(get_db)):
     return crud.create_report(db, report=ref.model_dump())
