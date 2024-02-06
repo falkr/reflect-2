@@ -1,0 +1,449 @@
+{
+	"info": {
+		"_postman_id": "86877364-edc6-495a-88a2-ea01f13ec83b",
+		"name": "NTNU Reflection Tool",
+		"description": "To get started you will need to have both the backend and the frontend running:\n\nThe frontend needs only to be active at the start so that we can get the session cookie for the backend from FEIDE\n\nSteps to get started.\n\n- Start up backend and frontend\n- Go into frontend page [http://127.0.0.1:5173/](http://127.0.0.1:5173/)\n- Log in\n- When login is done, change the url from\n    - localhost/auth?code=...\n    - to\n    - 127.0.0.1:8000/auth?code=...\n- If you get an error, remember to empty the cookie before.\n- When that is done you will need to get the session cookie:\n- Right click -> Inspect -> Application -> Cookies\n- Copy the session token and go into the [USER](https://go.postman.co/workspace/4935485f-e6d5-45db-8b14-21d225e99973/documentation/24520570-86877364-edc6-495a-88a2-ea01f13ec83b?entity=request-62ede2f4-cd91-4068-90bc-e158b7974005) endpoint\n- Click \"Headers\" -> Update the cookie with new token -> Click send\n- If you have two fields with name Cookie, do this\n    - Click on \"Cookies\" that under the send button.\n    - Delete (click X) the \"127.0.0.1\"\n    - Now go back and update the cookie\n- This will now create a cookie that will affect all the endpoints\n- Happy coding!",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24520570"
+	},
+	"item": [
+		{
+			"name": "User",
+			"protocolProfileBehavior": {
+				"disableCookies": false
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Cookie",
+						"value": "session=eyJzY29wZSI6ICJvcGVuaWQgdXNlcmlkIHVzZXJpZC1mZWlkZSIsICJiZWFyZXJfdG9rZW4iOiAiZTQ3Y2Q1NDItNjM5YS00MDljLTk0NmUtYjIyNGZkNDQyYzNhIiwgInVzZXJfZGF0YSI6ICJ7XG4gICAgXCJlZHVQZXJzb25QcmluY2lwYWxOYW1lXCI6IFwic29uZHJhbGZAbnRudS5ub1wiLFxuICAgIFwidWlkXCI6IFtcbiAgICAgICAgXCJzb25kcmFsZlwiXG4gICAgXVxufSIsICJ1c2VyIjogeyJlZHVQZXJzb25QcmluY2lwYWxOYW1lIjogInNvbmRyYWxmQG50bnUubm8iLCAidWlkIjogWyJzb25kcmFsZiJdfX0=.ZbzcOg.yWHMa-7fL-n_eo0n2DpUSASd6hA",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "127.0.0.1:8000/user",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reflection",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"body\": \"test\",\n    \"user_id\": \"sondralf@ntnu.no\",\n    \"unit_id\": 1,\n    \"question_id\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/reflection",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"reflection"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Course",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:8000/course?course_id=TDT4100&course_semester=fall2023",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"course"
+					],
+					"query": [
+						{
+							"key": "course_id",
+							"value": "TDT4100"
+						},
+						{
+							"key": "course_semester",
+							"value": "fall2023"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create course",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Introduction to lorem ipsum\",\n    \"id\": \"TDT1000\",\n    \"semester\": \"fall2023\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/create_course",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"create_course"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create course 2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Introduction to lorem ipsum\",\n    \"id\": \"TDT1000\",\n    \"semester\": \"fall2023\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/create_course",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"create_course"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Enroll Student",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"course_id\": \"TDT1000\",\n    \"course_semester\": \"fall2023\",\n    \"role\": \"lecturer\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/enroll",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"enroll"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Enroll Lecturer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"course_id\": \"TDT1001\",\n    \"course_semester\": \"fall2023\",\n    \"role\": \"lecturer\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/enroll",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"enroll"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Units",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:8000/units?course_id=TDT4100&course_semester=fall2023",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"units"
+					],
+					"query": [
+						{
+							"key": "course_id",
+							"value": "TDT4100"
+						},
+						{
+							"key": "course_semester",
+							"value": "fall2023"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Unit",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"hidden\": false,\n    \"title\": \"tittel1\",\n    \"date_available\": \"2022-08-23 00:00:00\",\n    \"course_id\": \"TDT1001\",\n    \"course_semester\": \"fall2023\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/create_unit",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"create_unit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Unit Hidden",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"hidden\": true,\n    \"title\": \"tittel2\",\n    \"date_available\": \"2022-08-23 00:00:00\",\n    \"course_id\": \"TDT1001\",\n    \"course_semester\": \"fall2023\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/create_unit",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"create_unit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Hidden Unit",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 8,\n    \"hidden\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/update_hidden_unit",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"update_hidden_unit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deprecated - Edit Created Report",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"report_content\": [\n        {\n            \"1\": \"test\"\n        }\n    ],\n    \"unit_id\": 1,\n    \"course_id\": \"TDT1001\",\n    \"course_semester\": \"fall2023\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/edit_created_report",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"edit_created_report"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Invitation",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"course_id\": \"TDT1001\",\n    \"course_semester\": \"fall2023\",\n    \"email\": \"sondralf@ntnu.no\",\n    \"role\": \"student\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/create_invitation",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"create_invitation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Invitations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:8000/get_invitations",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"get_invitations"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Invitation / {id}",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:8000/delete_invitation/1",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"delete_invitation",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

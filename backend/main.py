@@ -267,6 +267,7 @@ async def create_reflection(
     return crud.create_reflection(db, reflection=ref.dict())
 
 
+# Example: /course?course_id=TDT4100&course_semester=fall2023
 @app.get("/course", response_model=schemas.Course)
 async def course(
     request: Request,
@@ -315,21 +316,6 @@ async def user(request: Request, db: Session = Depends(get_db)):
         user.admin = True
 
     return user
-
-
-@app.get("/is_admin", response_model=schemas.UserAdmin)
-async def user(request: Request, db: Session = Depends(get_db)):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in ")
-
-    user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
-    user = crud.get_user(db, user_email=email)
-    if user == None:
-        request.session.pop("user")
-        raise HTTPException(404, detail="User not found")
-
-    return user.admin
 
 
 # enroll self in course
@@ -383,6 +369,7 @@ async def enroll(
     raise HTTPException(403, detail="User not allowed to enroll")
 
 
+# Example: /units?course_id=TDT4100&course_semester=fall2023
 @app.get("/units", response_model=List[schemas.Unit])
 async def get_units(
     request: Request,
@@ -628,17 +615,6 @@ async def get_invitations(request: Request, db: Session = Depends(get_db)):
     email: str = user.get("eduPersonPrincipalName")
 
     return crud.get_invitations(db, email=email)
-
-
-# get all invitations (should be protected)
-@app.get("/get_all_invitations", response_model=List[schemas.Invitation])
-async def get_all_invitations(request: Request, db: Session = Depends(get_db)):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
-    if not is_admin(db, request):
-        raise HTTPException(403, detail="You are not an admin user")
-
-    return crud.get_all_invitations(db)
 
 
 # delete invitation
