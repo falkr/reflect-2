@@ -157,6 +157,10 @@ def get_units(db: Session, course_id: int, course_semester):
     )
 
 
+def get_all_units(db: Session):
+    return db.query(model.Unit).all()
+
+
 def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
     unit = get_unit(db, unit_id)
     if not unit:

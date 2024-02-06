@@ -56,7 +56,7 @@ email_config = ConnectionConfig(
     MAIL_FROM="noreply+ref@iik.ntnu.no",
     MAIL_PORT=25,
     MAIL_SERVER="smtp.ansatt.ntnu.no",
-    MAIL_FROM_NAME="Reflect Tool Project",
+    MAIL_FROM_NAME="Reflection Tool",
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=False,
@@ -601,24 +601,63 @@ async def delete_invitation(request: Request, id: int, db: Session = Depends(get
     return crud.delete_invitation(db, id=id)
 
 
-@app.get("/test_email/{mail}")
-async def send_email(mail: str) -> JSONResponse:
-    try:
-        message = MessageSchema(
-            subject="Hello World from Reflect Tool Project",
-            recipients=[mail],
-            body="This is a test email with the content 'hello world'.",
-            subtype="html",
+@app.post("/send-notifications")
+async def send_notifications(db: Session = Depends(get_db)):
+    units = crud.get_all_units(db)
+    results = []
+
+    for unit in units:
+        course_id = unit.course_id
+        unit_id = unit.id
+
+        course = crud.get_course(
+            db, course_id=course_id, course_semester=unit.course_semester
         )
-        fm = FastMail(email_config)
-        await fm.send_message(message)
-        return JSONResponse(status_code=200, content={"message": "email has been sent"})
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"message": "An error occurred while sending the email"},
+        users_without_reflection = crud.get_users_without_reflection_on_unit(
+            db=db, course_id=course_id, unit_id=unit_id
         )
+
+        for user_tuple in users_without_reflection:
+            # temporary fix, will get email from the user after feide API is updated
+            user_email = adjust_email_address(user_tuple[0])
+
+            try:
+                unit_link = f"https://ref.iik.ntnu.no/app/courseview/{course.semester}/{course_id}/{unit_id}"
+                email_content = f"""<p>Dear student,</p>
+                <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit.title}"</b>.</p>
+                <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
+                <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
+                <p>Best regards,<br/>The Reflection Tool Team</p>"""
+
+                message = MessageSchema(
+                    subject=f'Reminder: Provide Feedback to "{unit.title}"',
+                    recipients=[user_email],
+                    body=email_content,
+                    subtype="html",
+                )
+
+                fm = FastMail(email_config)
+                await fm.send_message(message)
+                results.append(
+                    {"unit_id": unit_id, "email": user_email, "status": "success"}
+                )
+            except Exception as e:
+                results.append(
+                    {
+                        "unit_id": unit_id,
+                        "email": user_email,
+                        "status": "error",
+                        "message": str(e),
+                    }
+                )
+
+    return JSONResponse(status_code=200, content=results)
+
+
+def adjust_email_address(email: str) -> str:
+    if email.endswith("@ntnu.no"):
+        return email.replace("@ntnu.no", "@stud.ntnu.no")
+    return email
 
 
 # ---------------------------------Code that was meant to send email to students --------#
