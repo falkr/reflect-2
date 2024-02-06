@@ -505,7 +505,16 @@ async def create_report(ref: schemas.ReportCreate, db: Session = Depends(get_db)
     return crud.create_report(db, report=ref.model_dump())
 
 
-"""
+@app.get("/report/{course_id}/{unit_id}", response_model=schemas.ReportBase)
+async def get_report(
+    request: Request, course_id: str, unit_id: int, db: Session = Depends(get_db)
+):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+    report = crud.get_report(db, course_id=course_id, unit_id=unit_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return report
 
 
 # Also created new report if not created

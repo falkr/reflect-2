@@ -268,12 +268,12 @@ def create_report(db: Session, report: schemas.ReportCreate):
     return db_obj
 
 
-def get_report(db: Session, user_id: str, unit_id: int):
+def get_report(db: Session, course_id: str, unit_id: int):
     return (
         db.query(model.Report)
-        .filter(model.Report.user_id == user_id)
         .filter(model.Report.unit_id == unit_id)
-        .all()
+        .filter(model.Report.course_id == course_id)
+        .first()
     )
 
 
