@@ -145,12 +145,12 @@
 		return exists;
 	}
 
-	let showError: boolean = false;
+	let showError = false;
 
-	let showSuccess: boolean = false;
+	let showSuccess = false;
 
-	let counter: number = 6;
-	let toastBody: string = '';
+	let counter = 6;
+	let toastBody = '';
 
 	function triggerToast(body: string, type: string) {
 		if (type == 'success') {
@@ -176,7 +176,7 @@
 		<div class="left-0 top-0 ml-3 md:absolute">
 			<Button
 				on:click={() => goto(`/app/courseview/${data.course.id}`)}
-				class=" hover:text-teal-8 mt-2 "
+				class=" mt-2 hover:text-teal-8 "
 				outline
 				color="alternative"
 				><svg
@@ -203,7 +203,7 @@
 		>
 	</div>
 	{#if data.answers.length == 0}
-		<div class="text-primary mx-8 mt-8 flex items-center justify-center text-lg italic">
+		<div class="text-primary text-lg mx-8 mt-8 flex items-center justify-center italic">
 			There are no reflections yet. When there are reflections on this unit, you will be able to
 			edit the report.
 		</div>
@@ -240,7 +240,7 @@
 															<div class="max-h-24 overflow-auto text-sm md:text-base">
 																{answer.body}
 															</div>
-															<Button class="bg-teal-9 hover:bg-teal-11 w-4.1 ml-3 h-2.5">
+															<Button class="w-4.1 ml-3 h-2.5 bg-teal-9 hover:bg-teal-11">
 																<Chevron>Add</Chevron>
 															</Button>
 															<Dropdown>
@@ -272,7 +272,7 @@
 						>
 							{#each reportContent as report}
 								<div
-									class=" text-primary text-transform: bg-teal-7 flex flex-row items-center justify-between rounded-lg text-lg font-bold uppercase"
+									class=" text-primary text-transform: text-lg flex flex-row items-center justify-between rounded-lg bg-teal-7 font-bold uppercase"
 								>
 									<p class="ml-4 text-[12px] md:text-base">
 										{report.name}
@@ -296,7 +296,7 @@
 												{answer}
 											</div>
 											<Button
-												class="bg-teal-9 hover:bg-teal-11 ml-4 h-2 w-2 "
+												class="ml-4 h-2 w-2 bg-teal-9 hover:bg-teal-11 "
 												on:click={() => removeAnswerFromCategory(report.name, answer)}
 											>
 												x
@@ -311,13 +311,13 @@
 								on:click={() => edit_created_report()}
 								id="download"
 								type="submit"
-								class="bg-teal-9 hover:bg-teal-8 ml-8 h-10 w-16 md:h-10 md:w-36">Save</Button
+								class="ml-8 h-10 w-16 bg-teal-9 hover:bg-teal-8 md:h-10 md:w-36">Save</Button
 							>
 							<Button
 								id="add"
 								type="add"
 								on:click={() => (unitModal = true)}
-								class="bg-teal-9 hover:bg-teal-8 mt-[20px] ml-8 h-10 w-16 md:h-10 md:w-36"
+								class="mt-[20px] ml-8 h-10 w-16 bg-teal-9 hover:bg-teal-8 md:h-10 md:w-36"
 								>Add category</Button
 							>
 						</div>

@@ -121,13 +121,16 @@
 			</svg>
 		</div>
 
-		<button type="button" class="p-3 border rounded-lg text-white bg-[#316CF4] mt-5 flex flex-row items-center justify-evenly hover:opacity-90" on:click={redirect}>
+		<button
+			type="button"
+			class="mt-5 flex flex-row items-center justify-evenly rounded-lg border bg-[#316CF4] p-3 text-white hover:opacity-90"
+			on:click={redirect}
+		>
 			<div class="mr-1.5">
-				<LogInIcon size="18"/>
+				<LogInIcon size="18" />
 			</div>
 			<div>Login via Feide</div>
 		</button>
 		<div />
 	</div>
 </main>
-

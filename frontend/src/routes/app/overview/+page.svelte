@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import CourseTable from '$lib/components/CourseTable.svelte';
 	import { Button, Modal, Label, Input, Select, Toast } from 'flowbite-svelte';
@@ -8,16 +8,15 @@
 	import { validateCourseId, validateCourseName, validateCourseSemester } from '$lib/validation';
 	import { slide } from 'svelte/transition';
 	import { AlertCircleIcon, CheckCircleIcon } from 'svelte-feather-icons';
-
-	export let data;
+	export let data: Data;
 
 	let defaultModal = false;
 
-	let courseToBeMade: string = '';
+	let courseToBeMade = '';
 	//selected option in semester dropwdown
-	let selected: string = '';
+	let selected = '';
 	//semester dropdown values
-	let semesterOptions: string[] = [];
+	let semesterOptions: { value: string; name: string }[] = [];
 	//function for filling dropdown select values
 	function fillSemesterOptions() {
 		let currentYear = new Date().getFullYear();
@@ -46,7 +45,7 @@
 		(enrollment) => enrollment.role === 'teaching assistant'
 	);
 
-	let selectedSemester;
+	let selectedSemester: FormDataEntryValue | null;
 
 	//action for creatign a course
 	async function createCourse(form: FormData) {
@@ -75,8 +74,8 @@
 		const course_id = courseToBeMade;
 		const role = 'lecturer';
 		if (selectedSemester == null) {
-			triggerToast("Failed setting semester!", 'error');
-			return 
+			triggerToast('Failed setting semester!', 'error');
+			return;
 		}
 
 		const response = await fetch(`${PUBLIC_API_URL}/enroll`, {
@@ -92,7 +91,6 @@
 			})
 		});
 		const status = response.status;
-		const js = await response.json();
 		invalidate('app:layoutUser');
 		if (status != 200) {
 			triggerToast("Couldn't enroll lecuturer!", 'error');
@@ -109,13 +107,13 @@
 			return createCourse(formData);
 		},
 		onSuccess(response) {
-			//response is not typed, hence the red line! Needs to be handled
-			if (response.status == 200) {
+			const castedResponse = response as Response;
+			if (castedResponse.status == 200) {
 				defaultModal = false;
 
 				enrollUserAsLecturer();
 			}
-			if (response.status == 409) {
+			if (castedResponse.status == 409) {
 				defaultModal = true;
 				triggerToast("Couldn't create course!", 'error');
 			}
@@ -123,23 +121,28 @@
 
 		//validates the form on submitting
 		validate: (values) => {
-			const errors = {};
+			const errors: Partial<FormValues> = {};
 			if ($isSubmitting) {
-				errors.name = validateCourseName(values.name);
-				errors.course_id = validateCourseId(values.course_id);
+				const nameError = validateCourseName(values.name);
+				const courseIdError = validateCourseId(values.course_id);
+				if (nameError) {
+					errors.name = Array.isArray(nameError) ? nameError : [nameError];
+				}
+				if (courseIdError) {
+					errors.course_id = Array.isArray(courseIdError) ? courseIdError : [courseIdError];
+				}
 				errors.semester = validateCourseSemester(values.semester);
-
 				return errors;
 			}
 		}
 	});
 
-	let showError: boolean = false;
+	let showError = false;
 
-	let showSuccess: boolean = false;
+	let showSuccess = false;
 
-	let counter: number = 6;
-	let toastBody: string = '';
+	let counter = 6;
+	let toastBody = '';
 
 	export function triggerToast(body: string, type: string) {
 		if (type == 'success') {
@@ -161,10 +164,10 @@
 </script>
 
 <div class="p flex flex-col">
-	<div class="flex justify-center items-center pl-4 pr-4 pt-10 pb-10">
-		<div class="header border-teal-12 flex justify-center items-center border-b-2 pb-3 ">
-			<h3 class="headline text-teal-12 flex text-center text-xl font-bold">
-				<p class="text-teal-12 flex text-center text-xl font-medium">Course overview</p>
+	<div class="flex items-center justify-center pl-4 pr-4 pt-10 pb-10">
+		<div class="header flex items-center justify-center border-b-2 border-teal-12 pb-3 ">
+			<h3 class="headline flex text-center text-xl font-bold text-teal-12">
+				<p class="flex text-center text-xl font-medium text-teal-12">Course overview</p>
 			</h3>
 		</div>
 	</div>
@@ -173,7 +176,7 @@
 		<div class="buttonContainer top-64 right-10 flex justify-center md:mr-16 md:justify-end">
 			<Button
 				on:click={() => (defaultModal = true)}
-				class="bg-teal-8 border-teal-8 hover:border-teal-7 hover:bg-teal-7 rounded-full px-3 py-2"
+				class="rounded-full border-teal-8 bg-teal-8 px-3 py-2 hover:border-teal-7 hover:bg-teal-7"
 				size="xl"
 			>
 				+ Create new course
@@ -185,7 +188,7 @@
 		class="tablesContainer w-6/7 mb-8 mt-8 flex flex-col items-center justify-center gap-10 md:ml-16 md:w-3/4 md:flex-row md:items-start md:justify-start"
 	>
 		{#if data.user.enrollments.length == 0}
-			<p class="text-teal-12 font-large text-base">You are not enrolled to any course yet</p>
+			<p class="font-large text-base text-teal-12">You are not enrolled to any course yet</p>
 		{/if}
 		{#if course_lecturer.length > 0}
 			<CourseTable courses={course_lecturer} role={'Lecturer'} />

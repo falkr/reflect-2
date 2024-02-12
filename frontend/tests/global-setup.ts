@@ -1,12 +1,11 @@
-import { chromium, type FullConfig } from '@playwright/test';
+import { chromium } from '@playwright/test';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 const username = process.env.FEIDE_USERNAME ?? '';
 const password = process.env.FEIDE_PASSWORD ?? '';
 
-async function globalSetup(config: FullConfig): Promise<void> {
-	const { storageState } = config.projects[0].use;
+async function globalSetup(): Promise<void> {
 	// TODO: Remove headless after this has been tested
 	const browser = await chromium.launch();
 	const page = await browser.newPage();

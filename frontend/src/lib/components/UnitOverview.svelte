@@ -1,4 +1,3 @@
-
 <script lang="ts">
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
 	import { PUBLIC_API_URL } from '$env/static/public';
@@ -23,8 +22,8 @@
 	import { AlertCircleIcon, CheckCircleIcon } from 'svelte-feather-icons';
 	import { slide } from 'svelte/transition';
 
-	export let data: any;
-    export let role: string;
+	export let data: Data;
+	export let role: string;
 	export let units: Unit[];
 	$: units = data.units;
 
@@ -46,21 +45,20 @@
 		(enrollment) => enrollment.role === 'teaching assistant'
 	);
 	const students = data.course.users.filter((enrollment) => enrollment.role === 'student');
-	const lecturers = data.course.users.filter((enrollment) => enrollment.role === 'lecturer');
 
 	let unitModal = false;
 	let emailModal = false;
 
-	let showError: boolean = false;
+	let showError = false;
 
-	let showSuccess: boolean = false;
+	let showSuccess = false;
 
-	let counter: number = 6;
-	let toastBody: string = '';
+	let counter = 6;
+	let toastBody = '';
 
 	async function _sendMail(form: FormData) {
 		// post request to
-		const course_ID = data.course.id;
+		//const course_ID = data.course.id;
 
 		let email_addresses = form.get('email');
 		// To send emails, the email addresses has to include "@stud.ntnu.no" and not only "@ntnu.no"
@@ -164,11 +162,12 @@
 			return createUnit(formData);
 		},
 		onSuccess(response) {
-			if (response.status == 200) {
+			const castedResponse = response as Response;
+			if (castedResponse.status == 200) {
 				unitModal = false;
 				triggerToast('Unit successfully created!', 'success');
 			}
-			if (response.status == 409) {
+			if (castedResponse.status == 409) {
 				unitModal = true;
 				triggerToast('Could not create unit', 'error');
 			}
@@ -176,12 +175,12 @@
 
 		//validates the form on submitting
 		validate: (values) => {
-			const errors = {};
-
+			const errors: Partial<FormValues> = {};
 			if ($isSubmitting) {
-				errors.title = validateUnitTitle(values.title);
-				//errors.seq_no = validateUnitSeqNumber(values.seq_no);
-				return errors;
+				const titleErrors = validateUnitTitle(values.title);
+				if (titleErrors) {
+					errors.title = Array.isArray(titleErrors) ? titleErrors : [titleErrors];
+				}
 			}
 		}
 	});
@@ -198,11 +197,12 @@
 			return _sendMail(formData);
 		},
 		onSuccess(response) {
-			if (response.status == 200) {
+			const castedResponse = response as Response;
+			if (castedResponse.status == 200) {
 				emailModal = false;
 				triggerToast('Invitations has been sent!', 'success');
 			}
-			if (response.status == 409) {
+			if (castedResponse.status == 409) {
 				emailModal = true;
 				triggerToast('Could not create invitation', 'error');
 			}
@@ -210,7 +210,7 @@
 
 		//validates the form on submitting
 		validate: (values) => {
-			const errors = {};
+			const errors: Partial<FormValues> = {};
 			if ($inviteFormIsSubmitting) {
 				errors.email = validateEmailAddresses(values.email);
 				errors.role = validateInviteRole(values.role);
@@ -228,7 +228,7 @@
 				'Content-Type': 'application/json'
 			}
 		});
-		const js = await response.json();
+		await response.json();
 	}
 
 	function getUnitName(number: number) {
@@ -265,24 +265,26 @@
 				hidden: hidden
 			})
 		});
-		const js = await response.json();
-		invalidateAll()
+		await response.json();
+		invalidateAll();
 	}
 </script>
 
 <main class="flex-shrink-0">
 	<div class="relative ">
-		<div class="flex justify-center items-center pl-4 pr-4 pt-10">
-			<div class="header border-teal-12 mt-5 flex flex-col border-b-2 pb-3">
-				<h3 class="headline text-teal-12 flex text-left text-xl font-bold">
+		<div class="flex items-center justify-center pl-4 pr-4 pt-10">
+			<div class="header mt-5 flex flex-col border-b-2 border-teal-12 pb-3">
+				<h3 class="headline flex text-left text-xl font-bold text-teal-12">
 					{data.course.id}
 					<p class="ml-3 mr-3">-</p>
-					<p class="text-teal-12 text-xl font-medium" style="word-break: break-word">{data.course.name}</p>
+					<p class="text-xl font-medium text-teal-12" style="word-break: break-word">
+						{data.course.name}
+					</p>
 				</h3>
 			</div>
 			<Button
 				on:click={() => goto(`/app/overview/`)}
-				class=" hover:text-teal-8 absolute left-0 top-0 mt-2 w-52"
+				class=" absolute left-0 top-0 mt-2 w-52 hover:text-teal-8"
 				outline
 				color="alternative"
 				><svg
@@ -307,15 +309,15 @@
 				<div class="buttonContainer flex justify-center pt-10">
 					<Button
 						on:click={() => (unitModal = true)}
-						class="bg-teal-8 border-teal-8 hover:border-teal-7 hover:bg-teal-7 w-[190px] rounded-full"
+						class="w-[190px] rounded-full border-teal-8 bg-teal-8 hover:border-teal-7 hover:bg-teal-7"
 						size="xl"
 					>
 						+ Create new unit
 					</Button>
-					<div class="w-2"></div>
+					<div class="w-2" />
 					<Button
 						on:click={() => (emailModal = true)}
-						class="bg-teal-8 border-teal-8 hover:border-teal-7 hover:bg-teal-7 w-[190px] rounded-full "
+						class="w-[190px] rounded-full border-teal-8 bg-teal-8 hover:border-teal-7 hover:bg-teal-7 "
 						size="xl"
 					>
 						+ Invite
@@ -326,7 +328,7 @@
 			<!-- <NewCourseModal {isOpen} {toggleIsOpen} /> -->
 			<Modal bind:open={unitModal} size="xs" autoclose={false} class="w-full">
 				<form class="flex flex-col space-y-6" use:form>
-					<h3 class="text-teal-12 p-0 text-xl font-medium dark:text-white">Create unit</h3>
+					<h3 class="p-0 text-xl font-medium text-teal-12 dark:text-white">Create unit</h3>
 					<Label class="space-y-2">
 						<span>Unit name</span>
 						<Input type="text" name="title" placeholder="title" required />
@@ -402,23 +404,23 @@
 				</form>
 			</Modal>
 
-			<section class="flex justify-center items-center pt-12">
+			<section class="flex items-center justify-center pt-12">
 				<Accordion
-					class="b-teal-12 border-teal-12 bg-teal-1 mt-16 w-[300px] border-2 md:mt-2 md:w-2/3"
+					class="b-teal-12 mt-16 w-[300px] border-2 border-teal-12 bg-teal-1 md:mt-2 md:w-2/3"
 					activeClasses="bg-teal-1 dark:bg-fifthly text-fifthly-600 dark:text-white"
 					inactiveClasses="bg-white text-gray-500 dark:text-gray-400 hover:bg-fifthly-100 dark:hover:bg-fifthly-800"
 				>
 					{#if role === 'lecturer'}
-						<AccordionItem class="border-teal-12 border-b-2">
-							<span slot="header" class="text-teal-12 text-[18px] font-semibold">View Reports</span>
+						<AccordionItem class="border-b-2 border-teal-12">
+							<span slot="header" class="text-[18px] font-semibold text-teal-12">View Reports</span>
 							<p class="">
 								{#each data.course.reports as report}
 									<!-- svelte-ignore a11y-click-events-have-key-events -->
 									<li
-										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+										class="w-50 border-stone-300 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
 										on:click={() => goto(`${data.course_name}/reports/${report.unit_id}`)}
 									>
-										<p class="text-teal-12 mt-3 font-semibold ">
+										<p class="mt-3 font-semibold text-teal-12 ">
 											Report for unit "{getUnitName(report.unit_id)}"
 										</p>
 									</li>
@@ -426,23 +428,23 @@
 							</p>
 						</AccordionItem>
 					{/if}
-					<AccordionItem open class="border-teal-12 border-b-2">
-						<span slot="header" class="text-teal-12 text-[18px] font-semibold">View units</span>
+					<AccordionItem open class="border-b-2 border-teal-12">
+						<span slot="header" class="text-[18px] font-semibold text-teal-12">View units</span>
 						<p class="">
 							{#each units as unit}
 								<!-- svelte-ignore a11y-click-events-have-key-events -->
 								{#if role === 'student' && !unit.hidden}
 									<li
-										class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+										class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
 										on:click={() => goto(`${data.course_name}/${unit.id}`)}
 									>
-										<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
+										<p class="mt-3 font-semibold text-teal-12 ">{unit.title}</p>
 
 										<div class="justify-end self-center">
 											{#if data.user.reflections
 												.map((reflection) => reflection.unit_id)
 												.includes(unit.id)}
-												<div class=" border-teal-12 flex justify-end  rounded">
+												<div class=" flex justify-end rounded  border-teal-12">
 													<span class=" font-semibold text-[#32431b]">Answered</span>
 												</div>
 											{:else}
@@ -460,10 +462,10 @@
 								{:else if role === 'lecturer' || role === 'teaching assistant'}
 									{#if !unit.hidden}
 										<li
-											class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+											class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
 											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
 										>
-											<p class="text-teal-12 mt-3 font-semibold ">{unit.title}</p>
+											<p class="mt-3 font-semibold text-teal-12 ">{unit.title}</p>
 
 											<div class="self-center text-right">
 												{#if role === 'lecturer' || role === 'teaching assistant'}
@@ -475,21 +477,19 @@
 													<span class="text-sm italic">Available</span>
 												{/if}
 											</div>
-
 										</li>
 										<Button
-											on:click={() => (update_hidden(unit.id, true))}
-											class="bg-orange-600 hover:bg-orange-700 w-[90px] h-[40px] rounded-full"
-											size="s"
+											on:click={() => update_hidden(unit.id, true)}
+											class="h-[40px] w-[90px] rounded-full bg-orange-600 hover:bg-orange-700"
 										>
 											- Hide unit
 										</Button>
 									{:else}
 										<li
-											class="w-50 bg-teal-1 hover:bg-teal-4 border-teal-12 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-stone-300 p-2"
+											class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
 											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
 										>
-											<p class="text-teal-12 mt-3 font-semibold ">{"[HIDDEN] " + unit.title}</p>
+											<p class="mt-3 font-semibold text-teal-12 ">{'[HIDDEN] ' + unit.title}</p>
 
 											<div class="self-center text-right">
 												{#if role === 'lecturer' || role === 'teaching assistant'}
@@ -501,12 +501,11 @@
 													<span class="text-sm italic">Available</span>
 												{/if}
 											</div>
-
 										</li>
 										<Button
-											on:click={() => (update_hidden(unit.id, false))}
-											class="bg-teal-7 hover:bg-teal-8 w-[90px] h-[40px] rounded-full "
-											size="s"
+											on:click={() => update_hidden(unit.id, false)}
+											class="h-[40px] w-[90px] rounded-full bg-teal-7 hover:bg-teal-8 "
+											size="sm"
 										>
 											+ Show unit
 										</Button>
@@ -517,21 +516,21 @@
 					</AccordionItem>
 
 					{#if role === 'lecturer' || role === 'teaching assistant'}
-						<AccordionItem class="border-teal-12 border-b-2">
-							<span slot="header" class="text-teal-12 text-[18px] font-semibold"
+						<AccordionItem class="border-b-2 border-teal-12">
+							<span slot="header" class="text-[18px] font-semibold text-teal-12"
 								>Teaching assistant</span
 							>
 							<p class="">
 								{#each teaching_assistants as ta}
-									<li class="text-teal-12 mt-3 font-bold">
+									<li class="mt-3 font-bold text-teal-12">
 										{ta.user_email}
 									</li>
 								{/each}
 							</p>
 						</AccordionItem>
-						<AccordionItem class="border-teal-3 border-b-2">
-							<span slot="header" class="text-teal-12 text-[18px] font-semibold">Students</span>
-							<p class="text-teal-12 mt-3 font-bold">
+						<AccordionItem class="border-b-2 border-teal-3">
+							<span slot="header" class="text-[18px] font-semibold text-teal-12">Students</span>
+							<p class="mt-3 font-bold text-teal-12">
 								{#each students as student}
 									<li class=" list-none p-2">{student.user_email}</li>
 								{/each}

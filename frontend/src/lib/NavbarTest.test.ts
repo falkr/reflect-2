@@ -3,12 +3,20 @@
  */
 
 import { render } from '@testing-library/svelte';
-import Navbar from './Navbar.svelte';
+import Navbar from './components/Navbar.svelte';
 
 const user: User = {
 	email: 'ntnureflection@ntnu.no',
-	enrollments: [{ user_email: 'ntnureflection@ntnu.no', course_id: 'TDT4100', role: 'lecturer' }],
-	reflections: []
+	enrollments: [
+		{
+			user_email: 'ntnureflection@ntnu.no',
+			course_id: 'TDT4100',
+			course_semester: 'Spring',
+			role: 'lecturer'
+		}
+	],
+	reflections: [],
+	admin: false
 };
 
 test('should render overview button', () => {

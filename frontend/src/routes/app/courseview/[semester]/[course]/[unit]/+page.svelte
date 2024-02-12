@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import { Button } from 'flowbite-svelte';
 	import { PUBLIC_API_URL } from '$env/static/public';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	export let data: PageData;
 
@@ -92,17 +92,19 @@
 
 <main class="flex-shrink-0">
 	<div class="relative">
-		<div class="flex justify-center items-center pl-4 pr-4 pt-10">
+		<div class="flex items-center justify-center pl-4 pr-4 pt-10">
 			<div class="">
-				<h3 class="headline text-teal-12 flex text-left text-xl font-bold">
+				<h3 class="headline flex text-left text-xl font-bold text-teal-12">
 					{data.course.id}
 					<p class="ml-3 mr-3">-</p>
-					<p class="text-teal-12 text-xl font-medium" style="word-break: break-word">{data.units.find((unit) => unit.id == data.unit_id)?.title}</p>
+					<p class="text-xl font-medium text-teal-12" style="word-break: break-word">
+						{data.units.find((unit) => unit.id == data.unit_id)?.title}
+					</p>
 				</h3>
 			</div>
 			<Button
-				on:click={() => (history.back())}
-				class=" hover:text-teal-8 absolute left-0 top-1 mt-2 w-52"
+				on:click={() => history.back()}
+				class=" absolute left-0 top-1 mt-2 w-52 hover:text-teal-8"
 				outline
 				color="alternative"
 				><svg
@@ -142,7 +144,7 @@
 						id="question"
 						name="answer"
 						rows="4"
-						class="focus:border-teal-12 focus:ring-teal-12 dark:focus:border-teal-12 dark:focus:ring-teal-12 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-teal-12 focus:ring-teal-12 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-teal-12 dark:focus:ring-teal-12"
 						placeholder="Write your thoughts here..."
 						value={getReflectionByQuestion()}
 						disabled={data.reflected || !data.available}
@@ -153,7 +155,7 @@
 						id="question"
 						name="answer"
 						rows="4"
-						class="focus:border-teal-12 focus:ring-teal-12 dark:focus:border-teal-12 dark:focus:ring-teal-12 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-teal-12 focus:ring-teal-12 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-teal-12 dark:focus:ring-teal-12"
 						placeholder="Write your thoughts here..."
 						style="resize: none"
 					/>
@@ -165,12 +167,12 @@
 			{#if data.reflected}
 				<div class="my-8 mb-4  flex max-w-2xl flex-col">
 					{#if data.available}
-						<p class="text-teal-12 self-center text-[18px] italic">
+						<p class="self-center text-[18px] italic text-teal-12">
 							You have already reflected on this unit
 						</p>
 						<Button
 							on:click={() => goto(`/app/courseview/${data.course.id}`)}
-							class="bg-teal-9 hover:bg-teal-8 mt-2 self-center "
+							class="mt-2 self-center bg-teal-9 hover:bg-teal-8 "
 							><svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"
@@ -188,20 +190,20 @@
 							<p class="ml-2">Back to courseview</p>
 						</Button>
 					{:else}
-						<p class="text-teal-12 self-center text-[18px] italic">
+						<p class="self-center text-[18px] italic text-teal-12">
 							This unit is not ready for reflection
 						</p>
 					{/if}
 				</div>
 			{:else if !data.reflected && !data.available}
 				<div class="my-8 mb-4  flex max-w-2xl">
-					<p class="text-teal-12 self-center text-[18px] italic pb-20">
+					<p class="self-center pb-20 text-[18px] italic text-teal-12">
 						This unit is not ready for reflection
 					</p>
 				</div>
 			{:else}
 				<div class="my-8 flex">
-					<Button type="submit" class=" bg-teal-9 hover:bg-teal-8 w-full1 self-center "
+					<Button type="submit" class=" w-full1 self-center bg-teal-9 hover:bg-teal-8 "
 						>Send reflection</Button
 					>
 				</div>

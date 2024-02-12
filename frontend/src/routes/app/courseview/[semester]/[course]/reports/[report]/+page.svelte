@@ -3,11 +3,11 @@
 	import type { PageData } from './$types';
 	import { Button } from 'flowbite-svelte';
 	export let data: PageData;
-	let filename: string = 'reflections.txt';
-	let content = data.unitReportContent.toString();
+	let filename = 'reflections.txt';
+	//let content = data.unitReportContent.toString();
 
 	//function for downloading report, downloads a .txt file
-	function downloadFile(filename: string, content: string) {
+	function downloadFile(filename: string) {
 		const element = document.createElement('a');
 		const reportContent = data.unitReportContent.report_content;
 		let fileContent = '';
@@ -42,13 +42,18 @@
 		element.click();
 		document.body.removeChild(element);
 	}
+
+	// Define a function to process answers into a formatted string
+	function formatAnswers(answers: string[]) {
+		return answers.map((answer) => `- ${answer}`).join('\n\n');
+	}
 </script>
 
 <div class="mx-5 ml-1 flex flex-col gap-y-6 md:mx-16 md:ml-16 md:p-4">
 	<div class="flex justify-start">
 		<Button
 			on:click={() => goto(`/app/courseview/${data.course.id}`)}
-			class=" hover:text-teal-8 w-42 absolute"
+			class=" w-42 absolute hover:text-teal-8"
 			outline
 			color="alternative"
 			><svg
@@ -69,19 +74,19 @@
 		</Button>
 	</div>
 	<div
-		class="header border-teal-12 mt-8 flex w-[350px] flex-col justify-center border-b-2 pb-3 md:w-[400px]"
+		class="header mt-8 flex w-[350px] flex-col justify-center border-b-2 border-teal-12 pb-3 md:w-[400px]"
 	>
-		<h3 class="headline text-teal-12 flex text-left text-[20px] font-bold md:text-xl">
+		<h3 class="headline flex text-left text-[20px] font-bold text-teal-12 md:text-xl">
 			{data.course.id}
 			<span class="ml-3 mr-3">-</span>
-			<span class="text-teal-12 text-[20px] font-medium md:text-xl">
+			<span class="text-[20px] font-medium text-teal-12 md:text-xl">
 				Report for {data.course.id}
 			</span>
 		</h3>
 	</div>
 	<Button
-		class="bg-teal-9 hover:bg-teal-11 w-36 rounded-md py-2 px-4 text-white transition duration-150 ease-in-out"
-		on:click={() => downloadFile(filename, content)}
+		class="w-36 rounded-md bg-teal-9 py-2 px-4 text-white transition duration-150 ease-in-out hover:bg-teal-11"
+		on:click={() => downloadFile(filename)}
 	>
 		Download report
 	</Button>
@@ -92,9 +97,10 @@
 					<div class="font-medium">{report_content.name}</div>
 					<textarea
 						disabled={true}
-						class="focus:border-teal-12 focus:ring-teal-12 dark:focus:border-teal-12 dark:focus:ring-teal-12 mt-4 block h-40 w-full min-w-[300px] max-w-[500px] overflow-y-scroll rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 md:max-h-[500px]"
+						class="mt-4 block h-40 w-full min-w-[300px] max-w-[500px] overflow-y-scroll rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-teal-12 focus:ring-teal-12 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-teal-12 dark:focus:ring-teal-12 md:max-h-[500px]"
 						rows={report_content.answers.length}
-						>{report_content.answers.map((answer) => `- ${answer}`).join('\n\n')}
+					>
+						{formatAnswers(report_content.answers)}
 					</textarea>
 				</div>
 			{/each}

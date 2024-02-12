@@ -1,5 +1,5 @@
 import { render } from '@testing-library/svelte';
-import { default as courseViewPage } from '../../courseview/[course]/+page.svelte';
+import { default as courseViewPage } from '../[course]/+page.svelte';
 
 describe('Courseview page', () => {
 	it('renders without errors', () => {

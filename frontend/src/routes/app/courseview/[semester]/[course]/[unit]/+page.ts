@@ -1,37 +1,40 @@
-import { error, redirect } from '@sveltejs/kit';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { redirect } from '@sveltejs/kit';
+import type { PageLoad } from './$types';
 
-export const load = async ({ params, parent, depends }) => {
+export const load: PageLoad = async ({ params, parent }) => {
 	const { course, user, units } = await parent();
-	let course_type = course as Course;
 
 	//check if unit exists in course, if not redirect to courseview
-	if (units.filter((unit) => unit.id == parseInt(params.unit)).length > 0 === false) {
-		//redirects the user to the courseview page
+	const unitId = params.unit ? parseInt(params.unit, 10) : null;
+	if (unitId === null || !units.some((unit: Unit) => unit.id === unitId)) {
 		throw redirect(302, `/app/courseview/${params.course}`);
 	}
 
 	//If the user have reflected or not
-	let reflected: boolean =
-		user.reflections.filter((reflection) => reflection.unit_id == parseInt(params.unit)).length > 0;
+	const reflectionUnitId = params.unit ? parseInt(params.unit, 10) : null;
+	const reflected = user.reflections.some(
+		(reflection: Reflection) => reflection.unit_id === reflectionUnitId
+	);
 
-	//date today
-	let today = new Date();
+	// Date today
+	const today = new Date();
 
-	//date of unit
-	let unitDate = units.filter((unit) => unit.id == parseInt(params.unit))[0].date_available;
+	// Date of unit
+	const unit = units.find((unit: Unit) => unit.id === unitId);
+	const unitDate = unit ? unit.date_available : null;
 
-	let date = new Date(unitDate);
+	// Check that unitDate is not null before converting to Date object
+	const date = unitDate ? new Date(unitDate) : null;
 
-	//if date is expired or not
-	let available = today > date;
+	// If date is expired or not
+	const available = date ? today > date : false;
 
 	return {
-		user: user as unknown as User,
-		course: course as unknown as Course,
-		unit_id: params.unit as unknown as number,
+		user: user as User,
+		course: course as Course,
+		unit_id: unitId as number,
 		reflected: reflected,
 		available: available,
-		units: units as unknown as Unit[]
+		units: units as Unit[]
 	};
 };

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { goto, invalidate } from '$app/navigation';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { Navbar, NavBrand, Dropdown, DropdownItem, Button, Modal } from 'flowbite-svelte';
@@ -16,10 +15,6 @@
 		location.href = `${PUBLIC_API_URL}/logout`;
 	}
 
-	function handleHome() {
-		goto('/app');
-	}
-
 	function handleOverview() {
 		goto('/app/overview');
 	}
@@ -28,12 +23,12 @@
 
 	let answerInvitationModal = false;
 
-	function handleSubmit(e: SubmitEvent) {
+	/*function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
 
 		answerInvitationModal = false;
-	}
+	}*/
 
 	async function getInvitations() {
 		const response = await fetch(`${PUBLIC_API_URL}/get_invitations`, {
@@ -108,14 +103,7 @@
 	<div class="flex">
 		<NavBrand href="/app/overview" class="flex self-center">
 			<div class="ml-5 flex md:ml-10">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					version="1.1"
-					xmlns:dc="http://purl.org/dc/elements/1.1/"
-					xmlns:xl="http://www.w3.org/1999/xlink"
-					viewBox="230 135 500 285"
-					width="60"
-				>
+				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="230 135 500 285" width="60">
 					<defs />
 					<g
 						id="Canvas_1"
@@ -208,7 +196,7 @@
 				</svg>
 			</div>
 			<span
-				class="text-teal-3 ml-8  hidden self-center whitespace-nowrap text-[20px] font-bold dark:text-white  sm:block  md:text-[25px]"
+				class="ml-8 hidden  self-center whitespace-nowrap text-[20px] font-bold text-teal-3 dark:text-white  sm:block  md:text-[25px]"
 			>
 				NTNU_reflection
 			</span>
@@ -216,15 +204,15 @@
 	</div>
 
 	<div class="mr-5 flex items-center">
-		<span class="text-teal-3 mr-5 hidden  text-[20px] italic md:block">{user.email}</span>
+		<span class="mr-5 hidden text-[20px]  italic text-teal-3 md:block">{user.email}</span>
 
-		<button class="text-teal-3 mr-5 text-[16px] md:text-[20px]  " on:click={handleOverview}
+		<button class="mr-5 text-[16px] text-teal-3 md:text-[20px]  " on:click={handleOverview}
 			>Overview</button
 		>
 
 		<button
 			type="submit"
-			class=" text-teal-3 mr-5 text-[16px] md:text-[20px] "
+			class=" mr-5 text-[16px] text-teal-3 md:text-[20px] "
 			on:click={handleLogOut}>Log out</button
 		>
 		<div class="relative mt-0.5 ">
@@ -242,18 +230,20 @@
 				}}
 			/>
 			<Dropdown {dropdownOpen}>
-			  {#if invitations.length > 0}
-				{#each invitations as invitation}
-				  <DropdownItem
-				  class="focus:outline-none hover:cursor-pointer"
-					on:click={() => {handleInviteClick(invitation)}}
-				  >
-					You have been invited to course: {invitation.course_id} as: {invitation.role}
-				  </DropdownItem>
-				{/each}
-			  {:else}
-				<DropdownItem>You have no new notifications</DropdownItem>
-			  {/if}
+				{#if invitations.length > 0}
+					{#each invitations as invitation}
+						<DropdownItem
+							class="hover:cursor-pointer focus:outline-none"
+							on:click={() => {
+								handleInviteClick(invitation);
+							}}
+						>
+							You have been invited to course: {invitation.course_id} as: {invitation.role}
+						</DropdownItem>
+					{/each}
+				{:else}
+					<DropdownItem>You have no new notifications</DropdownItem>
+				{/if}
 			</Dropdown>
 			<Modal bind:open={answerInvitationModal} size="xs" autoclose={false} class="w-full">
 				<h3 class="p-0 text-xl font-medium text-gray-900 dark:text-white">Course invitation</h3>

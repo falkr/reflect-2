@@ -1,9 +1,8 @@
-import { logged_in } from "$lib/stores";
-import { redirect } from "@sveltejs/kit";
-import { get } from "svelte/store";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { logged_in } from '$lib/stores';
 
-// redirects user to overview if they access this page withour a course
+// redirects user to overview if they access this page without a course
 // export const load = async (parent) => {
 //     const
-    
+
 // };

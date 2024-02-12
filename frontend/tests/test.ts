@@ -1,4 +1,4 @@
-import { chromium, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test('Navigate to course overview', async ({ page }) => {
 	await page.goto('/overview');

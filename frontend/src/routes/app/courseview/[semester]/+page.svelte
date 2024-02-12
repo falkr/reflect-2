@@ -6,7 +6,7 @@
 	if (data.user) {
 		goto('/app/overview');
 
-	//else go to landing page
+		//else go to landing page
 	} else {
 		goto('/');
 	}
