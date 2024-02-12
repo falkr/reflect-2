@@ -72,7 +72,7 @@ In **`frontend`** folder:
 
 ##### Alternative 1:
 ```bash
-docker-compose up backend
+docker-compose up --no-deps backend
 ```
 
 #### Alternative 2:
