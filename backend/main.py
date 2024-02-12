@@ -487,9 +487,13 @@ async def download_file(
     return Response(status_code=403)
 
 
+def to_dict(obj):
+    return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
+
+
 # Get unit data with course and semester required, better error handling/security (unit_id is just an incrementing number)
 # Example: /unit_data?course_id=TDT4100&course_semester=fall2023&unit_id=1
-@app.get("/unit_data", response_model=schemas.Unit)
+@app.get("/unit_data", response_model=schemas.UnitData)
 async def get_unit_data(
     request: Request,
     course_id: str,
@@ -508,22 +512,30 @@ async def get_unit_data(
     enrollment = crud.get_enrollment(db, course_id, course_semester, email)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
-    if db.query(model.Unit).filter(model.Unit.id == unit_id).first():
+    unit = (
+        db.query(model.Unit)
+        .filter(
+            model.Unit.id == unit_id,
+            model.Unit.course_id == course_id,
+            model.Unit.course_semester == course_semester,
+        )
+        .first()
+    )
+    if unit:
+        questions = [to_dict(question) for question in course.questions]
+        # Somehow needed to get reflections on Unit dict, even thought its never accessed
+        reflections = [to_dict(reflection) for reflection in unit.reflections]
+
         if is_admin(db, request) or enrollment.role in [
             "lecturer",
             "teaching assistant",
         ]:
-            return (
-                db.query(model.Unit)
-                .filter(
-                    model.Unit.course_id == course_id,
-                    model.Unit.course_semester == course_semester,
-                    model.Unit.id == unit_id,
-                )
-                .first()
-            )
+            return {
+                "unit": unit,
+                "unit_questions": questions,
+            }
         else:
-            return (
+            unit = (
                 db.query(model.Unit)
                 .filter(
                     model.Unit.course_id == course_id,
@@ -533,6 +545,12 @@ async def get_unit_data(
                 )
                 .first()
             )
+            if unit:
+                return {
+                    "unit": unit,
+                    "unit_questions": questions,
+                }
+
     raise HTTPException(404, detail="Unit not found")
 
 

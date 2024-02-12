@@ -78,6 +78,14 @@ class Question(QuestionBase):
         orm_mode = True
 
 
+class UnitData(BaseModel):
+    unit: Unit
+    unit_questions: List[QuestionBase] = []
+
+    class Config:
+        orm_mode = True
+
+
 class CourseBase(BaseModel):
     id: str
     semester: str
