@@ -1,6 +1,7 @@
 stages:
   - lint
   - build
+  - check
 
 variables:
   PUBLIC_API_URL: "http://127.0.0.1:8000"
@@ -25,10 +26,18 @@ lint frontend:
     - echo "Linting the frontend"
     - cd frontend
     - npm ci
-    - npm run format
     - npm run lint
   only:
     - merge_requests
+
+check frontend:
+  stage: check
+  image: node:19
+  script:
+    - echo "Checking the frontend"
+    - cd frontend
+    - npm ci
+    - npm run check
 
 build:
   stage: build

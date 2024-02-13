@@ -479,9 +479,8 @@
 											</div>
 										</li>
 										<Button
-											on:click={() => (update_hidden(unit.id, true))}
-											class="bg-orange-600 hover:bg-orange-700 w-[90px] h-[40px] rounded-full"
-											size="s"
+											on:click={() => update_hidden(unit.id, true)}
+											class="h-[40px] w-[90px] rounded-full bg-orange-600 hover:bg-orange-700"
 										>
 											- Hide unit
 										</Button>
