@@ -1,13 +1,46 @@
-before_script:
-  - python --version
-  - pip install --upgrade pip
 stages:
   - lint
+  - build
+
+variables:
+  PUBLIC_API_URL: "http://127.0.0.1:8000"
 
 lint backend:
   stage: lint
   image: python:3.11
   script:
+    - echo "Linting the backend"
+    - python --version
+    - pip install --upgrade pip
     - pip install black
     - cd backend
     - black --check .
+  only:
+    - merge_requests
+    
+lint frontend:
+  stage: lint
+  image: node:19
+  script:
+    - echo "Linting the frontend"
+    - cd frontend
+    - npm ci
+    - npm run format
+    - npm run lint
+  only:
+    - merge_requests
+
+build:
+  stage: build
+  image: node:19
+  script:
+    - echo "Building the project"
+    - cd frontend
+    - npm ci
+    - npm run build
+  only:
+    - merge_requests
+
+
+
+
