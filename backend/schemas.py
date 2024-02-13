@@ -206,3 +206,16 @@ class Report(BaseModel):
 
 class EmailSchema(BaseModel):
     email: List[EmailStr]
+
+
+class ReflectionJSONFormat(BaseModel):
+    learning_unit: str
+    participation: str
+    best_learning_success: str
+    least_learning_success: str
+
+
+class ReflectionJSON(BaseModel):
+    api_key: str
+    data: List[ReflectionJSONFormat]
+    use_cheap_model: bool

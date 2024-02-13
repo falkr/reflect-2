@@ -6,11 +6,11 @@ from typing import List, Optional
 
 import requests
 from requests.structures import CaseInsensitiveDict
+from prompting.main import analyze_student_feedback
 from schemas import EmailSchema
 
 import crud
 import model
-import motor.motor_asyncio
 import schemas
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from database import SessionLocal, engine
@@ -701,6 +701,14 @@ def adjust_email_address(email: str) -> str:
     if email.endswith("@ntnu.no"):
         return email.replace("@ntnu.no", "@stud.ntnu.no")
     return email
+
+
+@app.post("/analyze_feedback")
+async def analyze_feedback(ref: schemas.ReflectionJSON):
+    # Konverter hver ReflectionJSONFormat til en dictionary
+    data_dicts = [item.model_dump() for item in ref.data]
+    # Kall funksjonen og send dictionaries
+    return analyze_student_feedback(ref.api_key, data_dicts, ref.use_cheap_model)
 
 
 # ---------------------------------Code that was meant to send email to students --------#
