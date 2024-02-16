@@ -212,7 +212,7 @@ class ReflectionJSONFormat(BaseModel):
     learning_unit: str
     participation: str
     best_learning_success: str
-    least_learning_success: str
+    least_understood_concept: str
 
 
 class ReflectionJSON(BaseModel):

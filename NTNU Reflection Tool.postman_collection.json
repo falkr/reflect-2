@@ -444,6 +444,40 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Generate JSON report",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"Content-type": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"api_key\": \"{{api_key}}\",\n    \"data\": [\n    {\n    \"learning_unit\": \"Unit 0: Course Setup and Introduction\",\n    \"participation\": \"I participated in this unit.\",\n    \"best_learning_success\": \"This was the first time we sat together. I we progressed a lot on the planning side of things. I also learned a lot about RATs.\",\n    \"least_learning_success\": \"I would said that the different roles were the muddiest point to me. This is mainly because it is a new working environment for me, but i believe that in the future i will get used to it.\"\n    }\n    ],\n    \"use_cheap_model\": true\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8000/analyze_feedback",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"analyze_feedback"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }

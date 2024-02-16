@@ -705,9 +705,7 @@ def adjust_email_address(email: str) -> str:
 
 @app.post("/analyze_feedback")
 async def analyze_feedback(ref: schemas.ReflectionJSON):
-    # Konverter hver ReflectionJSONFormat til en dictionary
     data_dicts = [item.model_dump() for item in ref.data]
-    # Kall funksjonen og send dictionaries
     return analyze_student_feedback(ref.api_key, data_dicts, ref.use_cheap_model)
 
 
