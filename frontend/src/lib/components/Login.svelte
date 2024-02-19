@@ -1,8 +1,15 @@
 <script>
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { LogInIcon } from 'svelte-feather-icons';
+	import { goto } from '$app/navigation';
+	import { logged_in } from '$lib/stores';
 	export function redirect() {
 		location.href = `${PUBLIC_API_URL}/login`;
+	}
+	if (logged_in) {
+		goto('/app/overview');
+	} else {
+		goto('/');
 	}
 </script>
 
