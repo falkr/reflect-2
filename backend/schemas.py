@@ -102,7 +102,6 @@ class EnrollmentBase(BaseModel):
     course_id: str
     course_semester: str
     role: str
-    uid: str
 
     class Config:
         orm_mode = True
