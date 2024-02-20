@@ -6,10 +6,11 @@ import { render } from '@testing-library/svelte';
 import Navbar from './components/Navbar.svelte';
 
 const user: User = {
+	uid: 'ntnureflection',
 	email: 'ntnureflection@ntnu.no',
 	enrollments: [
 		{
-			user_email: 'ntnureflection@ntnu.no',
+			uid: 'ntnureflection',
 			course_id: 'TDT4100',
 			course_semester: 'Spring',
 			role: 'lecturer'

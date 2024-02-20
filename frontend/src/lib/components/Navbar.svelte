@@ -53,7 +53,7 @@
 	async function enrollUser() {
 		const course_id = activeInvitation.course_id;
 		const course_semester = activeInvitation.course_semester;
-		const user_email = activeInvitation.email;
+		const uid = activeInvitation.uid;
 		const role = activeInvitation.role;
 
 		const response = await fetch(`${PUBLIC_API_URL}/enroll`, {
@@ -63,7 +63,7 @@
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				user_email: user_email,
+				uid: uid,
 				course_id: course_id,
 				course_semester: course_semester,
 				role: role
@@ -204,7 +204,7 @@
 	</div>
 
 	<div class="mr-5 flex items-center">
-		<span class="mr-5 hidden text-[20px]  italic text-teal-3 md:block">{user.email}</span>
+		<span class="mr-5 hidden text-[20px]  italic text-teal-3 md:block">{user.uid}</span>
 
 		<button class="mr-5 text-[16px] text-teal-3 md:text-[20px]  " on:click={handleOverview}
 			>Overview</button

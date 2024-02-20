@@ -1,5 +1,6 @@
 type User = {
 	email: string;
+	uid: string;
 	enrollments: Enrollment[];
 	reflections: Reflection[];
 	admin: boolean;
@@ -12,7 +13,7 @@ type ReportType = {
 };
 
 type Enrollment = {
-	user_email: string;
+	uid: string;
 	course_id: string;
 	course_semester: string;
 	role: string;
@@ -69,7 +70,7 @@ type report_obj = {
 
 type Invitation = {
 	id: number;
-	email: string;
+	uid: string;
 	role: string;
 	course_id: string;
 	course_semester: string;

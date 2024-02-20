@@ -15,13 +15,13 @@ from typing import List
 
 
 # --- User ---
-def get_user(db: Session, user_email: str):
-    return db.query(model.User).filter(model.User.email == user_email).first()
+def get_user(db: Session, uid: str):
+    return db.query(model.User).filter(model.User.uid == uid).first()
 
 
 # Creates user from email address
-def create_user(db: Session, user_email: str):
-    db_user = model.User(email=user_email)
+def create_user(db: Session, uid: str, user_email: str):
+    db_user = model.User(uid, user_email)
     print("creating user")
     db.add(db_user)
     db.commit()
@@ -31,15 +31,15 @@ def create_user(db: Session, user_email: str):
 
 # Enrolls user in a course
 def create_enrollment(
-    db: Session, user_email: str, course_id: str, course_semester: str, role: str
+    db: Session, uid: str, course_id: str, course_semester: str, role: str
 ):
     # getting student
-    db_user = get_user(db, user_email=user_email)
+    db_user = get_user(db, uid)
     # getting course
-    db_course = get_course(db, course_id=course_id, course_semester=course_semester)
+    db_course = get_course(db, course_id, course_semester)
     # Creating enrollment
     db_enrollment = model.Enrollment(
-        user_email=user_email,
+        uid=uid,
         course_id=course_id,
         course_semester=course_semester,
         role=role,
@@ -89,13 +89,13 @@ def get_course(db: Session, course_id: str, course_semester: str):
 # --- Enrollment ---
 
 
-def get_enrollment(db: Session, course_id: str, course_semester: str, user_email: str):
+def get_enrollment(db: Session, course_id: str, course_semester: str, uid: str):
     return (
         db.query(model.Enrollment)
         .filter(
             model.Enrollment.course_id == course_id,
             model.Enrollment.course_semester == course_semester,
-            model.Enrollment.user_email == user_email,
+            model.Enrollment.uid == uid,
         )
         .first()
     )
@@ -211,17 +211,17 @@ def create_invitation(db: Session, invitation: schemas.InvitationBase):
     return db_obj
 
 
-def get_invitations(db: Session, email: str):
-    return db.query(model.Invitation).filter(model.Invitation.email == email).all()
+def get_invitations(db: Session, uid: str):
+    return db.query(model.Invitation).filter(model.Invitation.uid == uid).all()
 
 
 def get_priv_invitations_course(
-    db: Session, email: str, course_id: str, course_semester: str
+    db: Session, uid: str, course_id: str, course_semester: str
 ):
     return (
         db.query(model.Invitation)
         .filter(
-            model.Invitation.email == email,
+            model.Invitation.uid == uid,
             model.Invitation.course_id == course_id,
             model.Invitation.course_semester == course_semester,
             model.Invitation.role != "student",
@@ -304,11 +304,11 @@ def edit_created_report(
 # might need change when user-table gets new ID-column as primary key
 def get_users_without_reflection_on_unit(db: Session, course_id: str, unit_id: int):
     return (
-        db.query(model.User.email)
-        .join(model.Enrollment, model.Enrollment.user_email == model.User.email)
+        db.query(model.User.uid)
+        .join(model.Enrollment, model.Enrollment.uid == model.User.uid)
         .outerjoin(
             model.Reflection,
-            (model.Reflection.user_id == model.User.email)
+            (model.Reflection.user_id == model.User.uid)
             & (model.Reflection.unit_id == unit_id),
         )
         .filter(model.Enrollment.course_id == course_id)

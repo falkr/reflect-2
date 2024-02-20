@@ -523,7 +523,7 @@
 							<p class="">
 								{#each teaching_assistants as ta}
 									<li class="mt-3 font-bold text-teal-12">
-										{ta.user_email}
+										{ta.uid}
 									</li>
 								{/each}
 							</p>
@@ -532,7 +532,7 @@
 							<span slot="header" class="text-[18px] font-semibold text-teal-12">Students</span>
 							<p class="mt-3 font-bold text-teal-12">
 								{#each students as student}
-									<li class=" list-none p-2">{student.user_email}</li>
+									<li class=" list-none p-2">{student.uid}</li>
 								{/each}
 							</p>
 						</AccordionItem>

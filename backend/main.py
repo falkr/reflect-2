@@ -120,8 +120,8 @@ def is_admin(db, request):
     user = request.session.get("user")
     if user is None:
         return False
-    email: str = user.get("eduPersonPrincipalName")
-    user = crud.get_user(db, user_email=email)
+    uid: str = user.get("uid")
+    user = crud.get_user(db, uid)
     if user is None:
         return False
     return user.admin
@@ -145,11 +145,12 @@ def start_db():
         db, course={"name": course_name, "id": course_id, "semester": semester}
     )
 
-    USER_EMAIL = config("USER_EMAIL", cast=str)
+    UID = config("UID", cast=str)
+    EMAIL_USER = config("EMAIL_USER", cast=str)
 
-    user = crud.create_user(db, user_email=USER_EMAIL)
-    user0 = crud.create_user(db, user_email="test2@test.no")
-    user1 = crud.create_user(db, user_email="test3@test.no")
+    user = crud.create_user(db, uid=UID, user_email=EMAIL_USER)
+    user0 = crud.create_user(db, uid="test2", user_email="test2@test.no")
+    user1 = crud.create_user(db, uid="test3", user_email="test3@test.no")
 
     units = [
         crud.create_unit(
@@ -202,7 +203,7 @@ def start_db():
         course_id="TDT4100",
         course_semester=semester,
         role="student",
-        user_email=USER_EMAIL,
+        uid=UID,
     )
 
     db.commit()
@@ -222,17 +223,26 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         raise error
         return HTMLResponse(f"<h1>{error.error}</h1>")
     bearer_token = token.get("access_token")
+    print("bearer_token", bearer_token)
     request.session["scope"] = token.get("scope")
     request.session["bearer_token"] = bearer_token
     request.session["user_data"] = get_user_data(bearer_token)
     user = get_user_data(bearer_token)
     if user:
-        request.session["user"] = json.loads(user)
-        user = request.session.get("user")
-        email = user.get("eduPersonPrincipalName")
-        db_user = crud.get_user(db, user_email=email)
+        user = json.loads(user)
+        user["uid"] = user["uid"][0]
+        user["mail"] = user["mail"][0]
+        request.session["user"] = user
+        email = user.get("mail")
+        uid = user.get("uid")
+        db_user = crud.get_user(db, uid)
         if not db_user:
-            crud.create_user(db=db, user_email=email)
+            print("creating user")
+            crud.create_user(db=db, uid=uid, user_email=email)
+        else:
+            print("user already exists")
+    else:
+        print("No user data")
     return RedirectResponse(url=BASE_URL + "/login")
 
 
@@ -282,6 +292,8 @@ async def course(
     if course is None:
         raise HTTPException(404, detail="Course not found")
 
+    print("course found")
+    print(course)
     return course
 
 
@@ -306,8 +318,8 @@ async def user(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(401, detail="You are not logged in ")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
-    user = crud.get_user(db, user_email=email)
+    uid: str = user.get("uid")
+    user = crud.get_user(db, uid)
     if user == None:
         request.session.pop("user")
         raise HTTPException(404, detail="User not found")
@@ -335,7 +347,7 @@ async def enroll(
         raise HTTPException(404, detail="Course not found")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
+    uid: str = user.get("uid")
     if user is None:
         raise HTTPException(401, detail="Cannot find your user")
     if ref.role == "student":
@@ -345,14 +357,14 @@ async def enroll(
                 role=ref.role,
                 course_id=ref.course_id,
                 course_semester=ref.course_semester,
-                user_email=email,
+                uid=uid,
             )
         except IntegrityError:
             raise HTTPException(409, detail="User already enrolled in this course")
-    invitations = crud.get_invitations(db, email)
+    invitations = crud.get_invitations(db, uid)
     if invitations is not None:
         priv_inv = crud.get_priv_invitations_course(
-            db, email, ref.course_id, ref.course_semester
+            db, uid, ref.course_id, ref.course_semester
         )
         if len(priv_inv) != 0 or is_admin(db, request):
             try:
@@ -362,7 +374,7 @@ async def enroll(
                     role=ref.role,
                     course_id=ref.course_id,
                     course_semester=ref.course_semester,
-                    user_email=email,
+                    uid=uid,
                 )
             except IntegrityError:
                 raise HTTPException(409, detail="User already enrolled in this course")
@@ -381,11 +393,11 @@ async def get_units(
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
+    uid: str = user.get("uid")
     course = crud.get_course(db, course_id, course_semester)
     if course is None:
         raise HTTPException(404, detail="Course not found")
-    enrollment = crud.get_enrollment(db, course_id, course_semester, email)
+    enrollment = crud.get_enrollment(db, course_id, course_semester, uid)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
@@ -417,8 +429,8 @@ async def create_unit(
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
+    uid: str = user.get("uid")
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
@@ -439,11 +451,11 @@ async def update_hidden_unit(
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
+    uid: str = user.get("uid")
     unit = crud.get_unit(db, ref.id)
     if not unit:
         raise HTTPException(404, detail="Unit not found")
-    enrollment = crud.get_enrollment(db, unit.course_id, unit.course_semester, email)
+    enrollment = crud.get_enrollment(db, unit.course_id, unit.course_semester, uid)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
@@ -471,8 +483,8 @@ async def download_file(
     #     raise HTTPException(401, detail="You are not logged in")
 
     # user = request.session.get("user")
-    # email: str = user.get("eduPersonPrincipalName")
-    # enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
+    # uid: str = user.get("uid")
+    # enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
     if (
         True
         # is_admin(db, request) or enrollment.role in ["lecturer"]
@@ -580,8 +592,8 @@ async def edit_created_report(
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
+    uid: str = user.get("uid")
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
@@ -605,11 +617,11 @@ async def create_invitation(
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
-    user = crud.get_user(db, user_email=email)
+    uid: str = user.get("uid")
+    user = crud.get_user(db, uid)
     if user is None:
         raise HTTPException(401, detail="Cannot find your user")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, email)
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if not is_admin(db, request) or not enrollment.role in [
@@ -630,9 +642,9 @@ async def get_invitations(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
+    uid: str = user.get("uid")
 
-    return crud.get_invitations(db, email=email)
+    return crud.get_invitations(db, uid)
 
 
 # delete invitation

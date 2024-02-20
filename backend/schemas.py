@@ -102,6 +102,7 @@ class EnrollmentBase(BaseModel):
     course_id: str
     course_semester: str
     role: str
+    uid: str
 
     class Config:
         orm_mode = True
@@ -112,11 +113,11 @@ class EnrollmentCreate(EnrollmentBase):
 
 
 class EnrollUser(EnrollmentBase):
-    user_email: str
+    uid: str
 
 
 class Enrollment(EnrollmentBase):
-    user_email: str
+    uid: str
 
 
 class UserAdmin(BaseModel):
@@ -127,6 +128,7 @@ class UserAdmin(BaseModel):
 
 
 class UserBase(BaseModel):
+    uid: str
     email: str
 
     class Config:
@@ -140,7 +142,7 @@ class UserCreate(UserBase):
 class InvitationBase(BaseModel):
     course_id: str
     course_semester: str
-    email: str
+    uid: str
     role: str
 
     class Config:
@@ -155,7 +157,7 @@ class Invitation(InvitationBase):
     id: int
     course_id: str
     course_semester: str
-    email: str
+    uid: str
     role: str
 
 

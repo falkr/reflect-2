@@ -12,10 +12,15 @@ enum_values = Enum("lecturer", "teaching assistant", "student", name="enrollment
 class User(Base):
     __tablename__ = "users"
 
-    email = Column(String, unique=True, primary_key=True)
+    uid = Column(String, unique=True, primary_key=True)
+    email = Column(String, unique=False, primary_key=False)
     enrollments = relationship("Enrollment", back_populates="user")
     reflections = relationship("Reflection", back_populates="user")
     admin = Column(Boolean, default=False)
+
+    def __init__(self, uid, email):
+        self.uid = uid
+        self.email = email
 
 
 class Course(Base):
@@ -37,7 +42,7 @@ class Course(Base):
 class Enrollment(Base):
     __tablename__ = "enrollment"
 
-    user_email = Column(String, ForeignKey("users.email"), primary_key=True)
+    uid = Column(String, ForeignKey("users.uid"), primary_key=True)
     course_id = Column(String, primary_key=True)
     course_semester = Column(String, primary_key=True)
     role = Column(enum_values, primary_key=False)
@@ -92,7 +97,7 @@ class Reflection(Base):
     is_interesting = Column(Boolean)
     is_problematic = Column(Boolean)
     is_sorted = Column(Boolean)
-    user_id = Column(String, ForeignKey("users.email"))
+    user_id = Column(String, ForeignKey("users.uid"))
     user = relationship("User", back_populates="reflections")
     unit_id = Column(Integer, ForeignKey("units.id"))
     unit = relationship("Unit", back_populates="reflections")
@@ -125,7 +130,7 @@ class Invitation(Base):
     __tablename__ = "invitations"
 
     id = Column(Integer, primary_key=True)
-    email = Column(String, primary_key=False)
+    uid = Column(String, primary_key=False)
     course_id = Column(String)
     course_semester = Column(String)
     __table_args__ = (

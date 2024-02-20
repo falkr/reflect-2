@@ -67,7 +67,7 @@
 					},
 					body: JSON.stringify({
 						body: answers[index],
-						user_id: data.user.email,
+						user_id: data.user.uid,
 						unit_id: data.unit_id,
 						question_id: questions_num[index]
 					})
