@@ -249,6 +249,26 @@ def get_number_of_unit_questions(db: Session, unit_id: int):
     )
 
 
+def get_question(db: Session, question_id: int):
+    return db.query(model.Question).filter(model.Question.id == question_id).first()
+
+
+def user_already_reflected_on_question(
+    db: Session, unit_id: int, user_id: int, question_id
+):
+    existing_reflection = (
+        db.query(model.Reflection)
+        .filter(
+            model.Reflection.unit_id == unit_id,
+            model.Reflection.user_id == user_id,
+            model.Reflection.question_id == question_id,
+        )
+        .first()
+    )
+
+    return existing_reflection is not None
+
+
 # --- Report ---
 def create_report(db: Session, report: schemas.ReportCreate):
     existing_report = (

@@ -263,13 +263,16 @@ async def create_reflection(
     if unit is None:
         raise HTTPException(404, detail="Unit cannot be found")
 
+    if crud.get_question(db, ref.question_id) is None:
+        raise HTTPException(404, detail="Question cannot be found")
+
     if unit.hidden:
         raise HTTPException(403, detail="Unit cannot be reflected when hidden")
 
-    number_of_questions = crud.get_number_of_unit_questions(db, ref.unit_id)
-
-    if len(crud.get_reflections(db, ref.user_id, ref.unit_id)) >= number_of_questions:
-        raise HTTPException(403, detail="You have already reflected this unit")
+    if crud.user_already_reflected_on_question(
+        db, ref.unit_id, ref.user_id, ref.question_id
+    ):
+        raise HTTPException(403, detail="You have already reflected this question")
 
     if unit.date_available > date.today():
         raise HTTPException(403, detail="This unit is not available")
