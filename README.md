@@ -170,6 +170,19 @@ uvicorn main:app --reload
 
 ### Production
 
+#### Setup cron jobs:
+After the application is running, you have to set up cron jobs to send out emails. Do the following:
+
+- Open the terminal and run `crontab -e` to open the cron jobs file.
+- Add the following line to the file: `0 18 * * * curl -X POST http://127.0.0.1:8000/send-notifications`
+    - If using a different port or url, change the url accordingly.
+- Save and exit: If your in vim, press `esc` and then `:wq` and then `enter`.
+- Verify Crontab: Run `crontab -l` to verify that the cron job is added.
+
+Note: this cron job will send out emails every day at 18:00 and works only for linux. If you are using windows, you can use the windows task scheduler to do the same thing, but it is not covered in this documentation as it is not used in production.
+
+#### Running containers:
+
 In production we have dockerized all the applications and use Postgres as the database. Docker compose is used to setup all the containers together and [traefik](https://doc.traefik.io/) is used as a reverse proxy to the containers and handle ssl.
 
 **Requirements:**
