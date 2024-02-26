@@ -45,13 +45,13 @@ services:
   backend:
     image: reflect
     #network_mode: "host"
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload", "--root-path", "/api"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload", "--root-path", "/api"]
     build:
       context: ./backend
       dockerfile:
         Dockerfile
     volumes:
-     - ./backend:/backend
+     - ./backend:/backend/
     ports:
       - 8000:80
     env_file:

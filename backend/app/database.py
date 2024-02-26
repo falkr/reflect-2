@@ -16,8 +16,10 @@ if config("production", cast=bool, default=False):
     # database = databases.Database(DATABASE_URL)
     engine = create_engine(DATABASE_URL)
 else:
-    DATABASE_URL = "sqlite:///./reflect.db"
-    # database = databases.Database(DATABASE_URL)
+    if config("TEST", cast=bool, default=False):
+        DATABASE_URL = "sqlite:///./test.db"
+    else:
+        DATABASE_URL = "sqlite:///./reflect.db"
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 

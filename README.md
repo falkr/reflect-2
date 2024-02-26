@@ -72,6 +72,10 @@ In **`frontend`** folder:
 
 ##### Alternative 1:
 ```bash
+make dev
+```
+If you are using windows, you can run the following commands (every command in the makefile) manually in the terminal:
+```bash
 docker-compose up --no-deps backend
 ```
 
@@ -286,13 +290,20 @@ The project is split into 2 main folders, `frontend` and `backend`. The frontend
 
     .
     ├── alembic.ini             # Alembic file. 
-    ├── crud.py                 # Crud methods. Functions for performing CRUD operations on database.
-    ├── database.py             # Database file. Contains database setup, connection and session.
-    ├── Dockerfile              # Dockerfile. Used for building docker image.
-    ├── main.py                 # Main file. Contains all the routes for the API.
-    ├── model.py                # Database model. Contains all the database models.
-    ├── schemas.py              # Schemas. Contains all the schemas used for validating data sent between frontend and backend. 
+    ├── Dockerfile              # Dockerfile. Used for building docker image. 
+    ├── Dockerfile.test         # Dockerfile for testing.
     ├── requirements.txt        # Requirements file. Contains all the python packages used in the project.
+    │   ├── app                 # app folder. Contains main code. 
+            ├── crud.py                 # Crud methods. Functions for performing CRUD operations on database.
+            ├── database.py             # Database file. Contains database setup, connection and session.
+            ├── main.py                 # Main file. Contains all the routes for the API.
+            ├── model.py                # Database model. Contains all the database models.
+            ├── schemas.py              # Schemas. Contains all the schemas used for validating data sent between frontend and backend.
+    │   ├── test                 # Test folder. Contains all the tests for the project.
+            ├── test_main.py           # Test main. Contains tests for the main file.
+    │   ├── prompting            # Prompting folder. Contains all the code for gpt prompting.
+            ├── main.py                 # GPT file. Contains the gpt model and methods for prompting.
+   
 
 #### Frontend
 

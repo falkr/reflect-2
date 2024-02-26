@@ -1,7 +1,7 @@
 stages:
   - lint
   - build
-  - check
+  - test
 
 variables:
   PUBLIC_API_URL: "http://127.0.0.1:8000"
@@ -27,17 +27,10 @@ lint frontend:
     - cd frontend
     - npm ci
     - npm run lint
+    - npm run check
+
   only:
     - merge_requests
-
-check frontend:
-  stage: check
-  image: node:19
-  script:
-    - echo "Checking the frontend"
-    - cd frontend
-    - npm ci
-    - npm run check
 
 build:
   stage: build
@@ -50,6 +43,26 @@ build:
   only:
     - merge_requests
 
-
-
-
+test backend:
+  stage: test
+  image: python:3.9
+  script:
+    - echo "Testing the backend"
+    - pip install --upgrade pip
+    - pip install pytest httpx pytest-asyncio
+    - cd backend
+    - pip install -r requirements.txt
+    - |
+      cat <<EOF > .env
+      TEST=true
+      SECRET_KEY=test
+      isAdmin=false
+      production=false
+      client_id = ""
+      client_secret = ""
+      REDIRECT_URI = ""
+      BASE_URL = ""
+      EOF
+    - pytest -p no:warnings
+  only:
+    - merge_requests

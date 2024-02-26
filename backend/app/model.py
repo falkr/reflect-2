@@ -1,5 +1,5 @@
 from sqlalchemy import JSON
-from database import Base
+from .database import Base
 from sqlalchemy import (
     Boolean,
     Column,
@@ -28,9 +28,10 @@ class User(Base):
     reflections = relationship("Reflection", back_populates="user")
     admin = Column(Boolean, default=False)
 
-    def __init__(self, uid, email):
+    def __init__(self, uid, email, admin):
         self.uid = uid
         self.email = email
+        self.admin = admin
 
 
 class Course(Base):

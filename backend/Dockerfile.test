@@ -1,0 +1,16 @@
+# Use an official Python runtime as a parent image
+FROM python:3.9
+
+WORKDIR /backend
+
+# Copy only the requirements file first to leverage Docker cache
+COPY ./backend/requirements.txt /backend/requirements.txt
+
+# Install application dependencies
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Install fixed dependencies
+RUN pip install pytest httpx pytest-asyncio
+
+# pytest and hide all warnings
+CMD ["pytest", "-p", "no:warnings"]

@@ -5,13 +5,14 @@ from typing import List
 
 import requests
 from requests.structures import CaseInsensitiveDict
+
+from . import crud
+from . import model
+from . import schemas
 from prompting.main import analyze_student_feedback
 
-import crud
-import model
-import schemas
 from authlib.integrations.starlette_client import OAuth, OAuthError
-from database import SessionLocal, engine
+from .database import SessionLocal, engine
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse

@@ -1,8 +1,8 @@
 from datetime import date, datetime, timedelta
 from fastapi import HTTPException
 
-import model
-import schemas
+from . import model
+from . import schemas
 from sqlalchemy.orm import Session
 
 
@@ -12,8 +12,8 @@ def get_user(db: Session, uid: str):
 
 
 # Creates user from email address
-def create_user(db: Session, uid: str, user_email: str):
-    db_user = model.User(uid, user_email)
+def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
+    db_user = model.User(uid, user_email, admin)
     print("creating user")
     db.add(db_user)
     db.commit()
