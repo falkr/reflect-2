@@ -51,6 +51,7 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
+# Should all this be in .env?
 email_config = ConnectionConfig(
     MAIL_USERNAME="noreply+ref@iik.ntnu.no",
     MAIL_PASSWORD="",
@@ -663,21 +664,23 @@ async def delete_invitation(request: Request, id: int, db: Session = Depends(get
 @app.post("/send-notifications")
 async def send_notifications(db: Session = Depends(get_db)):
     """
-    Sends out notifications to students who haven't reflected on their learning units,
-    respecting a cooldown period and a notification limit per unit.
+    Sends reminder notifications to students about units they need to provide feedback for.
 
-    This endpoint iterates through all available units, checks for students who have not submitted reflections,
-    and sends them a reminder email. It skips sending notifications if a student has already reached
-    the notification limit for a unit or if a notification was recently sent within the cooldown period.
+    This function iterates over all courses and their enrolled students, identifying units
+    for which students have not yet reached the notification limit. It then sends a reminder
+    email to each student about their pending units, updating the notification count for each unit
+    per student.
 
     Parameters:
-        db (Session): The database session used for database operations.
+    - db (Session): The database session used to perform database operations.
 
     Raises:
-        HTTPException: If a notification has been sent within the cooldown period defined by NOTIFICATION_COOLDOWN_DAYS.
+    - HTTPException: If a notification has already been sent within the cooldown period defined
+      by NOTIFICATION_COOLDOWN_DAYS.
 
     Returns:
-        JSONResponse: A summary of notification sending results, including success, skipped, and error statuses for each attempted notification.
+    - JSONResponse: A summary of the notification sending process, including information on
+      successful notifications, skipped notifications due to the notification limit, and any errors encountered.
     """
     if crud.check_recent_notification(db, NOTIFICATION_COOLDOWN_DAYS):
         raise HTTPException(
@@ -687,55 +690,48 @@ async def send_notifications(db: Session = Depends(get_db)):
             + " days.",
         )
 
-    units = crud.get_all_available_units(db)
     results = []
+    courses = crud.get_all_courses(db)
 
-    for unit in units:
-        course_id = unit.course_id
-        unit_id = unit.id
+    for course in courses:
+        students = crud.get_all_students_in_course(db, course.id, course.semester)
 
-        course = crud.get_course(
-            db, course_id=course_id, course_semester=unit.course_semester
-        )
-        user_emails = crud.get_users_without_reflection_on_unit(
-            db=db, course_id=course_id, unit_id=unit_id
-        )
+        for student in students:
+            units = crud.get_units_to_notify(
+                db, student.uid, NOTIFICATION_LIMIT, course.id, course.semester
+            )
 
-        for user_tuple in user_emails:
-            user_email = user_tuple[0]
-
-            if (
-                crud.get_notification_count(db, user_email, unit_id)
-                >= NOTIFICATION_LIMIT
-            ):
-                results.append(
-                    {
-                        "unit_id": unit_id,
-                        "email": user_email,
-                        "status": "notification limit for this unit for this user",
-                    }
-                )
+            if len(units) == 0:
                 continue
 
             try:
                 message = MessageSchema(
-                    subject=f'Reminder: Provide Feedback to "{unit.title}"',
-                    recipients=[user_email],
-                    body=format_email(course.semester, course_id, unit_id, unit.title),
+                    subject=f"{course.id} - Missing Reflection",
+                    recipients=[student.email],
+                    body=format_email(student.uid, course.id, units),
                     subtype="html",
                 )
 
                 fm = FastMail(email_config)
                 await fm.send_message(message)
-                crud.add_notification_count(db, user_email, unit_id)
+
+                for unit in units:
+                    crud.add_notification_count(db, student.uid, unit.id)
+
                 results.append(
-                    {"unit_id": unit_id, "email": user_email, "status": "success"}
+                    {
+                        "course": course.id,
+                        "units": [unit.id for unit in units],
+                        "email": student.email,
+                        "status": "success",
+                    }
                 )
             except Exception as e:
                 results.append(
                     {
-                        "unit_id": unit_id,
-                        "email": user_email,
+                        "course": course.id,
+                        "units": [unit.id for unit in units],
+                        "email": student.email,
                         "status": "error",
                         "message": str(e),
                     }
@@ -744,33 +740,36 @@ async def send_notifications(db: Session = Depends(get_db)):
     return JSONResponse(status_code=200, content=results)
 
 
+def format_email(student_id: str, course_id: str, units: List[model.Unit]):
+    """
+    Generates the HTML content for an email reminder to a student about providing feedback on learning units.
+
+    Parameters:
+    - student_id (str): The unique identifier of the student receiving the email.
+    - course_id (str): The unique identifier of the course for which feedback is requested.
+    - units (List[model.Unit]): A list of Unit objects representing the learning units for which feedback is requested.
+
+    Returns:
+    - str: A string containing the HTML content for the email body.
+    """
+    unit_links = "".join(
+        [
+            f'<li><a href="https://ref.iik.ntnu.no/app/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
+            for unit in units
+        ]
+    )
+
+    return f"""<p>Dear {student_id},</p>
+    <p>This is a reminder to share your thoughts regarding the recent learning units in {course_id}:</p>
+    <ul>{unit_links}</ul>
+    <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your feedback will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
+    <p>Best regards,<br/>The Reflection Tool Team</p>"""
+
+
 @app.post("/analyze_feedback")
 async def analyze_feedback(ref: schemas.ReflectionJSON):
     data_dicts = [item.model_dump() for item in ref.data]
     return analyze_student_feedback(ref.api_key, data_dicts, ref.use_cheap_model)
-
-
-def format_email(semester: str, course_id: str, unit_id: int, unit_title: str):
-    """
-    Generates an HTML-formatted email content aimed at students for collecting feedback on a specific learning unit.
-
-    Parameters:
-    - semester (str): The academic semester in which the course is offered, e.g., 'Fall2023'.
-    - course_id (str): The unique identifier for the course, e.g., 'CS101'.
-    - unit_id (int): The numeric identifier for the learning unit within the course.
-    - unit_title (str): The title of the learning unit, to be included in the email content.
-
-    Returns:
-    - str: A string containing HTML-formatted email content.
-    """
-    unit_link = (
-        f"https://ref.iik.ntnu.no/app/courseview/{semester}/{course_id}/{unit_id}"
-    )
-    return f"""<p>Dear student,</p>
-    <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit_title}"</b>.</p>
-    <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
-    <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
-    <p>Best regards,<br/>The Reflection Tool Team</p>"""
 
 
 # ---------------------------------Code that was meant to send email to students --------#

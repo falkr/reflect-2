@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from fastapi import HTTPException
 
 import model
@@ -331,21 +331,6 @@ def edit_created_report(
     return db_obj
 
 
-def get_users_without_reflection_on_unit(db: Session, course_id: str, unit_id: int):
-    return (
-        db.query(model.User.email)
-        .join(model.Enrollment, model.Enrollment.uid == model.User.uid)
-        .outerjoin(
-            model.Reflection,
-            (model.Reflection.user_id == model.User.uid)
-            & (model.Reflection.unit_id == unit_id),
-        )
-        .filter(model.Enrollment.course_id == course_id)
-        .filter(model.Reflection.id.is_(None))
-        .all()
-    )
-
-
 def check_recent_notification(db: Session, cooldown_days: int) -> bool:
     """
     Checks if a notification has been sent within a specified cooldown period.
@@ -438,3 +423,94 @@ def get_notification_count(db: Session, user_id: str, unit_id: int) -> int:
         return notification_entry.notification_count
     else:
         return 0
+
+
+def get_all_courses(db: Session):
+    """
+    Fetches all courses from the database.
+
+    Parameters:
+    - db (Session): The SQLAlchemy session for database access.
+
+    Returns:
+    - List[Course]: A list of Course objects representing all courses in the database.
+    """
+    return db.query(model.Course).all()
+
+
+def get_all_students_in_course(db: Session, course_id: str, course_semester: str):
+    """
+    Fetches all students enrolled in a specific course and semester.
+
+    Parameters:
+    - db (Session): The SQLAlchemy session for database access.
+    - course_id (str): The unique identifier for the course.
+    - course_semester (str): The semester during which the course is offered.
+
+    Returns:
+    - List[User]: A list of User objects representing the student enrolled in the specified course and semester.
+    """
+    users_in_course = (
+        db.query(model.User)
+        .join(model.Enrollment)
+        .filter(
+            model.Enrollment.course_id == course_id,
+            model.Enrollment.course_semester == course_semester,
+            model.Enrollment.role == "student",
+        )
+        .all()
+    )
+
+    return users_in_course
+
+
+def get_units_to_notify(
+    db: Session,
+    user_id: str,
+    notification_limit: int,
+    course_id: str,
+    course_semester: str,
+):
+    """
+    Retrieves units for which a user should be notified, based on a specific course and semester,
+    ensuring the user has not reached the notification limit for those units.
+
+    Parameters:
+    - db (Session): The SQLAlchemy session for database access.
+    - user_id (str): The unique identifier of the user.
+    - notification_limit (int): The maximum number of notifications a user can receive for a unit.
+    - course_id (str): The unique identifier of the course.
+    - course_semester (str): The semester in which the course is offered.
+
+    Returns:
+    - List[Unit]: A list of Unit objects for which the user should be notified.
+    """
+    available_units = (
+        db.query(model.Unit)
+        .filter(
+            model.Unit.course_id == course_id,
+            model.Unit.course_semester == course_semester,
+            model.Unit.hidden == False,
+            model.Unit.date_available <= date.today(),
+        )
+        .all()
+    )
+
+    units_to_notify = []
+    for unit in available_units:
+        notification_count = (
+            db.query(model.UserUnitNotificationCount)
+            .filter(
+                model.UserUnitNotificationCount.user_id == user_id,
+                model.UserUnitNotificationCount.unit_id == unit.id,
+            )
+            .first()
+        )
+
+        if (
+            not notification_count
+            or notification_count.notification_count < notification_limit
+        ):
+            units_to_notify.append(unit)
+
+    return units_to_notify
