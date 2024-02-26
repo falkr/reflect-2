@@ -1,17 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 
 import model
 import schemas
 from sqlalchemy.orm import Session
-from sqlalchemy import delete
-
-
-from fastapi import FastAPI
-from starlette.responses import JSONResponse
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from pydantic import EmailStr, BaseModel
-from typing import List
 
 
 # --- User ---
@@ -160,6 +152,24 @@ def get_units(db: Session, course_id: int, course_semester):
 
 def get_all_units(db: Session):
     return db.query(model.Unit).all()
+
+
+def get_all_available_units(db: Session):
+    """
+    Retrieves all unit records from the database where the date_available is before the current date,
+    indicating that the units are currently available.
+
+    Parameters:
+        db (Session): The database session used to execute the query.
+
+    Returns:
+        List[Unit]: A list of Unit model instances that are currently available based on their date_available field.
+    """
+    # Get the current date to compare against the units' date_available
+    current_date = datetime.utcnow().date()
+
+    # Query the database for all units where date_available is before (or equal to) the current date
+    return db.query(model.Unit).filter(model.Unit.date_available <= current_date).all()
 
 
 def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
@@ -321,10 +331,9 @@ def edit_created_report(
     return db_obj
 
 
-# might need change when user-table gets new ID-column as primary key
 def get_users_without_reflection_on_unit(db: Session, course_id: str, unit_id: int):
     return (
-        db.query(model.User.uid)
+        db.query(model.User.email)
         .join(model.Enrollment, model.Enrollment.uid == model.User.uid)
         .outerjoin(
             model.Reflection,
@@ -335,3 +344,97 @@ def get_users_without_reflection_on_unit(db: Session, course_id: str, unit_id: i
         .filter(model.Reflection.id.is_(None))
         .all()
     )
+
+
+def check_recent_notification(db: Session, cooldown_days: int) -> bool:
+    """
+    Checks if a notification has been sent within a specified cooldown period.
+
+    Parameters:
+        db (Session): The database session to execute the query.
+        cooldown_days (int): The number of days to look back from the current date.
+
+    Returns:
+        bool: True if a notification has been sent within the cooldown period, False otherwise.
+    """
+    cooldown_date = datetime.utcnow().date() - timedelta(days=cooldown_days)
+    return (
+        db.query(model.NotificationLog)
+        .filter(model.NotificationLog.sent_at > cooldown_date)
+        .first()
+        is not None
+    )
+
+
+def create_notification_log(db: Session):
+    """
+    Creates a new notification log entry in the database with the current UTC time.
+
+    Parameters:
+        db (Session): The database session to add and commit the new log entry.
+
+    Returns:
+        The newly created NotificationLog object with the current UTC time as the sent timestamp.
+    """
+    new_log = model.NotificationLog(sent_at=datetime.utcnow())
+
+    db.add(new_log)
+    db.commit()
+    db.refresh(new_log)
+
+    return new_log
+
+
+def add_notification_count(db: Session, user_id: str, unit_id: int):
+    """
+    Increments the notification count for a specific user and unit, or creates a new entry if none exists.
+
+    Parameters:
+        db (Session): The database session to execute the query and update records.
+        user_id (str): The id of the user for whom to update the notification count.
+        unit_id (int): The ID of the unit for which to update the notification count.
+
+    Returns:
+        The updated or newly created UserUnitNotificationCount object.
+    """
+    notification_entry = (
+        db.query(model.UserUnitNotificationCount)
+        .filter_by(user_id=user_id, unit_id=unit_id)
+        .first()
+    )
+
+    if notification_entry:
+        notification_entry.notification_count += 1
+    else:
+        notification_entry = model.UserUnitNotificationCount(
+            user_id=user_id, unit_id=unit_id, notification_count=1
+        )
+        db.add(notification_entry)
+
+    db.commit()
+
+    return notification_entry
+
+
+def get_notification_count(db: Session, user_id: str, unit_id: int) -> int:
+    """
+    Retrieves the notification count for a specific user and unit.
+
+    Parameters:
+        db (Session): The database session to execute the query.
+        user_id (str): The id of the user for whom to retrieve the notification count.
+        unit_id (int): The ID of the unit for which to retrieve the notification count.
+
+    Returns:
+        int: The notification count for the specified user and unit, or 0 if no entry exists.
+    """
+    notification_entry = (
+        db.query(model.UserUnitNotificationCount)
+        .filter_by(user_id=user_id, unit_id=unit_id)
+        .first()
+    )
+
+    if notification_entry:
+        return notification_entry.notification_count
+    else:
+        return 0

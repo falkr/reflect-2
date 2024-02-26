@@ -1,20 +1,18 @@
 import json
 import os
-import uuid
-from datetime import datetime, date, timedelta
-from typing import List, Optional
+from datetime import datetime, date
+from typing import List
 
 import requests
 from requests.structures import CaseInsensitiveDict
 from prompting.main import analyze_student_feedback
-from schemas import EmailSchema
 
 import crud
 import model
 import schemas
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from database import SessionLocal, engine
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,7 +24,7 @@ from starlette.datastructures import Secret
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse, Response, JSONResponse
 
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from fastapi.responses import FileResponse
 
 model.Base.metadata.create_all(bind=engine)
@@ -39,6 +37,9 @@ CONF_URL = "https://auth.dataporten.no/.well-known/openid-configuration"
 SECRET_KEY = config("SECRET_KEY", cast=Secret)
 CLIENT_ID = str(config("client_id", cast=Secret))
 CLIENT_SECRET = str(config("client_secret", cast=Secret))
+
+NOTIFICATION_COOLDOWN_DAYS = config("NOTIFICATION_COOLDOWN_DAYS", cast=int, default=1)
+NOTIFICATION_LIMIT = config("NOTIFICATION_LIMIT", cast=int, default=2)
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
@@ -661,7 +662,32 @@ async def delete_invitation(request: Request, id: int, db: Session = Depends(get
 
 @app.post("/send-notifications")
 async def send_notifications(db: Session = Depends(get_db)):
-    units = crud.get_all_units(db)
+    """
+    Sends out notifications to students who haven't reflected on their learning units,
+    respecting a cooldown period and a notification limit per unit.
+
+    This endpoint iterates through all available units, checks for students who have not submitted reflections,
+    and sends them a reminder email. It skips sending notifications if a student has already reached
+    the notification limit for a unit or if a notification was recently sent within the cooldown period.
+
+    Parameters:
+        db (Session): The database session used for database operations.
+
+    Raises:
+        HTTPException: If a notification has been sent within the cooldown period defined by NOTIFICATION_COOLDOWN_DAYS.
+
+    Returns:
+        JSONResponse: A summary of notification sending results, including success, skipped, and error statuses for each attempted notification.
+    """
+    if crud.check_recent_notification(db, NOTIFICATION_COOLDOWN_DAYS):
+        raise HTTPException(
+            status_code=400,
+            detail="A notification has already been sent in the last "
+            + str(NOTIFICATION_COOLDOWN_DAYS)
+            + " days.",
+        )
+
+    units = crud.get_all_available_units(db)
     results = []
 
     for unit in units:
@@ -671,31 +697,37 @@ async def send_notifications(db: Session = Depends(get_db)):
         course = crud.get_course(
             db, course_id=course_id, course_semester=unit.course_semester
         )
-        users_without_reflection = crud.get_users_without_reflection_on_unit(
+        user_emails = crud.get_users_without_reflection_on_unit(
             db=db, course_id=course_id, unit_id=unit_id
         )
 
-        for user_tuple in users_without_reflection:
-            # temporary fix, will get email from the user after feide API is updated
-            user_email = adjust_email_address(user_tuple[0])
+        for user_tuple in user_emails:
+            user_email = user_tuple[0]
+
+            if (
+                crud.get_notification_count(db, user_email, unit_id)
+                >= NOTIFICATION_LIMIT
+            ):
+                results.append(
+                    {
+                        "unit_id": unit_id,
+                        "email": user_email,
+                        "status": "notification limit for this unit for this user",
+                    }
+                )
+                continue
 
             try:
-                unit_link = f"https://ref.iik.ntnu.no/app/courseview/{course.semester}/{course_id}/{unit_id}"
-                email_content = f"""<p>Dear student,</p>
-                <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit.title}"</b>.</p>
-                <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
-                <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
-                <p>Best regards,<br/>The Reflection Tool Team</p>"""
-
                 message = MessageSchema(
                     subject=f'Reminder: Provide Feedback to "{unit.title}"',
                     recipients=[user_email],
-                    body=email_content,
+                    body=format_email(course.semester, course_id, unit_id, unit.title),
                     subtype="html",
                 )
 
                 fm = FastMail(email_config)
                 await fm.send_message(message)
+                crud.add_notification_count(db, user_email, unit_id)
                 results.append(
                     {"unit_id": unit_id, "email": user_email, "status": "success"}
                 )
@@ -708,20 +740,37 @@ async def send_notifications(db: Session = Depends(get_db)):
                         "message": str(e),
                     }
                 )
-
+    crud.create_notification_log(db=db)
     return JSONResponse(status_code=200, content=results)
-
-
-def adjust_email_address(email: str) -> str:
-    if email.endswith("@ntnu.no"):
-        return email.replace("@ntnu.no", "@stud.ntnu.no")
-    return email
 
 
 @app.post("/analyze_feedback")
 async def analyze_feedback(ref: schemas.ReflectionJSON):
     data_dicts = [item.model_dump() for item in ref.data]
     return analyze_student_feedback(ref.api_key, data_dicts, ref.use_cheap_model)
+
+
+def format_email(semester: str, course_id: str, unit_id: int, unit_title: str):
+    """
+    Generates an HTML-formatted email content aimed at students for collecting feedback on a specific learning unit.
+
+    Parameters:
+    - semester (str): The academic semester in which the course is offered, e.g., 'Fall2023'.
+    - course_id (str): The unique identifier for the course, e.g., 'CS101'.
+    - unit_id (int): The numeric identifier for the learning unit within the course.
+    - unit_title (str): The title of the learning unit, to be included in the email content.
+
+    Returns:
+    - str: A string containing HTML-formatted email content.
+    """
+    unit_link = (
+        f"https://ref.iik.ntnu.no/app/courseview/{semester}/{course_id}/{unit_id}"
+    )
+    return f"""<p>Dear student,</p>
+    <p>This is a reminder to share your thoughts regarding the recent learning unit <b>"{unit_title}"</b>.</p>
+    <p>To provide your feedback, please visit <a href="{unit_link}">this link</a>.</p>
+    <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your insights will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
+    <p>Best regards,<br/>The Reflection Tool Team</p>"""
 
 
 # ---------------------------------Code that was meant to send email to students --------#

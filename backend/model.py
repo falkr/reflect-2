@@ -1,8 +1,18 @@
 from sqlalchemy import JSON
 from database import Base
-from sqlalchemy import Boolean, Column, Date, Enum, ForeignKey, Integer, String
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import ForeignKeyConstraint, Table
+from datetime import date
 
 enum_values = Enum("lecturer", "teaching assistant", "student", name="enrollment_roles")
 
@@ -153,3 +163,22 @@ class CourseQuestion(Base):
         ),
         {},
     )
+
+
+class NotificationLog(Base):
+    __tablename__ = "notification_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sent_at = Column(Date, default=date.today)
+
+
+class UserUnitNotificationCount(Base):
+    __tablename__ = "user_unit_notification_counts"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(String, ForeignKey("users.uid"), nullable=False)
+    unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
+    notification_count = Column(Integer, default=0, nullable=False)
+
+    __table_args__ = (UniqueConstraint("user_id", "unit_id", name="_user_unit_uc"),)
