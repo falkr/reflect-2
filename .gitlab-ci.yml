@@ -18,7 +18,7 @@ lint backend:
     - black --check .
   only:
     - merge_requests
-    
+
 lint frontend:
   stage: lint
   image: node:19
@@ -62,6 +62,11 @@ test backend:
       client_secret = ""
       REDIRECT_URI = ""
       BASE_URL = ""
+      MAIL_USERNAME = $MAIL_USERNAME
+      MAIL_PASSWORD = $MAIL_PASSWORD
+      MAIL_FROM = $MAIL_FROM
+      MAIL_PORT = $MAIL_PORT
+      MAIL_SERVER = $MAIL_SERVER
       EOF
     - pytest -p no:warnings
   only:

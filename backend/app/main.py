@@ -54,11 +54,11 @@ app.add_middleware(
 
 # Should all this be in .env?
 email_config = ConnectionConfig(
-    MAIL_USERNAME="noreply+ref@iik.ntnu.no",
-    MAIL_PASSWORD="",
-    MAIL_FROM="noreply+ref@iik.ntnu.no",
-    MAIL_PORT=25,
-    MAIL_SERVER="smtp.ansatt.ntnu.no",
+    MAIL_USERNAME=config("MAIL_USERNAME", cast=str),
+    MAIL_PASSWORD=config("MAIL_PASSWORD", cast=str),
+    MAIL_FROM=config("MAIL_FROM", cast=str),
+    MAIL_PORT=config("MAIL_PORT", cast=int),
+    MAIL_SERVER=config("MAIL_SERVER", cast=str),
     MAIL_FROM_NAME="Reflection Tool",
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=False,
