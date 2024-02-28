@@ -136,7 +136,7 @@ node_modules/
 /playwright-report/
 /playwright/.cache/
 storage-state/
-
+jscpd-report/
 playwright/.auth
 
 test.py

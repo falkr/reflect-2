@@ -1,10 +1,16 @@
 stages:
   - lint
   - build
+  - duplicate-check
   - test
 
 variables:
   PUBLIC_API_URL: "http://127.0.0.1:8000"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}-node-modules
+  paths:
+    - node_modules/
 
 lint backend:
   stage: lint
@@ -28,20 +34,34 @@ lint frontend:
     - npm ci
     - npm run lint
     - npm run check
-
   only:
     - merge_requests
 
-build:
+build frontend:
   stage: build
   image: node:19
   script:
     - echo "Building the project"
     - cd frontend
-    - npm ci
+    - npm i --cache .npm --prefer-offline
     - npm run build
   only:
     - merge_requests
+  dependencies:
+    - lint frontend
+
+frontend check:
+  stage: duplicate-check
+  image: node:19
+  script:
+    - echo "Checking for duplicate files in the frontend"
+    - cd frontend
+    - npm i --cache .npm --prefer-offline
+    - npm run duplication-check
+  only:
+    - merge_requests
+  dependencies:
+    - lint frontend
 
 test backend:
   stage: test
