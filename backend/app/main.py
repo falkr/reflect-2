@@ -107,6 +107,7 @@ def get_user_data(bearer_token):
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
     headers["Authorization"] = f"Bearer {bearer_token}"
+    # print(f"Bearer {bearer_token}")
     resp = requests.get(url, headers=headers)
     return str(resp.content.decode())
 
@@ -128,6 +129,31 @@ def is_admin(db, request):
     if user is None:
         return False
     return user.admin
+
+
+def check_is_admin(bearer_token):
+    url = "https://groups-api.dataporten.no/groups/me/groups"
+    headers = {"Accept": "application/json", "Authorization": f"Bearer {bearer_token}"}
+
+    try:
+        # Using 'with' ensures the request is closed properly
+        with requests.get(url, headers=headers) as resp:
+            resp.raise_for_status()
+            data = resp.json()
+
+        admin_roles = {"LECTURER", "LÆRER", "HOVEDLÆRER", "KONTAKT"}
+        for group in data:
+            if group["membership"]["basic"] == "owner":
+                return True
+            if admin_roles.intersection(group["membership"]["fsroles"]):
+                return True
+
+    except requests.RequestException as e:
+        raise HTTPException(500, detail="Failed to check admin status")
+    except json.JSONDecodeError:
+        raise HTTPException(500, detail="Failed to parse admin status")
+
+    return False
 
 
 @app.on_event("startup")
@@ -241,7 +267,9 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         db_user = crud.get_user(db, uid)
         if not db_user:
             print("creating user")
-            crud.create_user(db=db, uid=uid, user_email=email)
+            crud.create_user(
+                db=db, uid=uid, user_email=email, admin=check_is_admin(bearer_token)
+            )
         else:
             print("user already exists")
     else:

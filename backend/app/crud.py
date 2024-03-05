@@ -11,9 +11,9 @@ def get_user(db: Session, uid: str):
     return db.query(model.User).filter(model.User.uid == uid).first()
 
 
-# Creates user from email address
+# Creates user from email
 def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
-    db_user = model.User(uid, user_email, admin)
+    db_user = model.User(uid=uid, email=user_email, admin=admin)
     print("creating user")
     db.add(db_user)
     db.commit()
