@@ -165,7 +165,7 @@
 
 <div class="p flex flex-col">
 	<div class="flex items-center justify-center pl-4 pr-4 pt-10 pb-10">
-		<div class="header flex items-center justify-center border-b-2 border-teal-12 pb-3 ">
+		<div class="header flex items-center justify-center border-b-2 border-teal-12 pb-3">
 			<h3 class="headline flex text-center text-xl font-bold text-teal-12">
 				<p class="flex text-center text-xl font-medium text-teal-12">Course overview</p>
 			</h3>
@@ -256,7 +256,6 @@
 	<div class="z-50">
 		<Toast
 			position="bottom-right"
-			simple
 			transition={slide}
 			bind:open={showSuccess}
 			divClass="w-full max-w-sm p-5"
@@ -267,7 +266,7 @@
 			<div class="text-[1.5em]">{toastBody}</div>
 		</Toast>
 
-		<Toast position="bottom-right" simple transition={slide} bind:open={showError}>
+		<Toast position="bottom-right" transition={slide} bind:open={showError}>
 			<svelte:fragment slot="icon">
 				<AlertCircleIcon />
 			</svelte:fragment>

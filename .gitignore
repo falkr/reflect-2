@@ -128,7 +128,7 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
+/test/
 # Pyre type checker
 .pyre/
 node_modules/
@@ -141,3 +141,4 @@ playwright/.auth
 
 test.py
 test.txt
+.vercel

@@ -5,5 +5,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	test: {
 		include: ['static/**/*.{test,spec}.{js,ts}']
+	},
+	build: {
+		outDir: 'dist' // Specify the output directory
 	}
 });

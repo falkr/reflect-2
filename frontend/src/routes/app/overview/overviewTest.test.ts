@@ -4,7 +4,7 @@ import { default as Page } from './+page.svelte';
 describe('Overview page', () => {
 	it('renders without errors', () => {
 		const { container } = render(Page);
-		expect(container.firstChild).toBeInTheDocument();
+		expect(container.firstChild).not.toBeNull();
 	});
 });
 

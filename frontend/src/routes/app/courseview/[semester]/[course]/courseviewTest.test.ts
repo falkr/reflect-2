@@ -4,6 +4,6 @@ import { default as courseViewPage } from '../[course]/+page.svelte';
 describe('Courseview page', () => {
 	it('renders without errors', () => {
 		const { container } = render(courseViewPage);
-		expect(container.firstChild).toBeInTheDocument();
+		expect(container.firstChild).not.toBeNull();
 	});
 });

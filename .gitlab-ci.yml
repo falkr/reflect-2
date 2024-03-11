@@ -3,6 +3,7 @@ stages:
   - build
   - duplicate-check
   - test
+  - deploy
 
 variables:
   PUBLIC_API_URL: "http://127.0.0.1:8000"
@@ -27,7 +28,7 @@ lint backend:
 
 lint frontend:
   stage: lint
-  image: node:19
+  image: node:20
   script:
     - echo "Linting the frontend"
     - cd frontend
@@ -39,7 +40,7 @@ lint frontend:
 
 build frontend:
   stage: build
-  image: node:19
+  image: node:20
   script:
     - echo "Building the project"
     - cd frontend
@@ -52,7 +53,7 @@ build frontend:
 
 frontend check:
   stage: duplicate-check
-  image: node:19
+  image: node:20
   script:
     - echo "Checking for duplicate files in the frontend"
     - cd frontend
@@ -91,3 +92,67 @@ test backend:
     - pytest -p no:warnings
   only:
     - merge_requests
+
+deploy-frontend:
+  stage: deploy
+  image: node:19
+  script:
+    - echo "Deploying to Vercel for the frontend"
+    - cd frontend
+    - |
+      cat <<EOF > .env
+      PUBLIC_API_URL = $PUBLIC_API_URL
+      EOF
+    - npx vercel --token $VERCEL_TOKEN --confirm=n --prod
+  only:
+    - dev
+  environment:
+    name: production
+  variables:
+    VERCEL_TOKEN: $VERCEL_TOKEN
+    PUBLIC_API_URL: $PUBLIC_API_URL
+
+deploy-backend:
+  stage: deploy
+  image: node:19
+  script:
+    - echo "Deploying to Heroku for the backend"
+    - cd backend
+    - |
+      cat <<EOF > .env
+      SECRET_KEY = $SECRET_KEY
+      isAdmin=false
+      production = true
+      client_id = $CLIENT_ID
+      client_secret = $CLIENT_SECRET
+      DATABASE_URI = $DATABASE_URI
+      REDIRECT_URI = $REDIRECT_URI
+      BASE_URL = $BASE_URL
+      MAIL_USERNAME = $MAIL_USERNAME
+      MAIL_PASSWORD = $MAIL_PASSWORD
+      MAIL_FROM = $MAIL_FROM
+      MAIL_PORT = $MAIL_PORT
+      MAIL_SERVER = $MAIL_SERVER
+      UID = ""
+      EMAIL_USER = ""
+      USER_EMAIL = ""
+      EOF
+    - npx vercel --token $VERCEL_TOKEN --confirm=n --prod
+  variables:
+    VERCEL_TOKEN: $VERCEL_TOKEN
+    SECRET_KEY: $SECRET_KEY
+    CLIENT_ID: $CLIENT_ID
+    CLIENT_SECRET: $CLIENT_SECRET
+    REDIRECT_URI: $REDIRECT_URI
+    BASE_URL: $BASE_URL
+    MAIL_USERNAME: $MAIL_USERNAME
+    MAIL_PASSWORD: $MAIL_PASSWORD
+    MAIL_FROM: $MAIL_FROM
+    MAIL_PORT: $MAIL_PORT
+    MAIL_SERVER: $MAIL_SERVER
+    DATABASE_URI: $DATABASE_URI
+  only:
+    - dev
+  environment:
+    name: production
+

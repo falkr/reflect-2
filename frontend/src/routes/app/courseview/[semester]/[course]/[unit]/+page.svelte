@@ -165,7 +165,7 @@
 			{/each}
 
 			{#if data.reflected}
-				<div class="my-8 mb-4  flex max-w-2xl flex-col">
+				<div class="my-8 mb-4 flex max-w-2xl flex-col">
 					{#if data.available}
 						<p class="self-center text-[18px] italic text-teal-12">
 							You have already reflected on this unit
@@ -196,7 +196,7 @@
 					{/if}
 				</div>
 			{:else if !data.reflected && !data.available}
-				<div class="my-8 mb-4  flex max-w-2xl">
+				<div class="my-8 mb-4 flex max-w-2xl">
 					<p class="self-center pb-20 text-[18px] italic text-teal-12">
 						This unit is not ready for reflection
 					</p>

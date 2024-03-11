@@ -159,16 +159,16 @@ def check_is_admin(bearer_token):
 @app.on_event("startup")
 # Adds dummy data if in development mode
 def start_db():
+    # Do not populate database if prod or data exists
+    if course or is_prod():
+        return
+
     print("init database")
     course_id: str = "TDT4100"
     semester: str = "fall2023"
     course_name: str = "Informasjonsteknologi grunnkurs"
     db = SessionLocal()
     course = crud.get_course(db, course_id=course_id, course_semester=semester)
-
-    # Do not populate database if prod or data exists
-    if course or is_prod():
-        return
 
     course = crud.create_course(
         db, course={"name": course_name, "id": course_id, "semester": semester}

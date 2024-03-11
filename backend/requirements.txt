@@ -11,11 +11,11 @@ requests
 itsdangerous
 sqlalchemy
 databases
+psycopg2-binary
 aiosqlite
 asyncpg
-psycopg2
 alembic
 fastapi_mail
-typing
+typing-extensions
 openai
 datetime

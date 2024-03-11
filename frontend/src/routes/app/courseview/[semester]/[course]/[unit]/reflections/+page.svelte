@@ -1,15 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import {
-		Button,
-		Dropdown,
-		DropdownItem,
-		Chevron,
-		Modal,
-		Label,
-		Input,
-		Toast
-	} from 'flowbite-svelte';
+	import { Button, Dropdown, DropdownItem, Modal, Label, Input, Toast } from 'flowbite-svelte';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { goto, invalidate } from '$app/navigation';
 	import { CheckCircleIcon } from 'svelte-feather-icons';
@@ -172,11 +163,11 @@
 </script>
 
 {#key { key }}
-	<div class="relative ">
+	<div class="relative">
 		<div class="left-0 top-0 ml-3 md:absolute">
 			<Button
 				on:click={() => goto(`/app/courseview/${data.course.id}`)}
-				class=" mt-2 hover:text-teal-8 "
+				class=" hover:text-teal-8 mt-2 "
 				outline
 				color="alternative"
 				><svg
@@ -198,12 +189,12 @@
 		</div>
 
 		<span
-			class="text-primary mx-8 mt-4 flex items-center justify-center text-[20px] font-bold md:text-xl "
+			class="text-primary mx-8 mt-4 flex items-center justify-center text-[20px] font-bold md:text-xl"
 			>Reflections on {data.course.id} for unit "{data.unitName}"</span
 		>
 	</div>
 	{#if data.answers.length == 0}
-		<div class="text-primary text-lg mx-8 mt-8 flex items-center justify-center italic">
+		<div class="text-primary mx-8 mt-8 flex items-center justify-center text-lg italic">
 			There are no reflections yet. When there are reflections on this unit, you will be able to
 			edit the report.
 		</div>
@@ -240,8 +231,8 @@
 															<div class="max-h-24 overflow-auto text-sm md:text-base">
 																{answer.body}
 															</div>
-															<Button class="w-4.1 ml-3 h-2.5 bg-teal-9 hover:bg-teal-11">
-																<Chevron>Add</Chevron>
+															<Button class="w-4.1 bg-teal-9 hover:bg-teal-11 ml-3 h-2.5">
+																Add
 															</Button>
 															<Dropdown>
 																{#each reportContent as report}
@@ -266,13 +257,13 @@
 				<!-- report div -->
 				<div class="flex w-full flex-col md:w-[50%]">
 					<div class="text-primary text-center text-xl">Categories</div>
-					<div class=" relative my-2 flex flex-row justify-between ">
+					<div class=" relative my-2 flex flex-row justify-between">
 						<div
 							class="my-4 flex w-9/12 flex-col justify-evenly gap-y-4 rounded-lg border bg-gray-100"
 						>
 							{#each reportContent as report}
 								<div
-									class=" text-primary text-transform: text-lg flex flex-row items-center justify-between rounded-lg bg-teal-7 font-bold uppercase"
+									class=" text-primary text-transform: bg-teal-7 flex flex-row items-center justify-between rounded-lg text-lg font-bold uppercase"
 								>
 									<p class="ml-4 text-[12px] md:text-base">
 										{report.name}
@@ -290,13 +281,13 @@
 								<div class="ml-2 max-h-[350px] overflow-auto">
 									{#each report.answers as answer}
 										<div
-											class="my-2 flex w-11/12 flex-row justify-between rounded-lg border bg-white p-4 "
+											class="my-2 flex w-11/12 flex-row justify-between rounded-lg border bg-white p-4"
 										>
 											<div class="max-h-24 overflow-auto text-sm md:text-base">
 												{answer}
 											</div>
 											<Button
-												class="ml-4 h-2 w-2 bg-teal-9 hover:bg-teal-11 "
+												class="bg-teal-9 hover:bg-teal-11 ml-4 h-2 w-2 "
 												on:click={() => removeAnswerFromCategory(report.name, answer)}
 											>
 												x
@@ -311,20 +302,18 @@
 								on:click={() => edit_created_report()}
 								id="download"
 								type="submit"
-								class="ml-8 h-10 w-16 bg-teal-9 hover:bg-teal-8 md:h-10 md:w-36">Save</Button
+								class="bg-teal-9 hover:bg-teal-8 ml-8 h-10 w-16 md:h-10 md:w-36">Save</Button
 							>
 							<Button
 								id="add"
-								type="add"
 								on:click={() => (unitModal = true)}
-								class="mt-[20px] ml-8 h-10 w-16 bg-teal-9 hover:bg-teal-8 md:h-10 md:w-36"
+								class="bg-teal-9 hover:bg-teal-8 ml-8 mt-[20px] h-10 w-16 md:h-10 md:w-36"
 								>Add category</Button
 							>
 						</div>
 						<div class="z-50">
 							<Toast
 								position="bottom-right"
-								simple
 								transition={slide}
 								bind:open={showSuccess}
 								divClass="w-full max-w-sm p-5"
