@@ -9,6 +9,8 @@ __pycache__/
 # C extensions
 *.so
 
+prompting/data/
+
 # Distribution / packaging
 .Python
 build/

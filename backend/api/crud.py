@@ -279,30 +279,6 @@ def user_already_reflected_on_question(
     return existing_reflection is not None
 
 
-# --- Report ---
-def create_report(db: Session, report: schemas.ReportCreate):
-    existing_report = (
-        db.query(model.Report)
-        .filter(
-            model.Report.course_id == report.get("course_id"),
-            model.Report.unit_id == report.get("unit_id"),
-        )
-        .first()
-    )
-
-    if existing_report:
-        existing_report.report_content = report.get("report_content")
-        existing_report.number_of_answers = report.get("number_of_answers")
-        db_obj = existing_report
-    else:
-        db_obj = model.Report(**report)
-        db.add(db_obj)
-
-    db.commit()
-    db.refresh(db_obj)
-    return db_obj
-
-
 def get_report(db: Session, course_id: str, unit_id: int):
     return (
         db.query(model.Report)
@@ -325,6 +301,39 @@ def edit_created_report(
     )
     if db_obj:
         db_obj.report_content = report
+
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def save_report(db: Session, report: schemas.ReportCreate) -> model.Report:
+    """
+    Save or update a report in the database based on the provided report details.
+
+    Parameters:
+    - db (Session): The database session used to perform database operations.
+    - report (schemas.ReportCreate): An instance of ReportCreate schema containing the report details.
+
+    Returns:
+    - model.Report: The updated or newly created report object from the database.
+    """
+    existing_report = (
+        db.query(model.Report)
+        .filter(
+            model.Report.course_id == report.get("course_id"),
+            model.Report.unit_id == report.get("unit_id"),
+        )
+        .first()
+    )
+
+    if existing_report:
+        existing_report.report_content = report.get("report_content")
+        existing_report.number_of_answers = report.get("number_of_answers")
+        db_obj = existing_report
+    else:
+        db_obj = model.Report(**report)
+        db.add(db_obj)
 
     db.commit()
     db.refresh(db_obj)

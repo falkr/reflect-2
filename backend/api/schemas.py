@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any, List
+from typing import Any, List, Dict
 
 from pydantic import BaseModel, EmailStr
 
@@ -170,7 +170,7 @@ class User(UserBase):
 
 
 class ReportBase(BaseModel):
-    report_content: list[dict] = []
+    report_content: Dict[str, Dict[str, List[str]]]
     number_of_answers: int
     unit_id: int
     course_id: str
@@ -212,11 +212,12 @@ class EmailSchema(BaseModel):
 class ReflectionJSONFormat(BaseModel):
     learning_unit: str
     participation: str
-    best_learning_success: str
-    least_understood_concept: str
+    answers: List[str]
+    key: int
 
 
 class ReflectionJSON(BaseModel):
     api_key: str
-    data: List[ReflectionJSONFormat]
+    questions: List[str]
+    student_feedback: List[ReflectionJSONFormat]
     use_cheap_model: bool

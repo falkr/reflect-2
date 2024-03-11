@@ -5,11 +5,15 @@ from typing import List
 
 import requests
 from requests.structures import CaseInsensitiveDict
+from prompting.transformKeysToAnswers import transformKeysToAnswers
+from prompting.sort import sort
+from prompting.createCategories import createCategories
+
+# from prompting.main import analyze_student_feedback
 
 from . import crud
 from . import model
 from . import schemas
-from prompting.main import analyze_student_feedback
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from .database import SessionLocal, engine
@@ -157,18 +161,15 @@ def check_is_admin(bearer_token):
 
 
 @app.on_event("startup")
-# Adds dummy data if in development mode
 def start_db():
-    # Do not populate database if prod or data exists
-    if course or is_prod():
-        return
-
     print("init database")
     course_id: str = "TDT4100"
     semester: str = "fall2023"
     course_name: str = "Informasjonsteknologi grunnkurs"
     db = SessionLocal()
     course = crud.get_course(db, course_id=course_id, course_semester=semester)
+    if course or is_prod():
+        return
 
     course = crud.create_course(
         db, course={"name": course_name, "id": course_id, "semester": semester}
@@ -600,9 +601,18 @@ async def get_unit_data(
     raise HTTPException(404, detail="Unit not found")
 
 
-@app.post("/report", response_model=schemas.Report)
-async def create_report(ref: schemas.ReportCreate, db: Session = Depends(get_db)):
-    return crud.create_report(db, report=ref.model_dump())
+@app.post("/save_report", response_model=schemas.ReportCreate)
+async def save_report_endpoint(
+    request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
+):
+    if not is_admin(db, request):
+        raise HTTPException(403, detail="You are not an admin user")
+    try:
+        return crud.save_report(db, report=ref.model_dump())
+    except IntegrityError as e:
+        raise HTTPException(
+            409, detail="An error occurred while saving the report: " + str(e)
+        )
 
 
 @app.get("/report/{course_id}/{unit_id}", response_model=schemas.ReportBase)
@@ -797,8 +807,27 @@ def format_email(student_id: str, course_id: str, units: List[model.Unit]):
 
 @app.post("/analyze_feedback")
 async def analyze_feedback(ref: schemas.ReflectionJSON):
-    data_dicts = [item.model_dump() for item in ref.data]
-    return analyze_student_feedback(ref.api_key, data_dicts, ref.use_cheap_model)
+    student_feedback_dicts = [
+        {
+            key: item[key]
+            for key in item
+            if key not in ["learning_unit", "participation"]
+        }
+        for item in (item.model_dump() for item in ref.student_feedback)
+    ]
+    categorise = createCategories(
+        ref.api_key, ref.questions, student_feedback_dicts, ref.use_cheap_model
+    )
+    sorted_feedback = sort(
+        ref.api_key,
+        ref.questions,
+        categorise,
+        student_feedback_dicts,
+        ref.use_cheap_model,
+    )
+    return transformKeysToAnswers(
+        sorted_feedback, ref.questions, student_feedback_dicts
+    )
 
 
 # ---------------------------------Code that was meant to send email to students --------#
