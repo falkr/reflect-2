@@ -5,6 +5,7 @@ from typing import List
 
 import requests
 from requests.structures import CaseInsensitiveDict
+from prompting.summary import createSummary
 from prompting.transformKeysToAnswers import transformKeysToAnswers
 from prompting.sort import sort
 from prompting.createCategories import createCategories
@@ -807,6 +808,25 @@ def format_email(student_id: str, course_id: str, units: List[model.Unit]):
 
 @app.post("/analyze_feedback")
 async def analyze_feedback(ref: schemas.ReflectionJSON):
+    """
+    Analyzes student feedback, sorts it into predefined categories, and generates a summary.
+
+    This function processes student feedback submitted for a learning unit. It categorizes the feedback based on the content, sorts it accordingly, and then generates a summary highlighting key themes. The process involves the following steps:
+    1. Filtering relevant information from the submitted feedback.
+    2. Categorizing the feedback using the OpenAI API.
+    3. Sorting the feedback into the identified categories.
+    4. Transforming sorted keys into actual answers for a readable format.
+    5. Generating a summary of the categorized feedback.
+
+    Parameters:
+    - ref (schemas.ReflectionJSON): An object containing all necessary data for the feedback analysis. This includes the API key for OpenAI, a list of questions, the student feedback in a structured format, and a flag indicating whether to use a cheaper model for processing.
+
+    Returns:
+    - dict: A dictionary containing the categorized feedback and a summary. If the `createCategories` function does not return a dictionary, a TypeError is raised.
+
+    Raises:
+    - TypeError: If the output from `createCategories` is not a dictionary, indicating an issue with the categorization process.
+    """
     student_feedback_dicts = [
         {
             key: item[key]
@@ -815,19 +835,26 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
         }
         for item in (item.model_dump() for item in ref.student_feedback)
     ]
-    categorise = createCategories(
+    categories = createCategories(
         ref.api_key, ref.questions, student_feedback_dicts, ref.use_cheap_model
     )
+
+    if not isinstance(categories, dict):
+        return TypeError("createCategories not dict")
+
     sorted_feedback = sort(
         ref.api_key,
         ref.questions,
-        categorise,
+        categories,
         student_feedback_dicts,
         ref.use_cheap_model,
     )
-    return transformKeysToAnswers(
+    stringAnswered = transformKeysToAnswers(
         sorted_feedback, ref.questions, student_feedback_dicts
     )
+    summary = createSummary(ref.api_key, stringAnswered, ref.use_cheap_model)
+    stringAnswered["Summary"] = summary["summary"]
+    return stringAnswered
 
 
 # ---------------------------------Code that was meant to send email to students --------#

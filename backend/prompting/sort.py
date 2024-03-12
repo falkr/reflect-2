@@ -3,7 +3,26 @@ import json
 import os
 
 
-def sort(api_key, questions, categorise, feedbacks, use_cheap_model=True):
+def sort(api_key, questions, categories, feedbacks, use_cheap_model=True):
+    """
+    Sorts student feedback into predefined categories based on their content.
+
+    This function uses the OpenAI API to process and sorts student feedback into categories.
+    The categorization is based on a given set of categories and questions answered by the students.
+    The output is saved to a JSON file named 'sortAnswers.json' in the current directory.
+
+    Parameters:
+    - api_key (str): The API key for OpenAI.
+    - questions (list[str]): A list of questions that students answered in their feedback.
+    - categorise (dict): A dictionary with a key "Category" that maps to a list of category names.
+    - feedbacks (list[dict]): A list of dictionaries, where each dictionary represents a student's feedback.
+                              Each feedback dictionary must have 'answers' (list[str]) and 'key' (int) as keys.
+    - use_cheap_model (bool, optional): If True (default), uses a cheaper and less powerful model for processing.
+                                        If False, uses a more powerful and expensive model.
+
+    Returns:
+    dict: A dictionary representing the sorted feedback according to the categories.
+    """
 
     if use_cheap_model:
         model = "gpt-3.5-turbo-1106"
@@ -14,11 +33,12 @@ def sort(api_key, questions, categorise, feedbacks, use_cheap_model=True):
         inputPrice = 0.01
         outputPrice = 0.03
 
-    if isinstance(categorise, dict) and "Summary" in categorise:
-        categorise_str = json.dumps(categorise["Summary"], indent=2)
+    if "Category" in categories:
+        categories_dict = categories["Category"]
     else:
-        print("Error: 'categorise' is not a dictionary or does not contain 'Summary'.")
-        return
+        categories_dict = categories
+
+    categorise_str = json.dumps(categories_dict, indent=2)
 
     # Convert lists to JSON-formatted strings
     feedbacks_str = json.dumps(feedbacks, indent=2)
@@ -31,8 +51,6 @@ def sort(api_key, questions, categorise, feedbacks, use_cheap_model=True):
 
         Data format on the student feedback
         Is a list of dictionaries, where each dictionary contains these keys:
-        - learning_unit is a string that represents the learning unit name.
-        - participation is a string that represents the participation level of the student.
         - answers: List[str] is a list of strings that represent the answers of the student for each question; answers[0] is answer for question 1, answers[1] is answer for question 2 and so on.
         - key is a int representing the key of a student's feedback. Here are the students' feedback:
         Here is the feedback:
@@ -123,6 +141,7 @@ def sort(api_key, questions, categorise, feedbacks, use_cheap_model=True):
             },
             {"role": "user", "content": prompt},
         ],
+        temperature=0,
     )
 
     output = response.choices[0].message.content
@@ -130,7 +149,7 @@ def sort(api_key, questions, categorise, feedbacks, use_cheap_model=True):
     response_json = json.loads(output)
 
     absolute_path = os.path.dirname(__file__)
-    output_file_path = os.path.join(absolute_path, "data/analysis_result1.json")
+    output_file_path = os.path.join(absolute_path, "data/sortAnswers.json")
 
     with open(output_file_path, "w") as file:
         json.dump(response_json, file, indent=2)

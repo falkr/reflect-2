@@ -39,8 +39,6 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
     prompt = (
         """
         Analyze the feedback data from students regarding a learning unit to provide a teacher with a thorough overview. The feedback student_feedback is a list structured as follows:
-        - learning_unit is a string that represents the learning unit name.
-        - participation is a string that represents the participation level of the student.
         - answers: List[str] is a list of strings that represent the answers of the student for each question; answers[0] is answer for question 1, answers[1] is answer for question 2 and so on.
         - key is a int representing the key of a student's feedback. 
         Here are the students' feedback:
@@ -55,7 +53,7 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
         1. Create a summary that highlights the most repeated themes from the students' feedback. You do not need to mention how many belong to each theme.
     
         Please format the response as follows:
-        Summary: {
+        Category: {
           Question1: [
             theme,
             theme,
@@ -85,6 +83,7 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
             },
             {"role": "user", "content": prompt},
         ],
+        temperature=0,
     )
 
     output = response.choices[0].message.content
