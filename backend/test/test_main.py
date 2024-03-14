@@ -285,6 +285,23 @@ def test_create_unit():
 
 
 @pytest.mark.asyncio
+async def test_get_course():
+    """
+    Test case for getting a course.
+    """
+    login_user(users["test"]["uid"], users["test"]["email"])
+    response = client.get("/course?course_id=TDT1000&course_semester=fall2023")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["id"] == "TDT1000"
+    assert data["semester"] == "fall2023"
+    assert data["name"] == "Introduction to lorem ipsum"
+    assert data["responsible"] == ""
+    assert data["website"] == ""
+
+
+@pytest.mark.asyncio
 def test_create_reflection():
     """
     Test case for creating a reflection in a unit.

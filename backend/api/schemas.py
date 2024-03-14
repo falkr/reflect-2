@@ -170,7 +170,7 @@ class User(UserBase):
 
 
 class ReportBase(BaseModel):
-    report_content: Dict[str, Dict[str, List[str]]]
+    report_content: list[dict] = []
     number_of_answers: int
     unit_id: int
     course_id: str
@@ -181,6 +181,7 @@ class ReportBase(BaseModel):
 
 
 class ReportCreate(ReportBase):
+    report_content: Dict[str, Dict[str, List[str]]] = []
     pass
 
 
