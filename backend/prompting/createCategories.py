@@ -33,7 +33,21 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
     else:
         json_string = student_feedback
 
-    questions_string = ", ".join(questions)
+    # Process questions to handle compound questions intelligently
+    formatted_questions = []
+    for question in questions:
+        # Split on "? " to identify potential internal question marks, preserving the final one
+        parts = question.rsplit("? ", 1)
+        if len(parts) > 1:
+            # Join internal parts with " AND ", preserving the final question mark
+            formatted_question = " AND ".join(parts[:-1]) + "? " + parts[-1]
+        else:
+            formatted_question = question  # No internal division, keep as is
+        # Enclose the question to signal unity
+        formatted_questions.append(f'"{formatted_question}"')
+
+    # Join the formatted questions with a delimiter
+    questions_string = "; ".join(formatted_questions)
 
     # Prepare prompt
     prompt = (

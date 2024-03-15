@@ -53,12 +53,12 @@ def create_course(db: Session, course: schemas.CourseCreate):
         create_question(
             db=db,
             question="Teaching",
-            comment="What did you learn in this unit? What was your best learning achievement?",
+            comment="What was your best learning success in this unit? Why?",
         ),
         create_question(
             db=db,
             question="Difficult",
-            comment="What was difficult in this unit? Was there a concept that you struggled with the most, or something that you found unclear?",
+            comment="What was your least understood concept in this unit? Why?",
         ),
     ]
     for q in questions:
@@ -279,11 +279,12 @@ def user_already_reflected_on_question(
     return existing_reflection is not None
 
 
-def get_report(db: Session, course_id: str, unit_id: int):
+def get_report(db: Session, course_id: str, unit_id: int, course_semester: str):
     return (
         db.query(model.Report)
         .filter(model.Report.unit_id == unit_id)
         .filter(model.Report.course_id == course_id)
+        .filter(model.Report.course_semester == course_semester)
         .first()
     )
 

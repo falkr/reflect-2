@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, EmailStr
 
@@ -180,8 +180,22 @@ class ReportBase(BaseModel):
         orm_mode = True
 
 
+class AutomaticReport(BaseModel):
+    unit_id: int
+    course_id: str
+    course_semester: str
+
+    class Config:
+        orm_mode = True
+
+
 class ReportCreate(ReportBase):
     report_content: Dict[str, Dict[str, List[str]]] = []
+    pass
+
+
+class AnalyzeReportCreate(ReportBase):
+    report_content: Any
     pass
 
 
@@ -191,7 +205,6 @@ class Course(CourseBase):
     website: str
     questions: list[QuestionBase] = []
     users: list[EnrollmentBase] = []
-    reports: list[ReportBase] = []
 
     class Config:
         orm_mode = True
@@ -211,10 +224,7 @@ class EmailSchema(BaseModel):
 
 
 class ReflectionJSONFormat(BaseModel):
-    learning_unit: str
-    participation: str
     answers: List[str]
-    key: int
 
 
 class ReflectionJSON(BaseModel):

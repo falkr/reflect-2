@@ -553,7 +553,7 @@ async def get_unit_data(
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
-    email: str = user.get("eduPersonPrincipalName")
+    email: str = user.get("uid")
     course = crud.get_course(db, course_id, course_semester)
     if course is None:
         raise HTTPException(404, detail="Course not found")
@@ -616,13 +616,20 @@ async def save_report_endpoint(
         )
 
 
-@app.get("/report/{course_id}/{unit_id}", response_model=schemas.ReportBase)
+@app.get("/report")
 async def get_report(
-    request: Request, course_id: str, unit_id: int, db: Session = Depends(get_db)
+    request: Request,
+    params: schemas.AutomaticReport = Depends(),
+    db: Session = Depends(get_db),
 ):
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
-    report = crud.get_report(db, course_id=course_id, unit_id=unit_id)
+    report = crud.get_report(
+        db,
+        course_id=params.course_id,
+        unit_id=params.unit_id,
+        course_semester=params.course_semester,
+    )
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
     return report
@@ -827,14 +834,22 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
     Raises:
     - TypeError: If the output from `createCategories` is not a dictionary, indicating an issue with the categorization process.
     """
+
+    # Adds a key to each student feedback dict to identify the student and filter out irrelevant information
     student_feedback_dicts = [
         {
-            key: item[key]
-            for key in item
-            if key not in ["learning_unit", "participation"]
+            **{"key": index + 1},
+            **{
+                key: item[key]
+                for key in item
+                if key not in ["learning_unit", "participation"]
+            },
         }
-        for item in (item.model_dump() for item in ref.student_feedback)
+        for index, item in enumerate(
+            (item.model_dump() for item in ref.student_feedback)
+        )
     ]
+
     categories = createCategories(
         ref.api_key, ref.questions, student_feedback_dicts, ref.use_cheap_model
     )
@@ -855,6 +870,62 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
     summary = createSummary(ref.api_key, stringAnswered, ref.use_cheap_model)
     stringAnswered["Summary"] = summary["summary"]
     return stringAnswered
+
+
+@app.post("/generate_report")
+async def generate_report_endpoint(
+    request: Request, ref: schemas.AutomaticReport, db: Session = Depends(get_db)
+):
+    if not is_admin(db, request):
+        raise HTTPException(403, detail="You are not an admin user")
+    try:
+        unit_data = await get_unit_data(
+            request, ref.course_id, ref.course_semester, ref.unit_id, db
+        )
+
+        questions = [q["comment"] for q in unit_data["unit_questions"]]
+        reflections = unit_data["unit"].reflections
+
+        student_answers = {}
+        for reflection in reflections:
+            if reflection.user_id not in student_answers:
+                student_answers[reflection.user_id] = {"answers": [reflection.body]}
+            else:
+                student_answers[reflection.user_id]["answers"].append(reflection.body)
+
+        student_feedback = [
+            {"answers": student_answers[student]["answers"]}
+            for student in student_answers
+        ]
+
+        feedback = schemas.ReflectionJSON(
+            api_key=config("OPENAI_KEY", cast=str),
+            questions=questions,
+            student_feedback=student_feedback,
+            use_cheap_model=True,
+        )
+
+        analyze = await analyze_feedback(feedback)
+
+        try:
+            await save_report_endpoint(
+                request,
+                ref=schemas.AnalyzeReportCreate(
+                    number_of_answers=len(student_feedback),
+                    report_content=analyze,
+                    unit_id=ref.unit_id,
+                    course_id=ref.course_id,
+                    course_semester=ref.course_semester,
+                ),
+                db=db,
+            )
+        except:
+            raise HTTPException(500, detail="An error occurred while saving the report")
+        return HTTPException(200, detail="Report generated and saved successfully")
+    except IntegrityError as e:
+        raise HTTPException(
+            409, detail="An error occurred while generating the report: " + str(e)
+        )
 
 
 # ---------------------------------Code that was meant to send email to students --------#

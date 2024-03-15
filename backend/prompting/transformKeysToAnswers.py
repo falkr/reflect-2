@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from typing import Dict, List
 
 
@@ -30,16 +31,21 @@ def transformKeysToAnswers(
     for question in questions:
         feedbackWithAnswers[question] = {}
 
-    for question, categories in updated_sorted_answers.items():
-        for category, keys in categories.items():
-            # Initialize each category with an empty list for this question
-            feedbackWithAnswers[question][category] = []
-            for key in keys:
-                # Append the answer to the correct category
-                question_index = questions.index(question)
-                feedbackWithAnswers[question][category].append(
-                    key_to_answers[key][question_index]
-                )
+    try:
+        for question, categories in updated_sorted_answers.items():
+            for category, keys in categories.items():
+                # Initialize each category with an empty list for this question
+                feedbackWithAnswers[question][category] = []
+                for key in keys:
+                    # Append the answer to the correct category
+                    question_index = questions.index(question)
+                    feedbackWithAnswers[question][category].append(
+                        key_to_answers[key][question_index]
+                    )
+    except:
+        raise HTTPException(
+            status_code=500, detail="Failed to transform keys to answers"
+        )
     return feedbackWithAnswers
 
 
