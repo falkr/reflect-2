@@ -5,6 +5,7 @@ from typing import List
 
 import requests
 from requests.structures import CaseInsensitiveDict
+from api.utils.exceptions import DataProcessingError, OpenAIRequestError
 from prompting.summary import createSummary
 from prompting.transformKeysToAnswers import transformKeysToAnswers
 from prompting.sort import sort
@@ -23,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.config import Config
@@ -829,10 +831,7 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
     - ref (schemas.ReflectionJSON): An object containing all necessary data for the feedback analysis. This includes the API key for OpenAI, a list of questions, the student feedback in a structured format, and a flag indicating whether to use a cheaper model for processing.
 
     Returns:
-    - dict: A dictionary containing the categorized feedback and a summary. If the `createCategories` function does not return a dictionary, a TypeError is raised.
-
-    Raises:
-    - TypeError: If the output from `createCategories` is not a dictionary, indicating an issue with the categorization process.
+    - dict: A dictionary containing the categorized feedback and a summary.
     """
 
     # Adds a key to each student feedback dict to identify the student and filter out irrelevant information
@@ -854,9 +853,6 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
         ref.api_key, ref.questions, student_feedback_dicts, ref.use_cheap_model
     )
 
-    if not isinstance(categories, dict):
-        return TypeError("createCategories not dict")
-
     sorted_feedback = sort(
         ref.api_key,
         ref.questions,
@@ -864,11 +860,14 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
         student_feedback_dicts,
         ref.use_cheap_model,
     )
+
     stringAnswered = transformKeysToAnswers(
         sorted_feedback, ref.questions, student_feedback_dicts
     )
+
     summary = createSummary(ref.api_key, stringAnswered, ref.use_cheap_model)
     stringAnswered["Summary"] = summary["summary"]
+
     return stringAnswered
 
 
@@ -928,33 +927,17 @@ async def generate_report_endpoint(
         )
 
 
-# ---------------------------------Code that was meant to send email to students --------#
-# @app.post("/invitation_email/{course_id}")
-# async def simple_send(email: EmailSchema, course_id:str) -> JSONResponse:
-#     html = f"""
-
-#         <p>Hi!</p>
-#         <p></p>
-#         <p>You have been invited to join {course_id}! Accept the invitation and give your first reflection on <a href="https://ref2.iik.ntnu.no/">ref2.iik.ntnu.no</a>.</p>
-#         <br>
-#         <br>
-#         <br>
-# 	    <p>Sincerely,</p>
-#         <p></p>
-#         <p>NTNU Reflection</p>
-#         <br>
-#         <br>
-# 	    <p>This is an automated email notification, contact your lecturer if you are experiencing any issues.</p>
+@app.exception_handler(DataProcessingError)
+async def data_processing_exception_handler(request, exc: DataProcessingError):
+    return JSONResponse(
+        status_code=400,
+        content={"message": f"Data processing error: {exc.message}"},
+    )
 
 
-#         """
-
-#     message = MessageSchema(
-#         subject=f"Invitation to join {course_id}",
-#         recipients=email.dict().get("email"),
-#         body=html,
-#         subtype=MessageType.html)
-
-#     fm = FastMail(email_config)
-#     await fm.send_message(message)
-#     return JSONResponse(status_code=200, content={"message": "email has been sent"})
+@app.exception_handler(OpenAIRequestError)
+async def openai_request_exception_handler(request, exc: OpenAIRequestError):
+    return JSONResponse(
+        status_code=502,
+        content={"message": f"OpenAI API request failed: {exc.message}"},
+    )

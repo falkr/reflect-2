@@ -1,6 +1,6 @@
-from openai import OpenAI
+from openai import OpenAI, OpenAIError, RateLimitError
 import json
-import os
+from api.utils.exceptions import DataProcessingError, OpenAIRequestError
 
 
 def createCategories(api_key, questions, student_feedback, use_cheap_model=True):
@@ -17,103 +17,92 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
     Returns:
     - dict: A dictionary with the summary of themes per question based on the students' feedback.
     """
-
-    if use_cheap_model:
-        model = "gpt-3.5-turbo-1106"
-        inputPrice = 0.0010
-        outputPrice = 0.0020
-    else:
-        model = "gpt-4-0125-preview"
-        inputPrice = 0.01
-        outputPrice = 0.03
-
-    # Convert data to JSON string if it's not already a string
-    if not isinstance(student_feedback, str):
-        json_string = json.dumps(student_feedback, indent=2)
-    else:
-        json_string = student_feedback
-
-    # Process questions to handle compound questions intelligently
-    formatted_questions = []
-    for question in questions:
-        # Split on "? " to identify potential internal question marks, preserving the final one
-        parts = question.rsplit("? ", 1)
-        if len(parts) > 1:
-            # Join internal parts with " AND ", preserving the final question mark
-            formatted_question = " AND ".join(parts[:-1]) + "? " + parts[-1]
+    try:
+        if use_cheap_model:
+            model = "gpt-3.5-turbo-1106"
         else:
-            formatted_question = question  # No internal division, keep as is
-        # Enclose the question to signal unity
-        formatted_questions.append(f'"{formatted_question}"')
+            model = "gpt-4-0125-preview"
 
-    # Join the formatted questions with a delimiter
-    questions_string = "; ".join(formatted_questions)
+        json_string = json.dumps(student_feedback, indent=2)
 
-    # Prepare prompt
-    prompt = (
-        """
-        Analyze the feedback data from students regarding a learning unit to provide a teacher with a thorough overview. The feedback student_feedback is a list structured as follows:
-        - answers: List[str] is a list of strings that represent the answers of the student for each question; answers[0] is answer for question 1, answers[1] is answer for question 2 and so on.
-        - key is a int representing the key of a student's feedback. 
-        Here are the students' feedback:
-        """
-        + json_string
-        + """
-        The questions asked to the students are as follows:
-        """
-        + questions_string
-        + """Based on this information, I request the following:
+        # Process questions to handle compound questions intelligently
+        formatted_questions = []
+        for question in questions:
+            # Split on "? " to identify potential internal question marks, preserving the final one
+            parts = question.rsplit("? ", 1)
+            if len(parts) > 1:
+                # Join internal parts with " AND ", preserving the final question mark
+                formatted_question = " AND ".join(parts[:-1]) + "? " + parts[-1]
+            else:
+                formatted_question = question  # No internal division, keep as is
+            # Enclose the question to signal unity
+            formatted_questions.append(f'"{formatted_question}"')
 
-        1. Create a summary that highlights the most repeated themes from the students' feedback. You do not need to mention how many belong to each theme.
-    
-        Please format the response as follows:
-        Category: {
-          Question1: [
-            theme,
-            theme,
-            etc.
-          ],
-          Question2: [
-            theme,
-            theme,
-            etc.
-          ],
-          ...
-        }
-        """
-    )
+        # Join the formatted questions with a delimiter
+        questions_string = "; ".join(formatted_questions)
 
-    # Initialize OpenAI client
-    client = OpenAI(api_key=api_key)
+        # Prepare prompt
+        prompt = (
+            """
+            Analyze the feedback data from students regarding a learning unit to provide a teacher with a thorough overview. The feedback student_feedback is a list structured as follows:
+            - answers: List[str] is a list of strings that represent the answers of the student for each question; answers[0] is answer for question 1, answers[1] is answer for question 2 and so on.
+            - key is a int representing the key of a student's feedback. 
+            Here are the students' feedback:
+            """
+            + json_string
+            + """
+            The questions asked to the students are as follows:
+            """
+            + questions_string
+            + """Based on this information, I request the following:
 
-    # Call the API
-    response = client.chat.completions.create(
-        model=model,
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful assistant designed to output JSON. Your job is to help the teacher to sort what kind of information is important and what is not so the teacher can prepare for the next lecture.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0,
-    )
+            1. Create a summary that highlights the most repeated themes from the students' feedback. You do not need to mention how many belong to each theme.
+        
+            Please format the response as follows:
+            Category: {
+            Question1: [
+                theme,
+                theme,
+                etc.
+            ],
+            Question2: [
+                theme,
+                theme,
+                etc.
+            ],
+            ...
+            }
+            """
+        )
 
-    output = response.choices[0].message.content
+        # Initialize OpenAI client
+        client = OpenAI(api_key=api_key)
 
-    response_json = json.loads(output)
+        # Call the API
+        response = client.chat.completions.create(
+            model=model,
+            response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON. Your job is to help the teacher to sort what kind of information is important and what is not so the teacher can prepare for the next lecture.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+        )
 
-    absolute_path = os.path.dirname(__file__)
-    output_file_path = os.path.join(absolute_path, "data/categorize.json")
+        output = response.choices[0].message.content
 
-    with open(output_file_path, "w") as file:
-        json.dump(response_json, file, indent=2)
+        response_json = json.loads(output)
 
-    print(
-        "COST: ",
-        ((inputPrice * (len(prompt) / 1000)) + (outputPrice * (len(output) / 1000))),
-        "$",
-    )
+        return response_json
 
-    return response_json
+    except RateLimitError as e:
+        raise OpenAIRequestError(f"Rate limit exceeded: {str(e)}")
+    except OpenAIError as e:
+        raise OpenAIRequestError(f"OpenAI API error: {str(e)}")
+    except json.JSONDecodeError as e:
+        raise DataProcessingError(f"JSON decoding error: {str(e)}")
+    except Exception as e:
+        raise OpenAIRequestError(f"An unexpected error occurred: {str(e)}")
