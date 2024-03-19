@@ -6,6 +6,7 @@ from typing import List
 import requests
 from requests.structures import CaseInsensitiveDict
 from api.utils.exceptions import DataProcessingError, OpenAIRequestError
+from prompting.enforceUniqueCategories import enforce_unique_categories
 from prompting.summary import createSummary
 from prompting.transformKeysToAnswers import transformKeysToAnswers
 from prompting.sort import sort
@@ -860,6 +861,8 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
         student_feedback_dicts,
         ref.use_cheap_model,
     )
+
+    sorted_feedback = enforce_unique_categories(sorted_feedback)
 
     stringAnswered = transformKeysToAnswers(
         sorted_feedback, ref.questions, student_feedback_dicts
