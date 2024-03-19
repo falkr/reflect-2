@@ -414,17 +414,21 @@
 						<AccordionItem class="border-b-2 border-teal-12">
 							<span slot="header" class="text-[18px] font-semibold text-teal-12">View Reports</span>
 							<p class="">
-								{#each data.course.reports as report}
-									<!-- svelte-ignore a11y-click-events-have-key-events -->
-									<li
-										class="w-50 border-stone-300 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-										on:click={() => goto(`${data.course_name}/reports/${report.unit_id}`)}
-									>
-										<p class="mt-3 font-semibold text-teal-12">
-											Report for unit "{getUnitName(report.unit_id)}"
-										</p>
-									</li>
-								{/each}
+								{#if Array.isArray(data.course.reports)}
+									{#each data.course.reports as report}
+										<!-- svelte-ignore a11y-click-events-have-key-events -->
+										<li
+											class="w-50 border-stone-300 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
+											on:click={() => goto(`${data.course_name}/reports/${report.unit_id}`)}
+										>
+											<p class="mt-3 font-semibold text-teal-12">
+												Report for unit "{getUnitName(report.unit_id)}"
+											</p>
+										</li>
+									{/each}
+								{:else}
+									<p class="mt-3 font-semibold text-teal-12">No reports available</p>
+								{/if}
 							</p>
 						</AccordionItem>
 					{/if}
