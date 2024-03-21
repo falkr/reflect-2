@@ -264,8 +264,12 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     user = get_user_data(bearer_token)
     if user:
         user = json.loads(user)
-        user["uid"] = user["uid"][0]
-        user["mail"] = user["mail"][0]
+        if config("TEST_ACCOUNT", cast=bool, default=False):
+            user["uid"] = "test"
+            user["mail"] = "test@mail.no"
+        else:
+            user["uid"] = user["uid"][0]
+            user["mail"] = user["mail"][0]
         request.session["user"] = user
         email = user.get("mail")
         uid = user.get("uid")
