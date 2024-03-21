@@ -22,7 +22,7 @@ def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
 
 
 # Enrolls user in a course
-def create_enrollment(
+async def create_enrollment(
     db: Session, uid: str, course_id: str, course_semester: str, role: str
 ):
     # getting student

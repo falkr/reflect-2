@@ -165,7 +165,7 @@ def check_is_admin(bearer_token):
 
 
 @app.on_event("startup")
-def start_db():
+async def start_db():
     print("init database")
     course_id: str = "TDT4100"
     semester: str = "fall2023"
@@ -232,7 +232,7 @@ def start_db():
         u.course_id = course.id
         u.course_semester = semester
 
-    enrollment = crud.create_enrollment(
+    enrollment = await crud.create_enrollment(
         db=db,
         course_id="TDT4100",
         course_semester=semester,
@@ -395,7 +395,7 @@ async def enroll(
         raise HTTPException(401, detail="Cannot find your user")
     if ref.role == "student":
         try:
-            return crud.create_enrollment(
+            return await crud.create_enrollment(
                 db,
                 role=ref.role,
                 course_id=ref.course_id,
@@ -412,7 +412,7 @@ async def enroll(
         if len(priv_inv) != 0 or is_admin(db, request):
             try:
 
-                return crud.create_enrollment(
+                return await crud.create_enrollment(
                     db,
                     role=ref.role,
                     course_id=ref.course_id,
@@ -442,7 +442,16 @@ async def get_units(
         raise HTTPException(404, detail="Course not found")
     enrollment = crud.get_enrollment(db, course_id, course_semester, uid)
     if enrollment is None:
-        raise HTTPException(401, detail="You are not enrolled in the course")
+        await crud.create_enrollment(
+            db,
+            role="student",
+            course_id=course_id,
+            course_semester=course_semester,
+            uid=uid,
+        )
+        enrollment = crud.get_enrollment(db, course_id, course_semester, uid)
+        if enrollment is None:
+            raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         return (
             db.query(model.Unit)
