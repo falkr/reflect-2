@@ -550,7 +550,13 @@ async def download_file(
             db=db,
         )
 
-        report_dict = report.to_dict()
+        try:
+            report_dict = report.to_dict()
+        except:
+            raise HTTPException(
+                500,
+                detail="An error occurred while generating the report, you may have not generated a report yet.",
+            )
 
         with open("report.txt", "w") as f:
             f.write(json.dumps(report_dict, indent=4))

@@ -118,7 +118,7 @@ deploy-backend:
   script:
     - echo "Deploying to Heroku for the backend"
     - cd backend
-    - |
+    - | 
       cat <<EOF > .env
       SECRET_KEY = $SECRET_KEY
       isAdmin=false
@@ -136,6 +136,8 @@ deploy-backend:
       UID = ""
       EMAIL_USER = ""
       USER_EMAIL = ""
+      TEST_ACCOUNT = false
+      OPENAI_KEY = $OPENAI_KEY
       EOF
     - npx vercel --token $VERCEL_TOKEN --confirm=n --prod
   variables:
@@ -151,6 +153,7 @@ deploy-backend:
     MAIL_PORT: $MAIL_PORT
     MAIL_SERVER: $MAIL_SERVER
     DATABASE_URI: $DATABASE_URI
+    OPENAI_KEY: $OPENAI_KEY
   only:
     - dev
   environment:

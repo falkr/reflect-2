@@ -9,7 +9,7 @@
 	//function for downloading report, downloads a .txt file
 	function downloadFile(filename: string) {
 		const element = document.createElement('a');
-		const reportContent = data.unitReportContent.report_content;
+		const reportContent = data.unitReportContent?.report_content || [];
 		let fileContent = '';
 		let previousAnswer = '';
 		for (const { name, answers } of reportContent) {
@@ -90,7 +90,7 @@
 	>
 		Download report
 	</Button>
-	{#if data.unitReportContent.report_content.length > 0}
+	{#if data.unitReportContent && data.unitReportContent.report_content.length > 0}
 		<div class="grid gap-4 md:grid-cols-2">
 			{#each data.unitReportContent.report_content as report_content}
 				<div class="mb-4">

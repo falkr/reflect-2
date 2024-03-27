@@ -6,11 +6,13 @@ type User = {
 	admin: boolean;
 };
 
-type ReportType = {
-	report_content: report_obj[];
-	unit_id: number;
-	course_id: number;
-};
+type ReportType =
+	| {
+			report_content: report_obj[];
+			unit_id: number;
+			course_id: number;
+	  }
+	| undefined;
 
 type Enrollment = {
 	uid: string;

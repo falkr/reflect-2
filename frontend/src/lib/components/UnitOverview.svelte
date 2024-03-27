@@ -268,12 +268,41 @@
 		await response.json();
 		invalidateAll();
 	}
+
+	async function generate_report(unit: any) {
+		await fetch(`${PUBLIC_API_URL}/generate_report`, {
+			method: 'POST',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				unit_id: unit.id,
+				course_id: unit.course_id,
+				course_semester: unit.course_semester
+			})
+		});
+	}
+
+	let isGenerating = -1;
+
+	async function generateReport(unit: any) {
+		isGenerating = unit.id;
+		await generate_report(unit);
+		isGenerating = -1;
+	}
+
+	async function download_report(unit: any) {
+		window.open(
+			`${PUBLIC_API_URL}/download?course_id=${unit.course_id}&unit_id=${unit.id}&course_semester=${unit.course_semester}`
+		);
+	}
 </script>
 
 <main class="flex-shrink-0">
 	<div class="relative">
 		<div class="flex items-center justify-center pl-4 pr-4 pt-10">
-			<div class="header mt-5 flex flex-col border-b-2 border-teal-12 pb-3">
+			<div class="header mt-5 flex flex-col border-teal-12 pb-3">
 				<h3 class="headline flex text-left text-xl font-bold text-teal-12">
 					{data.course.id}
 					<p class="ml-3 mr-3">-</p>
@@ -406,12 +435,12 @@
 
 			<section class="flex items-center justify-center pt-12">
 				<Accordion
-					class="b-teal-12 mt-16 w-[300px] border-2 border-teal-12 bg-teal-1 md:mt-2 md:w-2/3"
+					class="b-teal-12 mt-16 w-[300px] rounded-xl border-teal-12 bg-teal-1 md:mt-2 md:w-2/3"
 					activeClass="bg-teal-1 dark:bg-fifthly text-fifthly-600 dark:text-white"
-					inactiveClass="bg-white text-gray-500 dark:text-gray-400 hover:bg-fifthly-100 dark:hover:bg-fifthly-800"
+					inactiveClass="text-gray-500 dark:text-gray-400 hover:bg-fifthly-100 dark:hover:bg-fifthly-800"
 				>
 					{#if role === 'lecturer'}
-						<AccordionItem class="border-b-2 border-teal-12">
+						<AccordionItem class=" border-teal-12">
 							<span slot="header" class="text-[18px] font-semibold text-teal-12">View Reports</span>
 							<p class="">
 								{#if Array.isArray(data.course.reports)}
@@ -419,10 +448,10 @@
 										<!-- svelte-ignore a11y-click-events-have-key-events -->
 										<li
 											class="w-50 border-stone-300 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-											on:click={() => goto(`${data.course_name}/reports/${report.unit_id}`)}
+											on:click={() => goto(`${data.course_name}/reports/${report?.unit_id}`)}
 										>
 											<p class="mt-3 font-semibold text-teal-12">
-												Report for unit "{getUnitName(report.unit_id)}"
+												Report for unit "{report && getUnitName(report.unit_id)}"
 											</p>
 										</li>
 									{/each}
@@ -432,7 +461,7 @@
 							</p>
 						</AccordionItem>
 					{/if}
-					<AccordionItem open class="border-b-2 border-teal-12">
+					<AccordionItem open class=" border-teal-12">
 						<span slot="header" class="text-[18px] font-semibold text-teal-12">View units</span>
 						<p class="">
 							{#each units as unit}
@@ -466,7 +495,7 @@
 								{:else if role === 'lecturer' || role === 'teaching assistant'}
 									{#if !unit.hidden}
 										<li
-											class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
+											class="w-50 border-stone-300 container my-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
 											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
 										>
 											<p class="mt-3 font-semibold text-teal-12">{unit.title}</p>
@@ -484,9 +513,25 @@
 										</li>
 										<Button
 											on:click={() => update_hidden(unit.id, true)}
-											class="h-[40px] w-[90px] rounded-full bg-orange-600 hover:bg-orange-700"
+											class="h-[40px] w-[120px] rounded bg-orange-600 hover:bg-orange-700"
 										>
 											- Hide unit
+										</Button>
+										<Button
+											on:click={() => generateReport(unit)}
+											class="h-[40px] w-[200px] rounded bg-green-600 hover:bg-green-700"
+										>
+											{#if isGenerating == unit.id}
+												Generating...
+											{:else}
+												- Generate report
+											{/if}
+										</Button>
+										<Button
+											on:click={() => download_report(unit)}
+											class="h-[40px] w-[200px] rounded bg-blue-600 hover:bg-blue-700"
+										>
+											- Download report
 										</Button>
 									{:else}
 										<li
@@ -520,7 +565,7 @@
 					</AccordionItem>
 
 					{#if role === 'lecturer' || role === 'teaching assistant'}
-						<AccordionItem class="border-b-2 border-teal-12">
+						<AccordionItem class="border-teal-12">
 							<span slot="header" class="text-[18px] font-semibold text-teal-12"
 								>Teaching assistant</span
 							>
@@ -532,7 +577,7 @@
 								{/each}
 							</p>
 						</AccordionItem>
-						<AccordionItem class="border-b-2 border-teal-3">
+						<AccordionItem class=" border-teal-12">
 							<span slot="header" class="text-[18px] font-semibold text-teal-12">Students</span>
 							<p class="mt-3 font-bold text-teal-12">
 								{#each students as student}

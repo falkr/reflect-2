@@ -15,7 +15,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 	const unitID = Number(params.report);
 	const reports = course.reports;
 
-	const unitReportContent = reports.find((report: ReportType) => report.unit_id === unitID);
+	const unitReportContent = reports.find((report: ReportType) => report?.unit_id === unitID);
 
 	return {
 		course: course as Course,

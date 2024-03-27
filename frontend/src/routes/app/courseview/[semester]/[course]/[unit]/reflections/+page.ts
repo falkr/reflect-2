@@ -30,7 +30,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 	const questions = course.questions;
 	const reports = course.reports as ReportType[];
 
-	const unitReportContent = reports.filter((report: ReportType) => report.unit_id == unitID)[0];
+	const unitReportContent = reports?.filter((report: ReportType) => report?.unit_id == unitID)[0];
 
 	//hente ut alle refleksjoner for en unit
 	units.forEach((unit: Unit) => {
