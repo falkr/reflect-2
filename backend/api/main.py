@@ -529,24 +529,34 @@ class FileResponseWithDeletion(FileResponse):
 
 @app.get("/download")
 async def download_file(
-    # request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
+    request: Request,
+    ref: schemas.AutomaticReport = Depends(),
+    db: Session = Depends(get_db),
 ):
-    # if not is_logged_in(request):
-    #     raise HTTPException(401, detail="You are not logged in")
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
 
-    # user = request.session.get("user")
-    # uid: str = user.get("uid")
-    # enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
-    if (
-        True
-        # is_admin(db, request) or enrollment.role in ["lecturer"]
-    ):
-        # TODO: Code that gets the data from ai.
-        with open("hello.txt", "w") as f:
-            f.write(f"Hello world!")
+    user = request.session.get("user")
+    uid: str = user.get("uid")
+    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
+    if is_admin(db, request) or enrollment.role in ["lecturer"]:
+        report = await get_report(
+            request,
+            params=schemas.AutomaticReport(
+                course_id=ref.course_id,
+                course_semester=ref.course_semester,
+                unit_id=ref.unit_id,
+            ),
+            db=db,
+        )
 
-        path = os.getcwd() + "/hello.txt"
-        return FileResponseWithDeletion(path, filename="hello.txt")
+        report_dict = report.to_dict()
+
+        with open("report.txt", "w") as f:
+            f.write(json.dumps(report_dict, indent=4))
+
+        path = os.getcwd() + "/report.txt"
+        return FileResponseWithDeletion(path, filename="report.txt")
 
     return Response(status_code=403)
 

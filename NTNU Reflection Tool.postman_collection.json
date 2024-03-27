@@ -523,6 +523,50 @@
       "response": []
     },
     {
+      "name": "Download Report ",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "Content-type": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "127.0.0.1:8000/download?course_id=TDT4100&unit_id=1&course_semester=fall2023",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["download"],
+          "query": [
+            {
+              "key": "course_id",
+              "value": "TDT4100"
+            },
+            {
+              "key": "unit_id",
+              "value": "1"
+            },
+            {
+              "key": "course_semester",
+              "value": "fall2023"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Feide",
       "request": {
         "auth": {

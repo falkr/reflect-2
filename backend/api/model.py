@@ -136,6 +136,24 @@ class Report(Base):
     )
     course = relationship("Course", back_populates="reports")
 
+    def to_dict(self):
+        report_content = self.report_content.copy()  # Create a copy of report_content
+        summary = report_content.pop(
+            "Summary", None
+        )  # Remove 'Summary' from the copy and get its value
+
+        return {
+            "Summary": summary,
+            **{
+                "number_of_answers": self.number_of_answers,
+                "report_content": report_content,
+                "unit_id": self.unit_id,
+                "id": self.id,
+                "course_id": self.course_id,
+                "course_semester": self.course_semester,
+            },
+        }
+
 
 class Invitation(Base):
     __tablename__ = "invitations"
