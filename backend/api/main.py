@@ -815,16 +815,21 @@ def format_email(student_id: str, course_id: str, units: List[model.Unit]):
     Returns:
     - str: A string containing the HTML content for the email body.
     """
-    unit_links = "".join(
-        [
-            f'<li><a href="https://ref.iik.ntnu.no/app/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
-            for unit in units
-        ]
+    unit_links = [
+        f'<li><a href="https://ref.iik.ntnu.no/app/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
+        for unit in reversed(units)
+    ]
+
+    additional_units = (
+        ""
+        if len(unit_links) <= 1
+        else f"<p>Also, you have not yet answered the following units:</p><ul>{''.join(unit_links[1:])}</ul>"
     )
 
     return f"""<p>Dear {student_id},</p>
-    <p>This is a reminder to share your thoughts regarding the recent learning units in {course_id}:</p>
-    <ul>{unit_links}</ul>
+    <p>This is a reminder to answer the recent learning unit in {course_id}:</p>
+    <ul>{unit_links[0]}</ul>
+    {additional_units}
     <p>Your input will directly contribute to improving the lectures for your benefit and the benefit of future students. Your feedback will be shared with your lecturer to help them tailor their teaching approach to your needs.</p>
     <p>Best regards,<br/>The Reflection Tool Team</p>"""
 
