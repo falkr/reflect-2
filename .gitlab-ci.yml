@@ -103,7 +103,7 @@ deploy-frontend:
       cat <<EOF > .env
       PUBLIC_API_URL = $PUBLIC_API_URL
       EOF
-    - npx vercel --token $VERCEL_TOKEN --confirm=n --prod
+    - npx vercel --token $VERCEL_TOKEN --confirm=n --prod --name frontend
   only:
     - dev
   environment:
@@ -139,7 +139,7 @@ deploy-backend:
       TEST_ACCOUNT = false
       OPENAI_KEY = $OPENAI_KEY
       EOF
-    - npx vercel --token $VERCEL_TOKEN --confirm=n --prod
+    - npx vercel --token $VERCEL_TOKEN --confirm=n --prod --name backend
   variables:
     VERCEL_TOKEN: $VERCEL_TOKEN
     SECRET_KEY: $SECRET_KEY

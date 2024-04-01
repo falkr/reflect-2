@@ -469,7 +469,10 @@
 								{#if role === 'student' && !unit.hidden}
 									<li
 										class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-										on:click={() => goto(`${data.course_name}/${unit.id}`)}
+										on:click={() =>
+											goto(
+												`../../courseview/${data.course.semester}/${data.course_name}/${unit.id}`
+											)}
 									>
 										<p class="mt-3 font-semibold text-teal-12">{unit.title}</p>
 
