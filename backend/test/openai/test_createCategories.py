@@ -6,8 +6,9 @@ from api.utils.exceptions import DataProcessingError, OpenAIRequestError
 from prompting.createCategories import createCategories
 
 """
-This test module verifies the functionality of the `createCategories` function, where he tests the function's ability
-to handle successful API calls, rate limit errors, API errors, JSON decoding errors, and unexpected errors.
+This test module verifies the functionality of the `createCategories` function, where the tests test the function's ability
+to handle successful API calls, rate limit errors, API errors, JSON decoding errors, and unexpected errors. It also tests the
+function's behavior when the list is empty.
 
 Each test function is decorated with `@patch("prompting.createCategories.OpenAI")`
 to mock the `OpenAI` class, allowing the test to manipulate the behavior of the
@@ -106,3 +107,35 @@ def test_unexpected_error(mock_openai):
     with pytest.raises(OpenAIRequestError) as excinfo:
         createCategories("test_api_key", ["Question1"], {"feedback": []})
     assert "Unexpected error" in str(excinfo.value)
+
+
+@patch("prompting.createCategories.OpenAI")
+def test_empty_feedback(mock_openai):
+    """
+    Tests the function with empty feedback.
+    """
+    mock_openai.return_value.chat.completions.create.return_value = MagicMock()
+
+    api_key = "test_api_key"
+    questions = ["What did you like about this unit?", "What could be improved?"]
+
+    with pytest.raises(DataProcessingError) as excinfo:
+        createCategories(api_key, questions, {})
+    assert "The student feedback data is empty." in str(excinfo.value)
+
+
+@patch("prompting.createCategories.OpenAI")
+def test_empty_questions(mock_openai):
+    """
+    Tests the function with empty questions.
+    """
+    mock_openai.return_value.chat.completions.create.return_value = MagicMock()
+
+    api_key = "test_api_key"
+    student_feedback = {
+        "feedback": [{"answers": ["It was informative", "More examples"], "key": 1}]
+    }
+
+    with pytest.raises(DataProcessingError) as excinfo:
+        createCategories(api_key, [], student_feedback)
+    assert "The questions list is empty." in str(excinfo.value)

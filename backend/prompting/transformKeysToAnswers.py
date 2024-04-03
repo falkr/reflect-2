@@ -24,6 +24,20 @@ def transformKeysToAnswers(
     - dict: A nested dictionary where the first level of keys are questions, the second level of keys are categories,
       and the values are lists of answers that fall into each category for the corresponding question.
     """
+    # First, ensure all keys in sorted_answers are in student_feedback or marked as 'Not included by AI'
+    feedback_keys = {entry["key"] for entry in student_feedback}
+    for question, categories in sorted_answers.items():
+        for category, keys in categories.items():
+            if category != "Not included by AI" and not all(
+                key in feedback_keys for key in keys
+            ):
+                missing_keys = [key for key in keys if key not in feedback_keys]
+                if missing_keys:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Mismatched keys: {missing_keys} in feedback data for question '{question}'.",
+                    )
+
     updated_sorted_answers = addKeysNotIncluded(sorted_answers, student_feedback)
     feedbackWithAnswers = {}
     key_to_answers = {entry["key"]: entry["answers"] for entry in student_feedback}
@@ -42,9 +56,9 @@ def transformKeysToAnswers(
                     feedbackWithAnswers[question][category].append(
                         key_to_answers[key][question_index]
                     )
-    except:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Failed to transform keys to answers"
+            status_code=500, detail=f"Failed to transform keys to answers: {str(e)}"
         )
     return feedbackWithAnswers
 

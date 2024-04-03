@@ -190,7 +190,7 @@ class AutomaticReport(BaseModel):
 
 
 class ReportCreate(ReportBase):
-    report_content: Dict[str, Dict[str, List[str]]] = []
+    report_content: Dict[str, Dict[str, List[str]]] = {}
     pass
 
 

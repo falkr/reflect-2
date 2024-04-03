@@ -7,8 +7,9 @@ from api.utils.exceptions import DataProcessingError, OpenAIRequestError
 from prompting.summary import createSummary
 
 """
-This test module verifies the functionality of the `summary` function, where he tests the function's ability
-to handle successful API calls, rate limit errors, API errors, JSON decoding errors, and unexpected errors.
+This test module verifies the functionality of the `summary` function, where the tests test the function's ability
+to handle successful API calls, rate limit errors, API errors, JSON decoding errors, and unexpected errors. It also tests the
+function's behavior when the is empty.
 
 Each test function is decorated with `@patch("prompting.summary.OpenAI")`
 to mock the `OpenAI` class, allowing the test to manipulate the behavior of the
@@ -60,8 +61,14 @@ def test_rate_limit_error(mock_openai):
         body="",
     )
 
+    answers = {
+        "Category1": {
+            "Question1": ["Answer1"],
+        },
+    }
+
     with pytest.raises(OpenAIRequestError) as excinfo:
-        createSummary("test_api_key", {})
+        createSummary("test_api_key", answers)
     assert "Rate limit exceeded" in str(excinfo.value)
 
 
@@ -76,8 +83,14 @@ def test_openai_api_error(mock_openai):
         "API error"
     )
 
+    answers = {
+        "Category1": {
+            "Question1": ["Answer1"],
+        },
+    }
+
     with pytest.raises(OpenAIRequestError) as excinfo:
-        createSummary("test_api_key", {})
+        createSummary("test_api_key", answers)
     assert "API error" in str(excinfo.value)
 
 
@@ -92,8 +105,14 @@ def test_json_decoding_error(mock_openai):
     mock_response.choices[0].message.content = "invalid json"
     mock_openai.return_value.chat.completions.create.return_value = mock_response
 
+    answers = {
+        "Category1": {
+            "Question1": ["Answer1"],
+        },
+    }
+
     with pytest.raises(DataProcessingError) as excinfo:
-        createSummary("test_api_key", {})
+        createSummary("test_api_key", answers)
     assert "JSON decoding error" in str(excinfo.value)
 
 
@@ -108,6 +127,26 @@ def test_unexpected_error(mock_openai):
         "Unexpected error"
     )
 
+    answers = {
+        "Category1": {
+            "Question1": ["Answer1"],
+        },
+    }
+
     with pytest.raises(OpenAIRequestError) as excinfo:
-        createSummary("test_api_key", {})
+        createSummary("test_api_key", answers)
     assert "Unexpected error" in str(excinfo.value)
+
+
+@patch("prompting.summary.OpenAI")
+def test_empty_answers(mock_openai):
+    """
+    Tests the function's behavior when the `answers`
+    dictionary is empty. It ensures that a `DataProcessingError` is raised with
+    the appropriate message when the `answers` dictionary is empty.
+    """
+    mock_openai.return_value.chat.completions.create.side_effect = MagicMock()
+
+    with pytest.raises(DataProcessingError) as excinfo:
+        createSummary("test_api_key", {})
+    assert "No student feedback has been provided." in str(excinfo.value)

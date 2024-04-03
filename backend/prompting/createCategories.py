@@ -23,22 +23,24 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
         else:
             model = "gpt-4-0125-preview"
 
+        if len(student_feedback) == 0:
+            raise DataProcessingError("The student feedback data is empty.")
+
+        if not questions:
+            raise DataProcessingError("The questions list is empty.")
+
         json_string = json.dumps(student_feedback, indent=2)
 
-        # Process questions to handle compound questions intelligently
+        # Process questions to handle compound questions
         formatted_questions = []
         for question in questions:
-            # Split on "? " to identify potential internal question marks, preserving the final one
             parts = question.rsplit("? ", 1)
             if len(parts) > 1:
-                # Join internal parts with " AND ", preserving the final question mark
                 formatted_question = " AND ".join(parts[:-1]) + "? " + parts[-1]
             else:
-                formatted_question = question  # No internal division, keep as is
-            # Enclose the question to signal unity
+                formatted_question = question
             formatted_questions.append(f'"{formatted_question}"')
 
-        # Join the formatted questions with a delimiter
         questions_string = "; ".join(formatted_questions)
 
         # Prepare prompt
@@ -98,6 +100,8 @@ def createCategories(api_key, questions, student_feedback, use_cheap_model=True)
 
         return response_json
 
+    except DataProcessingError:
+        raise
     except RateLimitError as e:
         raise OpenAIRequestError(f"Rate limit exceeded: {str(e)}")
     except OpenAIError as e:

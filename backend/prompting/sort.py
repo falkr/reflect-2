@@ -29,6 +29,15 @@ def sort(api_key, questions, categories, feedbacks, use_cheap_model=True):
         else:
             model = "gpt-4-0125-preview"
 
+        if not questions:
+            raise DataProcessingError("The questions list is empty.")
+
+        if not categories:
+            raise DataProcessingError("The categories list is empty.")
+
+        if len(feedbacks) == 0:
+            raise DataProcessingError("The student feedback data is empty.")
+
         if "Category" in categories:
             categories_dict = categories["Category"]
         else:
@@ -146,6 +155,8 @@ def sort(api_key, questions, categories, feedbacks, use_cheap_model=True):
 
         return response_json
 
+    except DataProcessingError:
+        raise
     except RateLimitError as e:
         raise OpenAIRequestError(f"Rate limit exceeded: {str(e)}")
     except OpenAIError as e:

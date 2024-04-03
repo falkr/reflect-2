@@ -53,6 +53,9 @@ def createSummary(
         else:
             model = "gpt-4-0125-preview"
 
+        if not answers:
+            raise DataProcessingError("No student feedback has been provided.")
+
         answers_str = json.dumps(answers)
 
         prompt = (
@@ -92,6 +95,8 @@ def createSummary(
 
         return response_json
 
+    except DataProcessingError:
+        raise
     except RateLimitError as e:
         raise OpenAIRequestError(f"Rate limit exceeded: {str(e)}")
     except OpenAIError as e:

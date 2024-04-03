@@ -1,9 +1,14 @@
+from unittest.mock import MagicMock, patch
+from sqlalchemy.exc import IntegrityError
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from api.main import app, get_db, is_logged_in  # Adjust the import path as necessary
-from api import crud  # Adjust the import path as necessary
+from sqlalchemy.orm import sessionmaker, Session
+from api.main import (
+    app,
+    is_admin,
+)
+from api import crud
 from fastapi import Request
 
 # Setup for the test database
@@ -329,3 +334,175 @@ def test_create_reflection():
     data = response.json()
 
     assert data[0]["reflections"][0]["body"] == "reflections test"
+
+
+@pytest.mark.asyncio
+def test_analyze_feedback_invalid_data():
+    """
+    Test the /analyze_feedback endpoint with invalid data.
+    """
+    # Construct an invalid request payload
+    request_payload = {
+        # Missing or invalid fields here
+    }
+
+    response = client.post("/analyze_feedback", json=request_payload)
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+def test_generate_report_invalid_data():
+    """
+    Test the /generate_report endpoint with invalid data.
+    """
+    # Construct an invalid request payload
+    request_payload = {
+        # Missing or invalid fields here
+    }
+
+    response = client.post("/generate_report", json=request_payload)
+
+    assert response.status_code == 422
+
+
+mock_db = MagicMock(spec=Session)
+mock_request = MagicMock(spec=Request)
+
+
+def config_side_effect(key, cast=None, default=None):
+    if key == "isAdmin":
+        return False
+    return default
+
+
+@pytest.fixture
+def config_patch():
+    with patch("api.main.config") as mock_config:
+        mock_config.side_effect = config_side_effect
+        yield mock_config
+
+
+@pytest.fixture
+def crud_patch():
+    with patch("api.main.crud") as mock_crud:
+        yield mock_crud
+
+
+def session_get_side_effect(key, default=None):
+    if key == "user":
+        return None
+    return default
+
+
+def test_is_admin_with_admin_config(config_patch):
+    def local_config_side_effect(key, cast=None, default=None):
+        if key == "isAdmin":
+            return True
+        return default
+
+    config_patch.side_effect = local_config_side_effect
+
+    mock_request.session.get.side_effect = session_get_side_effect
+
+    assert is_admin(mock_db, mock_request) == True
+
+
+def test_is_admin_no_user_logged_in(config_patch):
+    mock_request.session.get.side_effect = lambda key, default=None: default
+    assert is_admin(mock_db, mock_request) == False
+
+
+def test_is_admin_user_not_in_db(config_patch, crud_patch):
+    config_patch.return_value = MagicMock(return_value=False)
+    crud_patch.get_user.return_value = None
+    mock_request.session.get.side_effect = lambda key, default=None: (
+        {"uid": "testuid"} if key == "user" else default
+    )
+    assert is_admin(mock_db, mock_request) == False
+
+
+def test_is_admin_user_not_admin(config_patch, crud_patch):
+    config_patch.return_value = MagicMock(return_value=False)
+    crud_patch.get_user.return_value = MagicMock(admin=False)
+    mock_request.session.get.side_effect = lambda key, default=None: (
+        {"uid": "testuid"} if key == "user" else default
+    )
+    assert is_admin(mock_db, mock_request) == False
+
+
+def test_is_admin_user_is_admin(config_patch, crud_patch):
+    config_patch.return_value = MagicMock(return_value=False)
+    crud_patch.get_user.return_value = MagicMock(admin=True)
+    mock_request.session.get.side_effect = lambda key, default=None: (
+        {"uid": "testuid"} if key == "user" else default
+    )
+    assert is_admin(mock_db, mock_request) == True
+
+
+@pytest.mark.asyncio
+async def test_generate_report_non_admin_access():
+    # Simulate a non-admin user session
+    login_user(users["test"]["uid"], users["test"]["email"])
+
+    # Attempt to generate a report
+    response = client.post(
+        "/generate_report",
+        json={
+            # Provide necessary request payload here
+            "course_id": "TDT1000",
+            "unit_id": 1,
+            "course_semester": "fall2023",
+        },
+    )
+
+    # Assert that access is forbidden for non-admin users
+    assert response.status_code == 403
+
+
+def test_save_report_admin_user():
+    with patch("api.main.is_admin", return_value=True), patch(
+        "api.main.crud.save_report"
+    ) as mock_save_report:
+        test_report_data = {
+            "report_content": {"section1": {"subsection1": ["item1", "item2"]}},
+            "number_of_answers": 5,
+            "unit_id": 1,
+            "course_id": "course123",
+            "course_semester": "2023S",
+        }
+        expected_response_data = test_report_data.copy()
+        mock_save_report.return_value = {"id": 1, **test_report_data}
+        response = client.post("/save_report", json=test_report_data)
+        assert response.status_code == 200
+        assert response.json() == expected_response_data
+
+
+def test_save_report_access_denied_for_non_admin_user():
+    with patch("api.main.is_admin", return_value=False):
+        test_report_data = {
+            "report_content": {"section1": {"subsection1": ["item1", "item2"]}},
+            "number_of_answers": 5,
+            "unit_id": 1,
+            "course_id": "course123",
+            "course_semester": "2023S",
+        }
+        response = client.post("/save_report", json=test_report_data)
+        assert response.status_code == 403
+        assert response.json() == {"detail": "You are not an admin user"}
+
+
+def test_save_report_integrity_error():
+    with patch("api.main.is_admin", return_value=True), patch(
+        "api.main.crud.save_report", side_effect=IntegrityError(None, None, None)
+    ):
+        test_report_data = {
+            "report_content": {"section1": {"subsection1": ["item1", "item2"]}},
+            "number_of_answers": 5,
+            "unit_id": 1,
+            "course_id": "course123",
+            "course_semester": "2023S",
+        }
+        response = client.post("/save_report", json=test_report_data)
+        assert response.status_code == 409
+        assert "An error occurred while saving the report:" in response.json()["detail"]
