@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, EmailStr
 
@@ -170,7 +170,7 @@ class User(UserBase):
 
 
 class ReportBase(BaseModel):
-    report_content: list[dict] = []
+    report_content: Union[list[dict], dict] = {}
     number_of_answers: int
     unit_id: int
     course_id: str
@@ -205,6 +205,7 @@ class Course(CourseBase):
     website: str
     questions: list[QuestionBase] = []
     users: list[EnrollmentBase] = []
+    reports: list[ReportBase] = []
 
     class Config:
         orm_mode = True

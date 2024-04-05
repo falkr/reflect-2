@@ -673,7 +673,7 @@ async def get_report(
 # Also created new report if not created
 @app.post("/edit_created_report", response_model=schemas.Report)
 async def edit_created_report(
-    request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
+    request: Request, ref: schemas.ReportBase, db: Session = Depends(get_db)
 ):
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")

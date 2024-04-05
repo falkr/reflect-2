@@ -29,7 +29,10 @@
 	//fills the reportContent
 	function fillReportThemes() {
 		if (data.unitReportContent !== undefined) {
-			if (data.unitReportContent.report_content.length == 0) {
+			if (
+				data.unitReportContent.report_content.length == 0 ||
+				!(data.unitReportContent.report_content instanceof Array)
+			) {
 				reportContent = dummyData;
 			} else {
 				reportContent = data.unitReportContent.report_content;
@@ -57,11 +60,16 @@
 				course_id: course_id,
 				course_semester: course_semester,
 				unit_id: unit_id,
+				number_of_answers: 1,
 				report_content: repContent
 			})
 		});
 		const js = await response.json();
-		triggerToast('Report saved!', 'success');
+		if (response.status !== 200) {
+			triggerToast('Error saving report', 'success');
+		} else {
+			triggerToast('Report saved!', 'success');
+		}
 		invalidate('app:courseOverview');
 		return { js };
 	}

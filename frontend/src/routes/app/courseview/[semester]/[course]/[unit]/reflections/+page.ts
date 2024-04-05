@@ -13,7 +13,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 		throw redirect(302, `/app/courseview/${params.course}`);
 	}
 
-	const unitID = parseInt(params.unit, 2) as number;
+	const unitID = parseInt(params.unit) as number;
 	const unitName = units.find((unit: Unit) => unit.id == unitID)?.title;
 	const answers: Reflection[] = [];
 
