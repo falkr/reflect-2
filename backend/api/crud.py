@@ -48,21 +48,32 @@ async def create_enrollment(
 # --- Course ---
 # Creates course
 def create_course(db: Session, course: schemas.CourseCreate):
-    db_course = model.Course(**course)
-    questions = [
-        create_question(
-            db=db,
-            question="Teaching",
-            comment="What was your best learning success in this unit? Why?",
-        ),
-        create_question(
-            db=db,
-            question="Difficult",
-            comment="What was your least understood concept in this unit? Why?",
-        ),
-    ]
+    course_data = {key: value for key, value in course.items() if key != "questions"}
+    db_course = model.Course(**course_data)
+
+    questions = []
+    if len(course["questions"]) == 0:
+        questions = [
+            create_question(
+                db=db,
+                question="Teaching",
+                comment="What was your best learning success in this unit? Why?",
+            ),
+            create_question(
+                db=db,
+                question="Difficult",
+                comment="What was your least understood concept in this unit? Why?",
+            ),
+        ]
+    else:
+        for q in course["questions"]:
+            questions.append(
+                create_question(db=db, question=q["question"], comment=q["comment"])
+            )
+
     for q in questions:
         db_course.questions.append(q)
+
     print("creating course")
     db.add(db_course)
     db.commit()

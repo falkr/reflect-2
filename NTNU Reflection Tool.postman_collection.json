@@ -77,7 +77,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"Introduction to lorem ipsum\",\n    \"id\": \"TDT1000\",\n    \"semester\": \"fall2023\"\n}",
+          "raw": "{\n    \"name\": \"Introduction to lorem ipsum\",\n    \"id\": \"TDT4103\",\n    \"semester\": \"fall2023\",\n    \"questions\": [{\n        \"question\": \"Difficult\",\n        \"comment\": \"What was your least understood concept in this unit? Why?\"\n    }]\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -122,14 +122,14 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "127.0.0.1:8000/course?course_id=TDT4100&course_semester=fall2023",
+          "raw": "127.0.0.1:8000/course?course_id=TDT4101&course_semester=fall2023",
           "host": ["127", "0", "0", "1"],
           "port": "8000",
           "path": ["course"],
           "query": [
             {
               "key": "course_id",
-              "value": "TDT4100"
+              "value": "TDT4101"
             },
             {
               "key": "course_semester",
@@ -192,18 +192,18 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "127.0.0.1:8000/units?course_id=TDT4100&course_semester=fall2023",
+          "raw": "127.0.0.1:8000/units?course_id=WE12222&course_semester=spring2024",
           "host": ["127", "0", "0", "1"],
           "port": "8000",
           "path": ["units"],
           "query": [
             {
               "key": "course_id",
-              "value": "TDT4100"
+              "value": "WE12222"
             },
             {
               "key": "course_semester",
-              "value": "fall2023"
+              "value": "spring2024"
             }
           ]
         }
@@ -523,7 +523,7 @@
       "response": []
     },
     {
-      "name": "Download Report ",
+      "name": "Download Report",
       "protocolProfileBehavior": {
         "disableBodyPruning": true
       },

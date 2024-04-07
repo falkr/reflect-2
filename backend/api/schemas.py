@@ -94,8 +94,14 @@ class CourseBase(BaseModel):
         orm_mode = True
 
 
+class Question(BaseModel):
+    question: str
+    comment: str
+
+
 class CourseCreate(CourseBase):
     name: str
+    questions: List[Question] = []
 
 
 class EnrollmentBase(BaseModel):
