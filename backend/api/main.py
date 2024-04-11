@@ -52,6 +52,11 @@ NOTIFICATION_LIMIT = config("NOTIFICATION_LIMIT", cast=int, default=2)
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
+if config("production", cast=bool, default=True):
+    allowed_origin = config("PRODUCTION_ORIGIN", cast=str, default="")
+else:
+    allowed_origin = "http://127.0.0.1:5173"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -176,11 +181,17 @@ async def start_db():
         return
 
     course = crud.create_course(
-        db, course={"name": course_name, "id": course_id, "semester": semester}
+        db,
+        course={
+            "name": course_name,
+            "id": course_id,
+            "semester": semester,
+            "questions": [],
+        },
     )
 
-    UID = config("UID", cast=str)
-    EMAIL_USER = config("EMAIL_USER", cast=str)
+    UID = config("UID", cast=str, default="test")
+    EMAIL_USER = config("EMAIL_USER", cast=str, default="test@test.no")
 
     user = crud.create_user(db, uid=UID, user_email=EMAIL_USER)
     user0 = crud.create_user(db, uid="test2", user_email="test2@test.no")
