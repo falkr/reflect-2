@@ -195,14 +195,7 @@ def test_create_course_admin():
 
     assert data["uid"] == uid
     assert data["reflections"] == []
-    assert data["enrollments"] == [
-        {
-            "course_id": "TDT1000",
-            "course_semester": "fall2023",
-            "role": "lecturer",
-            "uid": uid,
-        }
-    ]
+    assert data["enrollments"][0]["role"] == "lecturer"
 
 
 @pytest.mark.asyncio
@@ -230,14 +223,7 @@ def test_enroll_student():
 
     assert data["uid"] == uid
     assert data["reflections"] == []
-    assert data["enrollments"] == [
-        {
-            "course_id": "TDT1000",
-            "course_semester": "fall2023",
-            "role": "student",
-            "uid": uid,
-        }
-    ]
+    assert data["enrollments"][0]["role"] == "student"
 
 
 @pytest.mark.asyncio

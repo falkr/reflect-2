@@ -11,6 +11,17 @@ def get_user(db: Session, uid: str):
     return db.query(model.User).filter(model.User.uid == uid).first()
 
 
+def get_units_for_course(db: Session, course_id: str, course_semester: str):
+    return (
+        db.query(model.Unit)
+        .filter(
+            model.Unit.course_id == course_id,
+            model.Unit.course_semester == course_semester,
+        )
+        .all()
+    )
+
+
 # Creates user from email
 def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
     db_user = model.User(uid=uid, email=user_email, admin=admin)

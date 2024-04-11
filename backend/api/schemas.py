@@ -123,6 +123,7 @@ class EnrollUser(EnrollmentBase):
 
 class Enrollment(EnrollmentBase):
     uid: str
+    missingUnits: Any = []
 
 
 class UserAdmin(BaseModel):

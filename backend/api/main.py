@@ -363,6 +363,24 @@ async def user(request: Request, db: Session = Depends(get_db)):
     user = request.session.get("user")
     uid: str = user.get("uid")
     user = crud.get_user(db, uid)
+
+    for enrollment in user.enrollments:
+        if enrollment.role not in ["lecturer", "teaching assistant"]:
+            today = datetime.now().date()
+            enrollment.missingUnits = [
+                {"id": unit.id, "date": unit.date_available}
+                for unit in crud.get_units_for_course(
+                    db, enrollment.course_id, enrollment.course_semester
+                )
+                if unit.date_available and unit.date_available <= today
+            ]
+            reflected_units = {reflection.unit_id for reflection in user.reflections}
+            enrollment.missingUnits = [
+                unit
+                for unit in enrollment.missingUnits
+                if unit["id"] not in reflected_units
+            ]
+
     if user == None:
         request.session.pop("user")
         raise HTTPException(404, detail="User not found")
