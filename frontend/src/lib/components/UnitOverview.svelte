@@ -60,25 +60,25 @@
 		// post request to
 		//const course_ID = data.course.id;
 
-		let email_addresses = form.get('email');
+		let uids = form.get('uid');
 		// To send emails, the email addresses has to include "@stud.ntnu.no" and not only "@ntnu.no"
 
-		let email = '';
-		if (email_addresses instanceof File) {
+		let uid = '';
+		if (uids instanceof File) {
 			// Handle file input
-			email = email_addresses.name;
-		} else if (typeof email_addresses === 'string') {
+			uid = uids.name;
+		} else if (typeof uids === 'string') {
 			// Handle regular string input
-			email = email_addresses;
+			uid = uids;
 		}
 
-		let emails_list = email.split(' ');
+		let uid_list = uid.split(' ');
 		let invitation_ids: number[] = [];
 		let response;
 
 		// Create row in invitation table
-		for (let i = 0; i < emails_list.length; i++) {
-			response = await createUserInvitation(emails_list[i], selectedInviteRole);
+		for (let i = 0; i < uid_list.length; i++) {
+			response = await createUserInvitation(uid_list[i], selectedInviteRole);
 			if (response.status == 200) {
 				invitation_ids.push(response.result.id);
 			} else {
@@ -107,7 +107,7 @@
 		// return { js };
 	}
 
-	async function createUserInvitation(email: string, role: string) {
+	async function createUserInvitation(uid: string, role: string) {
 		const course_id = data.course.id;
 
 		const response = await fetch(`${PUBLIC_API_URL}/create_invitation`, {
@@ -117,7 +117,7 @@
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				email: email,
+				uid: uid,
 				course_id: course_id,
 				course_semester: data.course.semester,
 				role: role
@@ -212,8 +212,6 @@
 		validate: (values) => {
 			const errors: Partial<FormValues> = {};
 			if ($inviteFormIsSubmitting) {
-				errors.email = validateEmailAddresses(values.email);
-				errors.role = validateInviteRole(values.role);
 				return errors;
 			}
 		}
@@ -395,14 +393,14 @@
 				<form class="flex flex-col space-y-6" use:inviteForm>
 					<h3 class="p-0 text-xl font-medium text-gray-900 dark:text-white">Invite Users</h3>
 					<Label class="space-y-2">
-						<span><b>Email</b></span>
-						<p>To invite multiple users, insert space-separated email addresses</p>
-						<Input type="text" name="email" placeholder="example@ntnu.no" required />
-						<Input type="hidden" name="user" value={data.user.email} />
+						<span><b>Username (feide)</b></span>
+						<p>To invite multiple users, insert space-separated usernames</p>
+						<Input type="text" name="uid" placeholder="example" required />
+						<Input type="hidden" name="user" value={data.user.uid} />
 					</Label>
 					<small>
-						{#if $inviteErrors.email}
-							{#each $inviteErrors.email as error}
+						{#if $inviteErrors.uid}
+							{#each $inviteErrors.uid as error}
 								<p class="text-red-500">{error}</p>
 							{/each}
 						{/if}
