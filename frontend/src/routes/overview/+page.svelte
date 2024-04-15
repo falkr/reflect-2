@@ -97,7 +97,12 @@
 		if (status != 200) {
 			toast.error("Couldn't enroll lecuturer!");
 		} else {
-			toast.success('Course successfully created!');
+			toast.success('Course successfully created!', {
+				iconTheme: {
+					primary: '#36786F',
+					secondary: '#FFFFFF'
+				}
+			});
 		}
 	}
 

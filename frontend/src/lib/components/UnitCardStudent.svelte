@@ -70,7 +70,7 @@
 	<div class="relative">
 		<h2 class="text-xl text-gray-900 dark:text-white font-bold">{unitData.title}</h2>
 		<p class="text-gray-800 dark:text-gray-300">
-			Unit {unitData.id} - {reformatDate(unitData.date_available)}
+			Unit {unitData.unit_number} - {reformatDate(unitData.date_available)}
 		</p>
 	</div>
 	<div class="pt-3 space-x-6 flex">

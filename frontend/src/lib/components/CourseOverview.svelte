@@ -7,30 +7,12 @@
 	export let units: Unit[];
 	$: units = data.units;
 
-	let showError = false;
+	let unitCounter = 1;
 
-	let showSuccess = false;
-
-	let counter = 6;
-	let toastBody = '';
-
-	function triggerToast(body: string, type: string) {
-		if (type == 'success') {
-			showSuccess = true;
-		} else {
-			showError = true;
-		}
-		counter = 6;
-		toastBody = body;
-		timeout();
-	}
-
-	function timeout(): number {
-		if (--counter > 0) return window.setTimeout(timeout, 1000);
-		showError = false;
-		showSuccess = false;
-		return counter;
-	}
+	units.forEach((unit) => {
+		unit.unit_number = unitCounter;
+		unitCounter++;
+	});
 </script>
 
 <main class="flex-shrink-0">

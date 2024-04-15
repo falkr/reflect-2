@@ -43,6 +43,7 @@ type Unit = {
 	course_semester: string;
 	course: Course;
 	reflections: reflections[];
+	unit_number: number;
 };
 
 type Question = {

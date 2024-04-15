@@ -68,7 +68,7 @@
 		</ButtonGroup>
 	</div>
 	<p class="text-black dark:text-gray-300">
-		Unit {unitData.id} - {reformatDate(unitData.date_available)}
+		Unit {unitData.unit_number} - {reformatDate(unitData.date_available)}
 	</p>
 	<div>
 		<ButtonGroup class="mt-5">
