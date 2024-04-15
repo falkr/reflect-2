@@ -139,6 +139,8 @@ deploy-backend:
       TEST_ACCOUNT = false
       OPENAI_KEY = $OPENAI_KEY
       EOF
+    - echo "Waiting for 3 seconds before deploying"
+    - sleep 3
     - npx vercel --token $VERCEL_TOKEN --confirm=n --prod --name backend
   variables:
     VERCEL_TOKEN: $VERCEL_TOKEN
