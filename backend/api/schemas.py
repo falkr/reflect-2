@@ -49,9 +49,9 @@ class UnitCreate(UnitBase):
     pass
 
 
-class UnitHidden(BaseModel):
-    id: int
-    hidden: bool
+class UnitDelete(BaseModel):
+    course_id: str
+    course_semester: str
 
 
 class Unit(UnitBase):

@@ -2,7 +2,8 @@
 module.exports = {
 	content: [
 		'./src/**/*.{html,js,svelte,ts}',
-		'./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}'
+		'./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}',
+		'./node_modules/flowbite-svelte-icons/**/*.{html,js,svelte,ts}'
 	],
 	theme: {
 		colors: {
@@ -18,7 +19,9 @@ module.exports = {
 				9: '#12a594',
 				10: '#0e9888',
 				11: '#067a6f',
-				12: '#10302b'
+				12: '#10302b',
+				13: '#36786F'
+				//12: '#046d62'
 			}
 		},
 		fontFamily: {
@@ -36,5 +39,6 @@ module.exports = {
 			}
 		}
 	},
-	plugins: [require('flowbite/plugin')]
+	plugins: [require('flowbite/plugin')],
+	darkMode: 'class'
 };

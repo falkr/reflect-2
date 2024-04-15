@@ -1,12 +1,13 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { logged_in } from '$lib/stores';
 	export let data;
+
+	//If user is logged in , go back to overview
 	if (data.user) {
 		goto('/overview');
-		logged_in.set(true);
+
+		//else go to landing page
 	} else {
-		logged_in.set(false);
 		goto('/');
 	}
 </script>

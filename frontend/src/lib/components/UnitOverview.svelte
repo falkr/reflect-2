@@ -299,8 +299,8 @@
 
 <main class="flex-shrink-0">
 	<div class="relative">
-		<div class="flex items-center justify-center pl-4 pr-4 pt-10">
-			<div class="header mt-5 flex flex-col border-teal-12 pb-3">
+		<div class="flex items-center justify-center pl-4 pr-4">
+			<div class="header flex flex-col border-b-2 border-teal-12 pb-3">
 				<h3 class="headline flex text-left text-xl font-bold text-teal-12">
 					{data.course.id}
 					<p class="ml-3 mr-3">-</p>
@@ -309,27 +309,6 @@
 					</p>
 				</h3>
 			</div>
-			<Button
-				on:click={() => goto(`/app/overview/`)}
-				class=" absolute left-0 top-0 mt-2 w-52 hover:text-teal-8"
-				outline
-				color="alternative"
-				><svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="2"
-					stroke="currentColor"
-					class="h-4 w-4"
-				>
-					<path
-						stroke-linecap="inherit"
-						stroke-linejoin="inherit"
-						d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
-					/>
-				</svg>
-				<p class="ml-2 text-left">Back to overview</p>
-			</Button>
 		</div>
 		<div class="flex flex-col md:gap-y-4">
 			{#if role === 'lecturer'}

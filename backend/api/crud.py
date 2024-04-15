@@ -56,6 +56,24 @@ async def create_enrollment(
     return db_enrollment
 
 
+def delete_enrollment(db: Session, uid: str, course_id: str, course_semester: str):
+    enrollment = (
+        db.query(model.Enrollment)
+        .filter(
+            model.Enrollment.uid == uid,
+            model.Enrollment.course_id == course_id,
+            model.Enrollment.course_semester == course_semester,
+        )
+        .first()
+    )
+    if enrollment:
+        db.delete(enrollment)
+        db.commit()
+        return enrollment
+    else:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+
 # --- Course ---
 # Creates course
 def create_course(db: Session, course: schemas.CourseCreate):
@@ -100,6 +118,49 @@ def get_course(db: Session, course_id: str, course_semester: str):
     )
 
 
+def delete_records(db: Session, model, filters):
+    records = db.query(model).filter(*filters).all()
+    for record in records:
+        db.delete(record)
+    db.commit()
+
+
+def delete_course(db: Session, course_id: str, course_semester: str):
+    delete_records(
+        db,
+        model.Enrollment,
+        [
+            model.Enrollment.course_id == course_id,
+            model.Enrollment.course_semester == course_semester,
+        ],
+    )
+    delete_records(
+        db,
+        model.Unit,
+        [
+            model.Unit.course_id == course_id,
+            model.Unit.course_semester == course_semester,
+        ],
+    )
+    delete_records(
+        db,
+        model.Invitation,
+        [
+            model.Invitation.course_id == course_id,
+            model.Invitation.course_semester == course_semester,
+        ],
+    )
+    delete_records(db, model.Question, [~model.Question.courses.any()])
+
+    course = get_course(db, course_id, course_semester)
+    if course:
+        db.delete(course)
+        db.commit()
+        return course
+    else:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+
 # --- Enrollment ---
 
 
@@ -124,7 +185,20 @@ def create_unit(
     course_id: str,
     course_semester: str,
 ):
-    print("creating unit")
+    """
+    Creates a new unit and its associated initial report in the database. If a unit with the same
+    ID already exists, it updates the existing unit with the provided details.
+
+    Parameters:
+    - db (Session): The database session used to perform operations.
+    - title (str): The title of the unit.
+    - date_available (str): The date the unit becomes available to users, in a string format.
+    - course_id (str): The identifier of the course to which the unit belongs.
+    - course_semester (str): The semester during which the unit is offered.
+
+    Returns:
+    - model.Unit: An instance of the Unit model representing the newly created unit.
+    """
     db_obj = model.Unit(
         title=title,
         date_available=date_available,
@@ -133,7 +207,6 @@ def create_unit(
     )
 
     db.add(db_obj)
-
     db.commit()
     db.refresh(db_obj)
 
@@ -155,6 +228,85 @@ def create_unit(
     db.commit()
     db.refresh(report_obj)
     return db_obj
+
+
+# update unit
+def update_unit(
+    db: Session,
+    unit_id: int,
+    title: str,
+    date_available: str,
+    course_id: str,
+    course_semester: str,
+):
+    """
+    Updates an existing unit with new information provided as parameters. This function
+    allows updating the unit's title and availability date.
+
+    Parameters:
+    - db (Session): The database session used to perform operations.
+    - unit_id (int): The unique identifier of the unit to be updated.
+    - title (str): The new title for the unit.
+    - date_available (str): The new availability date for the unit.
+    - course_id (str): The course ID to which the unit is associated.
+    - course_semester (str): The semester during which the unit is offered.
+
+    Returns:
+    - model.Unit: The updated unit object if the operation is successful.
+
+    Raises:
+    - HTTPException: A 404 error if no unit matches the provided `unit_id`.
+    """
+    db_obj = db.query(model.Unit).filter(model.Unit.id == unit_id).first()
+    if db_obj:
+        db_obj.title = title
+        db_obj.date_available = date_available
+        db_obj.course_id = course_id
+        db_obj.course_semester = course_semester
+        db_obj.unit_id = unit_id
+
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+    else:
+        raise HTTPException(status_code=404, detail="Unit not found")
+
+
+# delete unit
+def delete_unit(db: Session, unit_id: int, course_id: str, course_semester: str):
+    """
+    Deletes a specified unit, along with all associated reflections and reports, from the database.
+
+    Parameters:
+    - db (Session): The database session used to execute the database operations.
+    - unit_id (int): The unique identifier of the unit to be deleted.
+    - course_id (str): The ID of the course to which the unit belongs. Used to ensure the
+      correct report is deleted along with the unit.
+    - course_semester (str): The semester of the course to which the unit belongs. Used in
+      conjunction with `course_id` to identify the correct report.
+
+    Returns:
+    - The deleted unit object if the operation is successful.
+
+    Raises:
+    - HTTPException: A 404 error if the specified unit cannot be found in the database.
+    """
+    reflections = (
+        db.query(model.Reflection).filter(model.Reflection.unit_id == unit_id).all()
+    )
+    report = get_report(db, course_id, unit_id, course_semester)
+    unit = db.query(model.Unit).filter(model.Unit.id == unit_id).first()
+
+    for reflection in reflections:
+        db.delete(reflection)
+    if report:
+        db.delete(report)
+    if unit:
+        db.delete(unit)
+        db.commit()
+        return unit
+    else:
+        raise HTTPException(status_code=404, detail="Unit not found")
 
 
 def get_unit(db: Session, unit_id: int):
@@ -192,17 +344,6 @@ def get_all_available_units(db: Session):
 
     # Query the database for all units where date_available is before (or equal to) the current date
     return db.query(model.Unit).filter(model.Unit.date_available <= current_date).all()
-
-
-def update_unit_hidden(db: Session, unit_id: int, hidden: bool):
-    unit = get_unit(db, unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found")
-    setattr(unit, "hidden", hidden)
-    db.add(unit)
-    db.commit()
-    db.refresh(unit)
-    return unit
 
 
 def create_question(db: Session, question: str, comment: str):

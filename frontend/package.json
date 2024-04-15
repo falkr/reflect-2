@@ -6,7 +6,7 @@
 		"test": "jest",
 		"test:watch": "npm run test -- --watchAll",
 		"test:coverage": "jest --coverage",
-		"dev": "vite dev",
+		"dev": "vite dev --host 127.0.0.1",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -59,7 +59,9 @@
 		"felte": "^1.2.14",
 		"flowbite": "^2.3.0",
 		"flowbite-svelte": "0.44.24",
+		"flowbite-svelte-icons": "^1.4.3",
 		"jest-environment-jsdom": "^29.7.0",
-		"svelte-feather-icons": "^4.1.0"
+		"svelte-feather-icons": "^4.1.0",
+		"svelte-french-toast": "^1.2.0"
 	}
 }

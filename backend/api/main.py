@@ -20,7 +20,7 @@ from . import schemas
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from .database import SessionLocal, engine
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -59,7 +59,7 @@ else:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origin,
     allow_credentials=True,
     allow_headers=["*"],
     allow_methods=["*"],
@@ -340,7 +340,7 @@ async def course(
     db: Session = Depends(get_db),
 ):
     if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in ")
+        raise HTTPException(401, detail="You are not logged in")
 
     course = crud.get_course(db, course_id=course_id, course_semester=course_semester)
     if course is None:
@@ -369,7 +369,7 @@ async def create_course(
 @app.get("/user", response_model=schemas.User)
 async def user(request: Request, db: Session = Depends(get_db)):
     if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in ")
+        raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -409,7 +409,7 @@ async def enroll(
 ):
 
     if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in ")
+        raise HTTPException(401, detail="You are not logged in")
 
     course = crud.get_course(
         db, course_id=ref.course_id, course_semester=ref.course_semester
@@ -506,6 +506,25 @@ async def get_units(
 async def create_unit(
     request: Request, ref: schemas.UnitCreate, db: Session = Depends(get_db)
 ):
+    """
+    Creates a new unit with the details provided in the `ref` object.
+
+    Parameters:
+    - request (Request): The request object, used here to access the user's session for
+      authentication and authorization checks.
+    - ref (schemas.UnitCreate): A Pydantic model containing the necessary data to create a new unit.
+      This includes the unit's title, date of availability, course ID, and course semester.
+    - db (Session): Dependency injection of the database session for executing database operations.
+
+    Returns:
+    - schemas.Unit: The Pydantic model representation of the newly created unit, confirming
+      the successful creation.
+
+    Raises:
+    - HTTPException: 401 error if the user is not logged in or not enrolled in the specified course.
+    - HTTPException: 403 error if the user does not have sufficient permissions (not an admin or
+      a lecturer/teaching assistant in the course) to create a new unit.
+    """
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
 
@@ -522,27 +541,102 @@ async def create_unit(
             course_id=ref.course_id,
             course_semester=ref.course_semester,
         )
+    raise HTTPException(
+        403, detail="You do not have permission to edit a unit for this course"
+    )
 
 
-@app.patch("/update_hidden_unit", response_model=schemas.Unit)
-async def update_hidden_unit(
-    request: Request, ref: schemas.UnitHidden, db: Session = Depends(get_db)
+@app.patch("/update_unit/{unit_id}", response_model=schemas.UnitCreate)
+async def update_unit(
+    unit_id: int,
+    request: Request,
+    ref: schemas.UnitCreate,
+    db: Session = Depends(get_db),
 ):
+    """
+    Updates the details of an existing unit identified by `unit_id` with new information
+    provided in the `ref` object, which includes the unit's title and date available.
+
+    Parameters:
+    - unit_id (int): The unique identifier of the unit to be updated.
+    - request (Request): The request object, used here to access the user's session for
+      authentication and authorization checks.
+    - ref (schemas.UnitCreate): A Pydantic model representing the new data for the unit. This model
+      includes fields such as `title`, `date_available`, `course_id`, and `course_semester`.
+    - db (Session): Dependency injection of the database session for executing database operations.
+
+    Returns:
+    - schemas.UnitCreate: The Pydantic model representation of the updated unit, confirming
+      the successful update. Note: Depending on your application's design, you might return the updated
+      unit model (schemas.UnitUpdate might be more appropriate if it exists).
+
+    Raises:
+    - HTTPException: 401 error if the user is not logged in or not enrolled in the course.
+    - HTTPException: 404 error if the specified unit is not found in the database.
+    - HTTPException: 403 error if the user does not have permission to edit the unit for this course.
+    """
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
 
     user = request.session.get("user")
     uid: str = user.get("uid")
-    unit = crud.get_unit(db, ref.id)
+    unit = crud.get_unit(db, unit_id)
     if not unit:
         raise HTTPException(404, detail="Unit not found")
     enrollment = crud.get_enrollment(db, unit.course_id, unit.course_semester, uid)
     if enrollment is None:
         raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
-        return crud.update_unit_hidden(db=db, unit_id=unit.id, hidden=ref.hidden)
+        return crud.update_unit(
+            db=db,
+            unit_id=unit_id,
+            title=ref.title,
+            date_available=ref.date_available,
+            course_id=ref.course_id,
+            course_semester=ref.course_semester,
+        )
     raise HTTPException(
-        403, detail="You do not have permission to create a unit for this course"
+        403, detail="You do not have permission to edit a unit for this course"
+    )
+
+
+@app.delete("/delete_unit/{unit_id}", response_model=schemas.UnitDelete)
+async def delete_unit(
+    unit_id: int,
+    ref: schemas.UnitDelete,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Deletes a specific unit based on the unit ID, course ID, and course semester provided.
+
+    Parameters:
+    - unit_id (int): The unique identifier of the unit to be deleted.
+    - ref (schemas.UnitDelete): A Pydantic model that includes the `course_id` and `course_semester`
+      of the unit to ensure that the deletion is specific to the context of a particular course offering.
+    - request (Request): The request object, used here to access the user's session.
+    - db (Session): Dependency injection of the database session for executing database operations.
+
+    Returns:
+    - schemas.UnitDelete: The Pydantic model representation of the deleted unit,
+      confirming the successful deletion.
+
+    Raises:
+    - HTTPException: 401 error if the user is not logged in.
+    - HTTPException: 404 error if the specified unit is not found.
+    - HTTPException: 403 error if the user does not have permission to delete the unit,
+      based on their role or enrollment status.
+    """
+    user = request.session.get("user")
+    uid: str = user.get("uid")
+    unit = crud.get_unit(db, unit_id)
+    if not unit:
+        raise HTTPException(404, detail="Unit not found")
+    enrollment = crud.get_enrollment(db, unit.course_id, unit.course_semester, uid)
+    if is_admin(db, request) or enrollment.role in ["lecturer"]:
+        return crud.delete_unit(db, unit_id, ref.course_id, ref.course_semester)
+    raise HTTPException(
+        403, detail="You do not have permission to delete a unit for this course"
     )
 
 
@@ -562,6 +656,20 @@ async def download_file(
     ref: schemas.AutomaticReport = Depends(),
     db: Session = Depends(get_db),
 ):
+    """
+    Download a report file.
+
+    Args:
+        request (Request): The HTTP request object.
+        ref (schemas.AutomaticReport): The reference to the report.
+        db (Session): The database session.
+
+    Returns:
+        Union[FileResponseWithDeletion, Response]: The file response or a response with a status code.
+
+    Raises:
+        HTTPException: If the user is not logged in or if an error occurs while generating the report.
+    """
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
 
@@ -581,10 +689,10 @@ async def download_file(
 
         try:
             report_dict = report.to_dict()
-        except:
+        except Exception as e:
             raise HTTPException(
                 500,
-                detail="An error occurred while generating the report, you may have not generated a report yet.",
+                detail=f"An error occurred while generating the report, you may have not generated a report yet. Error: {str(e)}",
             )
 
         if is_prod():
@@ -686,6 +794,21 @@ async def get_report(
     params: schemas.AutomaticReport = Depends(),
     db: Session = Depends(get_db),
 ):
+    """
+    Retrieve a report from the db based on the provided parameters.
+
+    Args:
+    - request: The incoming request object.
+    - params: An instance of the AutomaticReport schema, containing the parameters for the report.
+    - db: The database session.
+
+    Returns:
+    - The retrieved report.
+
+    Raises:
+    - HTTPException with status code 401 if the user is not logged in.
+    - HTTPException with status code 404 if the report is not found.
+    """
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
     report = crud.get_report(
@@ -864,7 +987,7 @@ def format_email(student_id: str, course_id: str, units: List[model.Unit]):
     - str: A string containing the HTML content for the email body.
     """
     unit_links = [
-        f'<li><a href="https://ref.iik.ntnu.no/app/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
+        f'<li><a href="https://ref.iik.ntnu.no/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
         for unit in reversed(units)
     ]
 
@@ -938,6 +1061,36 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
     stringAnswered["Summary"] = summary["summary"]
 
     return stringAnswered
+
+
+@app.delete("/unroll_course")
+async def unroll_course(
+    request: Request, ref: schemas.EnrollmentBase, db: Session = Depends(get_db)
+):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+    if not is_admin(db, request):
+        raise HTTPException(403, detail="You are not an admin user")
+    try:
+        user = request.session.get("user")
+        uid = user.get("uid")
+        return crud.delete_enrollment(db, uid, ref.course_id, ref.course_semester)
+    except IntegrityError:
+        raise HTTPException(409, detail="Course already exists")
+
+
+@app.delete("/delete_course")
+async def delete_course(
+    request: Request, ref: schemas.CourseBase, db: Session = Depends(get_db)
+):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+    if not is_admin(db, request):
+        raise HTTPException(403, detail="You are not an admin user")
+    try:
+        return crud.delete_course(db, ref.id, ref.semester)
+    except IntegrityError:
+        raise HTTPException(409, detail="Course already exists")
 
 
 @app.post("/generate_report")

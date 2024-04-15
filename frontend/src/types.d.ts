@@ -4,6 +4,7 @@ type User = {
 	enrollments: Enrollment[];
 	reflections: Reflection[];
 	admin: boolean;
+	detail?: string;
 };
 
 type ReportType =
@@ -39,6 +40,7 @@ type Unit = {
 	title: string;
 	date_available: Date;
 	course_id: string;
+	course_semester: string;
 	course: Course;
 	reflections: reflections[];
 };

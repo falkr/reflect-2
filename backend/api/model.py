@@ -10,7 +10,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, class_mapper
 from sqlalchemy.schema import ForeignKeyConstraint, Table
 from datetime import date
 
@@ -135,6 +135,11 @@ class Report(Base):
         {},
     )
     course = relationship("Course", back_populates="reports")
+
+    """ def to_dict(self):
+        return {
+            c.key: getattr(self, c.key) for c in class_mapper(self.__class__).columns
+        } """
 
     def to_dict(self):
         report_content = self.report_content.copy()  # Create a copy of report_content
