@@ -20,7 +20,7 @@
 		<CourseOverviewLecturer {data} {units} />
 	{:else}
 		<CourseOverviewStudent {data} {units} />
-	{/if} -
+	{/if}
 </main>
 
 <!-- on:click={() => goto(`${data.course_name}/`)} -->

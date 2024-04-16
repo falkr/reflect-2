@@ -1,148 +1,35 @@
 <script lang="ts">
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { Input, Label, Helper, Textarea, Heading, P, Button } from 'flowbite-svelte';
+	import { CloseOutline, FileCirclePlusSolid, PapperPlaneSolid } from 'flowbite-svelte-icons';
+	import { validateUnitTitle } from '$lib/validation';
+	import { toast } from 'svelte-french-toast';
+	import { onMount } from 'svelte';
+	import { goto, invalidate } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import { PUBLIC_API_URL } from '$env/static/public';
-	import {
-		AccordionItem,
-		Accordion,
-		Button,
-		Label,
-		Input,
-		Modal,
-		Select,
-		Toast
-	} from 'flowbite-svelte';
 	import { createForm } from 'felte';
-	import {
-		validateEmailAddresses,
-		validateInviteRole,
-		// validateUnitSeqNumber,
-		validateUnitTitle
-	} from '$lib/validation';
-	import { DateInput } from 'date-picker-svelte';
-	import { AlertCircleIcon, CheckCircleIcon } from 'svelte-feather-icons';
-	import { slide } from 'svelte/transition';
+	import DeleteUnitModal from '$lib/components/DeleteUnitModal.svelte';
 
-	export let data: Data;
-	export let role: string;
-	export let units: Unit[];
-	$: units = data.units;
+	export let data: any;
+	export let unitName: string | undefined;
+	export let unit_number: number;
 
-	let selectedInviteRole: string;
+	let availableDate = data.unit.unit.date_available;
+	let isUnitOngoing: boolean = false;
+	let isUserLecturer: boolean = false;
+	let decline: boolean = false;
+	let answers: string[] = [];
 
-	let roles = [
-		{ value: 'student', name: 'Student' },
-		{ value: 'lecturer', name: 'Lecturer' },
-		{ value: 'teaching assistant', name: 'Teaching Assistant' }
-	];
-
-	//dates for datePicker
-	let date = new Date();
-	let minDate = new Date();
-	let maxDate = new Date(new Date().setFullYear(new Date().getFullYear() + 2));
-	let stringDate = date.toISOString().split('T')[0];
-
-	const teaching_assistants = data.course.users.filter(
-		(enrollment) => enrollment.role === 'teaching assistant'
-	);
-	const students = data.course.users.filter((enrollment) => enrollment.role === 'student');
-
-	let unitModal = false;
-	let emailModal = false;
-
-	let showError = false;
-
-	let showSuccess = false;
-
-	let counter = 6;
-	let toastBody = '';
-
-	async function _sendMail(form: FormData) {
-		// post request to
-		//const course_ID = data.course.id;
-
-		let uids = form.get('uid');
-		// To send emails, the email addresses has to include "@stud.ntnu.no" and not only "@ntnu.no"
-
-		let uid = '';
-		if (uids instanceof File) {
-			// Handle file input
-			uid = uids.name;
-		} else if (typeof uids === 'string') {
-			// Handle regular string input
-			uid = uids;
-		}
-
-		let uid_list = uid.split(' ');
-		let invitation_ids: number[] = [];
-		let response;
-
-		// Create row in invitation table
-		for (let i = 0; i < uid_list.length; i++) {
-			response = await createUserInvitation(uid_list[i], selectedInviteRole);
-			if (response.status == 200) {
-				invitation_ids.push(response.result.id);
-			} else {
-				// If one POST request fails, delete all the invitations that were created
-				for (let i = 0; i < invitation_ids.length; i++) {
-					deleteInvitation(invitation_ids[i]);
-				}
-				return response;
-			}
-		}
-		return response;
-		// Because of trouble with the server, we are not sending emails for now
-		// TODO: Contact IT Drift to enable sending of emails
-
-		// const response = await fetch(`${PUBLIC_API_URL}/invitation_email/${course_ID}`, {
-		// 	method: 'POST',
-		// 	credentials: 'include',
-		// 	headers: {
-		// 		'Content-Type': 'application/json'
-		// 	},
-		// 	body: JSON.stringify({
-		// 		email: emails_list
-		// 	})
-		// });
-		// const js = await response.json();
-		// return { js };
-	}
-
-	async function createUserInvitation(uid: string, role: string) {
-		const course_id = data.course.id;
-
-		const response = await fetch(`${PUBLIC_API_URL}/create_invitation`, {
-			method: 'POST',
+	async function editUnit(form: FormData) {
+		const response = await fetch(`${PUBLIC_API_URL}/update_unit/${data.unit_id}`, {
+			method: 'PATCH',
 			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				uid: uid,
-				course_id: course_id,
-				course_semester: data.course.semester,
-				role: role
-			})
-		});
-		const status = response.status;
-		const result = await response.json();
-		return { result, status };
-	}
-
-	//function for creating unit
-	async function createUnit(form: FormData) {
-		const title = form.get('title');
-		// const date_available = form.get('date_available');
-		// const seq_no = form.get('seq_no');
-
-		const response = await fetch(`${PUBLIC_API_URL}/create_unit`, {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				title: title,
-				date_available: date.toISOString().split('T')[0],
+				title: unitName,
+				date_available: availableDate,
 				course_id: data.course.id,
 				course_semester: data.course.semester,
 				hidden: false
@@ -154,25 +41,28 @@
 		return { result, status };
 	}
 
-	//Form for creating unit
+	//Form for edit unit
 	const { form, errors, isSubmitting } = createForm({
 		//on submit, create a course
 		onSubmit: async (values, { form }) => {
 			const formData = new FormData(form as HTMLFormElement);
-			return createUnit(formData);
+			return editUnit(formData);
 		},
 		onSuccess(response) {
 			const castedResponse = response as Response;
 			if (castedResponse.status == 200) {
-				unitModal = false;
-				triggerToast('Unit successfully created!', 'success');
+				window.history.back();
+				toast.success('Unit updated successfully', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
 			}
 			if (castedResponse.status == 409) {
-				unitModal = true;
-				triggerToast('Could not create unit', 'error');
+				toast.error('An error occurred while updating the unit');
 			}
 		},
-
 		//validates the form on submitting
 		validate: (values) => {
 			const errors: Partial<FormValues> = {};
@@ -185,417 +75,293 @@
 		}
 	});
 
-	//form for inviting students
-	const {
-		form: inviteForm,
-		errors: inviteErrors,
-		isSubmitting: inviteFormIsSubmitting
-	} = createForm({
-		//on submit, create a course
-		onSubmit: async (values, { form }) => {
-			const formData = new FormData(form as HTMLFormElement);
-			return _sendMail(formData);
-		},
-		onSuccess(response) {
-			const castedResponse = response as Response;
-			if (castedResponse.status == 200) {
-				emailModal = false;
-				triggerToast('Invitations has been sent!', 'success');
-			}
-			if (castedResponse.status == 409) {
-				emailModal = true;
-				triggerToast('Could not create invitation', 'error');
-			}
-		},
-
-		//validates the form on submitting
-		validate: (values) => {
-			const errors: Partial<FormValues> = {};
-			if ($inviteFormIsSubmitting) {
-				return errors;
-			}
-		}
+	onMount(() => {
+		const availableDate = new Date(data.unit.unit.date_available);
+		const today = new Date();
+		isUnitOngoing = availableDate <= today;
+		isUserLecturer = data.role === 'lecturer'; //Sets the value to true if the user is a lecturer
+		decline = false;
 	});
 
-	// function for deleting invitation, using DELETE method
-	async function deleteInvitation(invitation_id: number) {
-		const response = await fetch(`${PUBLIC_API_URL}/delete_invitation/${invitation_id}`, {
-			method: 'DELETE',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-		await response.json();
-	}
-
-	function getUnitName(number: number) {
-		return units.find((unit) => unit.id == number)?.title;
-	}
-
-	function triggerToast(body: string, type: string) {
-		if (type == 'success') {
-			showSuccess = true;
-		} else {
-			showError = true;
+	//Return the reflection by question
+	function getReflectionByQuestion() {
+		let answerString = answers.shift();
+		if (answerString == undefined) {
+			return '';
 		}
-		counter = 6;
-		toastBody = body;
-		timeout();
+		return answerString;
 	}
 
-	function timeout(): number {
-		if (--counter > 0) return window.setTimeout(timeout, 1000);
-		showError = false;
-		showSuccess = false;
-		return counter;
+	function handleDecline() {
+		decline = true;
 	}
 
-	async function update_hidden(unit_id: number, hidden: boolean) {
-		const response = await fetch(`${PUBLIC_API_URL}/update_hidden_unit`, {
-			method: 'PATCH',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				id: unit_id,
-				hidden: hidden
-			})
+	//Submit or decline based on button pressed
+	function handleSubmit(e: SubmitEvent) {
+		const formData = new FormData(e.target as HTMLFormElement);
+		if (decline === false) {
+			createReflection(formData);
+		} else {
+			declineReflection(formData);
+		}
+	}
+
+	//Submitting a reflection
+	async function createReflection(form: FormData) {
+		let questions = form.getAll('question_id');
+		let answers = form.getAll('answer');
+
+		//Parse question_id to numbers
+		let questions_num = questions.map(function (item) {
+			return parseInt(item.toString());
 		});
-		await response.json();
-		invalidateAll();
-	}
 
-	async function generate_report(unit: any) {
-		await fetch(`${PUBLIC_API_URL}/generate_report`, {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				unit_id: unit.id,
-				course_id: unit.course_id,
-				course_semester: unit.course_semester
+		let promises = [];
+
+		for (let index = 0; index < questions.length; index++) {
+			//Sends #question_id reflections to backend
+			promises.push(
+				fetch(`${PUBLIC_API_URL}/reflection`, {
+					method: 'POST',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						body: answers[index],
+						user_id: data.user.uid,
+						unit_id: data.unit_id,
+						question_id: questions_num[index]
+					})
+				})
+			);
+		}
+
+		Promise.all(promises)
+			.then(() => {
+				if (browser) {
+					invalidate('app:layoutUser').then(() => {
+						goto(`/courseview/${data.course.semester}/${data.course.id}`);
+					});
+				}
 			})
+			.then(() => {
+				toast.success('Reflection submitted', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
+			});
+	}
+
+	//Declining a reflection
+	async function declineReflection(form: FormData) {
+		let questions = form.getAll('question_id');
+
+		//Parse question_id to numbers
+		let questions_num = questions.map(function (item) {
+			return parseInt(item.toString());
 		});
-	}
 
-	let isGenerating = -1;
+		let promises = [];
 
-	async function generateReport(unit: any) {
-		isGenerating = unit.id;
-		await generate_report(unit);
-		isGenerating = -1;
-	}
+		for (let index = 0; index < questions.length; index++) {
+			//Sends #question_id reflections to backend
+			promises.push(
+				fetch(`${PUBLIC_API_URL}/reflection`, {
+					method: 'POST',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						body: '',
+						user_id: data.user.uid,
+						unit_id: data.unit_id,
+						question_id: questions_num[index]
+					})
+				})
+			);
+		}
 
-	async function download_report(unit: any) {
-		window.open(
-			`${PUBLIC_API_URL}/download?course_id=${unit.course_id}&unit_id=${unit.id}&course_semester=${unit.course_semester}`
-		);
+		Promise.all(promises)
+			.then(() => {
+				if (browser) {
+					invalidate('app:layoutUser').then(() => {
+						goto(`/courseview/${data.course.semester}/${data.course.id}`);
+					});
+				}
+			})
+			.then(() => {
+				toast.success('Unit declined', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
+			});
 	}
 </script>
 
-<main class="flex-shrink-0">
-	<div class="relative">
-		<div class="flex items-center justify-center pl-4 pr-4">
-			<div class="header flex flex-col border-b-2 border-teal-12 pb-3">
-				<h3 class="headline flex text-left text-xl font-bold text-teal-12">
-					{data.course.id}
-					<p class="ml-3 mr-3">-</p>
-					<p class="text-xl font-medium text-teal-12" style="word-break: break-word">
-						{data.course.name}
-					</p>
-				</h3>
+<div class="mx-5 md:w-4/5 md:mx-auto mb-12 text-gray-900 dark:text-white flex">
+	<Heading tag="h1" class="mt-2 text-xl">{'Unit ' + unit_number + ' - ' + unitName}</Heading>
+	{#if isUserLecturer}
+		<DeleteUnitModal {data} />
+	{/if}
+</div>
+
+{#if !isUserLecturer}
+	<div>
+		<form class="mx-5 md:w-4/5 md:mx-auto" on:submit={handleSubmit}>
+			<div class="flex-col md:flex-row gap-4 md:gap-8 w-full">
+				<p class="text-black dark:text-gray-300">
+					Write your reflection for this unit. Make sure not to include any sensitive or private
+					information.
+				</p>
+				<Heading
+					tag="h5"
+					style="font-size: 1.5rem;"
+					class="mt-2 text-xl text-gray-900 dark:text-white"
+				>
+					Questions
+				</Heading>
+
+				{#each data.course.questions as questionType}
+					<div class="my-4">
+						<Label for="question" class="text-sm block font-medium text-gray-900 dark:text-white"
+							>{questionType.comment}</Label
+						>
+					</div>
+					{#if data.reflected || !data.available}
+						<Textarea
+							id="question"
+							name="answer"
+							rows="4"
+							placeholder="Write your thoughts here..."
+							value={getReflectionByQuestion()}
+							disabled={data.reflected || !data.available}
+							style="resize: none"
+							class="mb-4"
+						/>
+					{:else}
+						<Textarea
+							id="question"
+							name="answer"
+							rows="4"
+							placeholder="Write your thoughts here..."
+							style="resize: none"
+							class="mb-4"
+						/>
+					{/if}
+
+					<input name="question_id" bind:value={questionType.id} class="hidden" />
+				{/each}
+
+				{#if data.reflected}
+					<div class="flex max-w-2xl flex-col">
+						{#if data.available}
+							<Heading tag="h1" class="mt-2">You have already reflected on this unit.</Heading>
+						{:else}
+							<Heading tag="h1" class="my-4">This unit is not ready for reflection.</Heading>
+						{/if}
+					</div>
+				{:else if !data.reflected && !data.available}
+					<div class="flex max-w-2xl">
+						<Heading tag="h1" class="my-4">This unit is not ready for reflection.</Heading>
+					</div>
+				{:else}
+					<div class="flex">
+						<Button
+							class="mr-8 mt-4 bg-teal-13 hover:bg-teal-10 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
+							label="Submit"
+							type="submit"
+						>
+							<PapperPlaneSolid class="w-3.5 h-3.5 mr-2" />
+							Submit Reflection
+						</Button>
+
+						<Button
+							color="alternative"
+							class="box-border border-red-700 border-2 py-2 px-4 mt-4 text-red-700 dark:text-white dark:border-red-700 dark:hover:bg-red-700 dark:hover:border-red-700"
+							type="submit"
+							on:click={handleDecline}
+						>
+							<CloseOutline class="text-red-700 dark:text-white mr-2"></CloseOutline>
+							Decline unit
+						</Button>
+					</div>
+				{/if}
+			</div>
+		</form>
+	</div>
+{:else}
+	<form class="mx-5 md:w-4/5 md:mx-auto" use:form>
+		{#if isUnitOngoing}
+			<P class="mb-4" size="sm"
+				>This unit is already ongoing, so you cannot edit any of the values.</P
+			>
+		{/if}
+		<div class="flex flex-col md:flex-row gap-4 md:gap-8 w-full mb-8">
+			<div class="sm:w-96 w-80">
+				<Label for="first_name" class="mb-2">Unit name</Label>
+				<Input
+					type="text"
+					id="first_name"
+					bind:value={unitName}
+					placeholder="Introduction and team setup"
+					disabled={isUnitOngoing}
+				/>
+				<Helper class="text-sm mt-1">The name of the unit, visible to the students.</Helper>
+			</div>
+			<div class="sm:w-96 w-80">
+				<Label for="last_name" class="mb-2">Unit available from</Label>
+				<Input
+					type="date"
+					id="last_name"
+					bind:value={availableDate}
+					placeholder={new Date()}
+					disabled={isUnitOngoing}
+				/>
+				<Helper class="text-sm mt-1">
+					The date the student should be able to submit their reflections on this unit.
+				</Helper>
 			</div>
 		</div>
-		<div class="flex flex-col md:gap-y-4">
-			{#if role === 'lecturer'}
-				<div class="buttonContainer flex justify-center pt-10">
-					<Button
-						on:click={() => (unitModal = true)}
-						class="w-[190px] rounded-full border-teal-8 bg-teal-8 hover:border-teal-7 hover:bg-teal-7"
-						size="xl"
-					>
-						+ Create new unit
+
+		<Heading tag="h5">Questions</Heading>
+		<div class="flex flex-col gap-4 mt-4">
+			{#if !isUnitOngoing}
+				<Helper class="text-sm mt-1">The questions cannot be changed.</Helper>
+			{/if}
+			<Textarea
+				class="resize-none md:w-1/2 w-3/4"
+				placeholder="What was your best learning success in this unit? Why?"
+				disabled
+			/>
+			<Textarea
+				class="resize-none md:w-1/2 w-3/4"
+				placeholder="What was your least understood concept in this unit? Why?"
+				disabled
+			/>
+			{#if !isUnitOngoing}
+				<div class="mt-6">
+					<Button type="submit" size="md" class="w-36 bg-teal-13 text-white">
+						Update unit
+						<FileCirclePlusSolid class="w-4 h-4 ml-2" />
 					</Button>
-					<div class="w-2" />
 					<Button
-						on:click={() => (emailModal = true)}
-						class="w-[190px] rounded-full border-teal-8 bg-teal-8 hover:border-teal-7 hover:bg-teal-7 "
-						size="xl"
+						on:click={() =>
+							goto(`${/courseview/ + data.course.semester + '/' + data.course.id}`, {
+								replaceState: false
+							})}
+						size="md"
+						class="w-24 ml-2 bg-gray-200 text-gray-900"
 					>
-						+ Invite
+						Cancel
 					</Button>
 				</div>
 			{/if}
-
-			<!-- <NewCourseModal {isOpen} {toggleIsOpen} /> -->
-			<Modal bind:open={unitModal} size="xs" autoclose={false} class="w-full">
-				<form class="flex flex-col space-y-6" use:form>
-					<h3 class="p-0 text-xl font-medium text-teal-12 dark:text-white">Create unit</h3>
-					<Label class="space-y-2">
-						<span>Unit name</span>
-						<Input type="text" name="title" placeholder="title" required />
-					</Label>
-
-					<small>
-						{#if $errors.title}
-							{#each $errors.title as error}
-								<p class="text-red-500">{error}</p>
-							{/each}
-						{/if}
-					</small>
-
-					<Label class="space-y-0">
-						<span>Date available from</span>
-					</Label>
-
-					<DateInput
-						bind:value={date}
-						max={maxDate}
-						min={minDate}
-						format="yyyy-MM-dd"
-						closeOnSelection={true}
-					/>
-					<Button
-						type="submit"
-						data-modal-target="unitModal"
-						data-modal-toggle="unitModal"
-						class="w-full1 bg-teal-9 hover:bg-teal-8">Submit</Button
-					>
-				</form>
-			</Modal>
-
-			<Modal bind:open={emailModal} size="xs" autoclose={false} class="w-full">
-				<form class="flex flex-col space-y-6" use:inviteForm>
-					<h3 class="p-0 text-xl font-medium text-gray-900 dark:text-white">Invite Users</h3>
-					<Label class="space-y-2">
-						<span><b>Username (feide)</b></span>
-						<p>To invite multiple users, insert space-separated usernames</p>
-						<Input type="text" name="uid" placeholder="example" required />
-						<Input type="hidden" name="user" value={data.user.uid} />
-					</Label>
-					<small>
-						{#if $inviteErrors.uid}
-							{#each $inviteErrors.uid as error}
-								<p class="text-red-500">{error}</p>
-							{/each}
-						{/if}
-					</small>
-					<Label class="space-y-2">
-						<span><b>Role</b></span>
-						<Select
-							class="mt-2"
-							items={roles}
-							required
-							name="role"
-							bind:value={selectedInviteRole}
-						/>
-					</Label>
-					<small>
-						{#if $inviteErrors.role}
-							{#each $inviteErrors.role as error}
-								<p class="text-red-500">{error}</p>
-							{/each}
-						{/if}
-					</small>
-					<Button
-						type="submit"
-						data-modal-target="emailModal"
-						data-modal-toggle="emailModal"
-						class="w-full1 bg-teal-9 hover:bg-teal-8">Submit</Button
-					>
-				</form>
-			</Modal>
-
-			<section class="flex items-center justify-center pt-12">
-				<Accordion
-					class="b-teal-12 mt-16 w-[300px] rounded-xl border-teal-12 bg-teal-1 md:mt-2 md:w-2/3"
-					activeClass="bg-teal-1 dark:bg-fifthly text-fifthly-600 dark:text-white"
-					inactiveClass="text-gray-500 dark:text-gray-400 hover:bg-fifthly-100 dark:hover:bg-fifthly-800"
-				>
-					{#if role === 'lecturer'}
-						<AccordionItem class=" border-teal-12">
-							<span slot="header" class="text-[18px] font-semibold text-teal-12">View Reports</span>
-							<p class="">
-								{#if Array.isArray(data.course.reports)}
-									{#each data.course.reports as report}
-										<!-- svelte-ignore a11y-click-events-have-key-events -->
-										<li
-											class="w-50 border-stone-300 container mt-3 flex h-16 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-											on:click={() => goto(`${data.course_name}/reports/${report?.unit_id}`)}
-										>
-											<p class="mt-3 font-semibold text-teal-12">
-												Report for unit "{report && getUnitName(report.unit_id)}"
-											</p>
-										</li>
-									{/each}
-								{:else}
-									<p class="mt-3 font-semibold text-teal-12">No reports available</p>
-								{/if}
-							</p>
-						</AccordionItem>
-					{/if}
-					<AccordionItem open class=" border-teal-12">
-						<span slot="header" class="text-[18px] font-semibold text-teal-12">View units</span>
-						<p class="">
-							{#each units as unit}
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								{#if role === 'student' && !unit.hidden}
-									<li
-										class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-										on:click={() =>
-											goto(
-												`../../courseview/${data.course.semester}/${data.course_name}/${unit.id}`
-											)}
-									>
-										<p class="mt-3 font-semibold text-teal-12">{unit.title}</p>
-
-										<div class="justify-end self-center">
-											{#if data.user.reflections
-												.map((reflection) => reflection.unit_id)
-												.includes(unit.id)}
-												<div class=" flex justify-end rounded border-teal-12">
-													<span class=" font-semibold text-[#32431b]">Answered</span>
-												</div>
-											{:else}
-												<div class=" flex justify-end rounded">
-													<span class=" font-semibold text-[#902c2c]">Unanswered</span>
-												</div>
-											{/if}
-											{#if unit.date_available.toString() > stringDate}
-												<span>Availble from: {unit.date_available}</span>
-											{:else}
-												<span>Available</span>
-											{/if}
-										</div>
-									</li>
-								{:else if role === 'lecturer' || role === 'teaching assistant'}
-									{#if !unit.hidden}
-										<li
-											class="w-50 border-stone-300 container my-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
-										>
-											<p class="mt-3 font-semibold text-teal-12">{unit.title}</p>
-
-											<div class="self-center text-right">
-												{#if role === 'lecturer' || role === 'teaching assistant'}
-													<div class="">Response count: {unit.reflections.length / 2}</div>
-												{/if}
-												{#if unit.date_available.toString() > stringDate}
-													<span class="text-sm italic">Available from: {unit.date_available}</span>
-												{:else}
-													<span class="text-sm italic">Available</span>
-												{/if}
-											</div>
-										</li>
-										<Button
-											on:click={() => update_hidden(unit.id, true)}
-											class="h-[40px] w-[120px] rounded bg-orange-600 hover:bg-orange-700"
-										>
-											- Hide unit
-										</Button>
-										<Button
-											on:click={() => generateReport(unit)}
-											class="h-[40px] w-[200px] rounded bg-green-600 hover:bg-green-700"
-										>
-											{#if isGenerating == unit.id}
-												Generating...
-											{:else}
-												- Generate report
-											{/if}
-										</Button>
-										<Button
-											on:click={() => download_report(unit)}
-											class="h-[40px] w-[200px] rounded bg-blue-600 hover:bg-blue-700"
-										>
-											- Download report
-										</Button>
-									{:else}
-										<li
-											class="w-50 border-stone-300 container mt-3 flex h-24 list-none justify-between rounded border-[1px] border-solid border-teal-12 bg-teal-1 p-2 hover:bg-teal-4"
-											on:click={() => goto(`${data.course_name}/${unit.id}/reflections`)}
-										>
-											<p class="mt-3 font-semibold text-teal-12">{'[HIDDEN] ' + unit.title}</p>
-
-											<div class="self-center text-right">
-												{#if role === 'lecturer' || role === 'teaching assistant'}
-													<div class="">Response count: {unit.reflections.length / 2}</div>
-												{/if}
-												{#if unit.date_available.toString() > stringDate}
-													<span class="text-sm italic">Available from: {unit.date_available}</span>
-												{:else}
-													<span class="text-sm italic">Available</span>
-												{/if}
-											</div>
-										</li>
-										<Button
-											on:click={() => update_hidden(unit.id, false)}
-											class="h-[40px] w-[90px] rounded-full bg-teal-7 hover:bg-teal-8 "
-											size="sm"
-										>
-											+ Show unit
-										</Button>
-									{/if}
-								{/if}
-							{/each}
-						</p>
-					</AccordionItem>
-
-					{#if role === 'lecturer' || role === 'teaching assistant'}
-						<AccordionItem class="border-teal-12">
-							<span slot="header" class="text-[18px] font-semibold text-teal-12"
-								>Teaching assistant</span
-							>
-							<p class="">
-								{#each teaching_assistants as ta}
-									<li class="mt-3 font-bold text-teal-12">
-										{ta.uid}
-									</li>
-								{/each}
-							</p>
-						</AccordionItem>
-						<AccordionItem class=" border-teal-12">
-							<span slot="header" class="text-[18px] font-semibold text-teal-12">Students</span>
-							<p class="mt-3 font-bold text-teal-12">
-								{#each students as student}
-									<li class=" list-none p-2">{student.uid}</li>
-								{/each}
-							</p>
-						</AccordionItem>
-					{/if}
-				</Accordion>
-			</section>
 		</div>
-		<div class="z-50">
-			<Toast
-				position="bottom-right"
-				transition={slide}
-				bind:open={showSuccess}
-				divClass="w-full max-w-sm p-5"
-			>
-				<svelte:fragment slot="icon">
-					<CheckCircleIcon />
-				</svelte:fragment>
-				<div class="text-[1.5em]">{toastBody}</div>
-			</Toast>
-
-			<Toast position="bottom-right" transition={slide} bind:open={showError}>
-				<svelte:fragment slot="icon">
-					<AlertCircleIcon />
-				</svelte:fragment>
-				<div class="text-[1.5em]">{toastBody}</div>
-			</Toast>
-		</div>
-	</div>
-</main>
-
-<!-- on:click={() => goto(`${data.course_name}/`)} -->
-<style>
-	:root {
-		--date-picker-background: #f6f7f8;
-		--date-picker-foreground: #10302b;
-	}
-</style>
+	</form>
+{/if}

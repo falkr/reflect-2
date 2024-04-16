@@ -53,7 +53,7 @@
 	}
 </script>
 
-<Card class="max-w-full mt-6 dark:bg-gray-800">
+<Card class="max-w-full mt-6 dark:bg-gray-800 sm:p-4 sm:pl-5">
 	<div class="flex justify-between">
 		<div class="flex flex-col md:flex-row md:items-center">
 			<h2 class="text-xl text-gray-900 dark:text-white font-semibold mr-4">{unitData.title}</h2>
@@ -71,7 +71,7 @@
 		Unit {unitData.unit_number} - {reformatDate(unitData.date_available)}
 	</p>
 	<div>
-		<ButtonGroup class="mt-5">
+		<ButtonGroup class="mt-3">
 			{#if unitTag === 'ready'}
 				<Button
 					class="focus:dark:outline-none dark:outline-none dark:bg-gray-800 dark:text-white"

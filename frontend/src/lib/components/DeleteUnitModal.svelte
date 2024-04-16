@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { Button, Modal, ButtonGroup, Heading } from 'flowbite-svelte';
-	import toast, { Toaster } from 'svelte-french-toast';
+	import toast from 'svelte-french-toast';
 	import { TrashBinOutline } from 'flowbite-svelte-icons';
 	import { PUBLIC_API_URL } from '$env/static/public';
-	import { goto } from '$app/navigation';
 	import { invalidate } from '$app/navigation';
 
 	export let data: any;
@@ -45,7 +44,6 @@
 	}
 </script>
 
-<Toaster />
 <ButtonGroup>
 	<Button class="w-32" on:click={() => (showDeleteUnitModal = true)}>
 		Delete unit

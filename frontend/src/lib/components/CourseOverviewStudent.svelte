@@ -1,8 +1,7 @@
 <script lang="ts">
-	import DeleteCourseModal from './DeleteCourseModal.svelte';
+	import CourseActions from './CourseActions.svelte';
 	import UnitCardStudent from './UnitCardStudent.svelte';
 	import { Button } from 'flowbite-svelte';
-	import { Toaster } from 'svelte-french-toast';
 	export let units: Unit[];
 	export let data: Data;
 
@@ -25,10 +24,9 @@
 	}
 </script>
 
-<Toaster />
 <div class="relative flex-col md:mx-24 mx-10">
 	<div class="flex justify-end mb-2">
-		<DeleteCourseModal {data} />
+		<CourseActions {data} />
 	</div>
 	{#if units.length === 0}
 		<h1 class="text-gray-500 dark:text-white">No units available yet for this course</h1>

@@ -5,9 +5,7 @@
 	import { onMount } from 'svelte';
 	import { createForm } from 'felte';
 	import { validateCourseId, validateCourseName, validateCourseSemester } from '$lib/validation';
-	import { slide } from 'svelte/transition';
-	import { AlertCircleIcon, CheckCircleIcon } from 'svelte-feather-icons';
-	import { Toaster, toast } from 'svelte-french-toast';
+	import { toast } from 'svelte-french-toast';
 	import CourseCards from '$lib/components/CourseCards.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	export let data: Data;
@@ -146,7 +144,6 @@
 </script>
 
 <Breadcrumb />
-<Toaster />
 <div>
 	{#if data.user.enrollments.length == 0}
 		<div class="mt-40 justify-center align-center self-center text-center">

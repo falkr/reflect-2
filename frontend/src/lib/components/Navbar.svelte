@@ -105,38 +105,31 @@
 			<img
 				src="/logo-horizontal-light.svg"
 				alt="Reflection Tool Logo"
-				class="me-3 hidden sm:block dark:hidden"
+				class="me-3 hidden md:block dark:hidden"
 			/>
 			<img
 				src="/logo-icon-light.svg"
-				class="me-3 sm:hidden dark:hidden"
+				class="me-3 md:hidden dark:hidden"
 				alt="Reflection Icon Logo"
 			/>
 			<img
 				src="/logo-horizontal-dark.svg"
 				alt="Reflection Tool Logo"
-				class="me-3 hidden dark:sm:block"
+				class="me-3 hidden dark:md:block"
 			/>
 			<img
 				src="/logo-icon-dark.svg"
-				class="me-3 hidden dark:max-sm:block"
+				class="me-3 hidden dark:max-md:block"
 				alt="Reflection Icon Logo"
 			/>
 		</NavBrand>
-		<div class="flex items-center gap-5">
-			<div>
-				<span class="hidden sm:inline">Logged in as</span>
-				<span class="mr-2 sm:mr-4">{user.uid}</span>
-				<DarkMode class="align-bottom text-blue-700 dark:text-yellow-200" />
-				<Button on:click={handleLogOut} color="alternative" class="ml-4">
-					Log out
-					<ArrowRightToBracketSolid class="w-3.5 h-3.5 ms-2" />
-				</Button>
-			</div>
-			<div class="relative mt-0.5">
+		<div class="flex items-center gap-2 sm:gap-5">
+			<span class="hidden sm:inline">Logged in as {user.uid}</span>
+			<DarkMode class="align-bottom text-gray-700 dark:text-yellow-200" />
+			<div class="relative">
 				{#if invitations.length > 0}
 					<div
-						class="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 hover:cursor-default focus:outline-none"
+						class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 hover:cursor-default focus:outline-none"
 					>
 						<span class="select-none text-[12px] font-bold text-white focus:outline-none"
 							>{invitations.length}</span
@@ -144,16 +137,16 @@
 					</div>
 				{/if}
 				<MailIcon
-					class="hover:cursor-pointer  focus:outline-none dark:text-white"
+					class="hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg w-10 h-10 text-gray-700 p-2.5 focus:outline-none dark:text-white "
 					on:click={() => {
 						dropdownOpen = !dropdownOpen;
 					}}
 				/>
-				<Dropdown open={dropdownOpen}>
+				<Dropdown open={dropdownOpen} class="w-max">
 					{#if invitations.length > 0}
 						{#each invitations as invitation}
 							<DropdownItem
-								class="hover:cursor-pointer focus:outline-none w-60"
+								class="hover:cursor-pointer focus:outline-none"
 								on:click={() => {
 									handleInviteClick(invitation);
 								}}
@@ -189,6 +182,10 @@
 					>
 				</Modal>
 			</div>
+			<Button on:click={handleLogOut} color="alternative" class="ml-4">
+				Log out
+				<ArrowRightToBracketSolid class="w-3.5 h-3.5 ms-2" />
+			</Button>
 		</div>
 	</Navbar>
 {/if}

@@ -1,9 +1,8 @@
 <script lang="ts">
 	import UnitCardLecturer from './UnitCardLecturer.svelte';
-	import InviteUsersModal from './InviteUsersModal.svelte';
 	import { Button } from 'flowbite-svelte';
 	import { goto } from '$app/navigation';
-	import DeleteCourseModal from './DeleteCourseModal.svelte';
+	import CourseActions from './CourseActions.svelte';
 
 	export let units: Unit[];
 	export let data: Data;
@@ -13,17 +12,16 @@
 </script>
 
 <div class="mt-16 w-full flex flex-col items-center mb-16">
-	<div class="flex justify-between w-11/12 sm:w-4/5">
+	<div class="flex sm:flex-row flex-col justify-between w-11/12 sm:w-4/5">
 		<div class="flex gap-4">
-			<InviteUsersModal {data} />
-			<DeleteCourseModal {data} />
+			<CourseActions {data} />
 		</div>
 		<Button
 			on:click={() =>
 				goto(`/courseview/${data.course.semester}/${data.course.id}/create`, {
 					replaceState: false
 				})}
-			class="text-white bg-teal-13 hover:bg-teal-10 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-sm py-2.5 text-center inline-flex items-center dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-800"
+			class="text-white w-1/2 mt-4 sm:mt-0 sm:w-44 bg-teal-13 hover:bg-teal-10 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-sm py-2.5 text-center inline-flex items-center dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-800"
 		>
 			Create new unit
 			<svg

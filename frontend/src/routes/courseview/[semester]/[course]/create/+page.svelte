@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
-	import { validateEmailAddresses, validateInviteRole, validateUnitTitle } from '$lib/validation';
+	import { invalidate } from '$app/navigation';
+	import { validateUnitTitle } from '$lib/validation';
 	import { Input, Label, Helper, Textarea, Heading, P, Button } from 'flowbite-svelte';
 	import { FileCirclePlusSolid } from 'flowbite-svelte-icons';
 	import { createForm } from 'felte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-	import toast, { Toaster } from 'svelte-french-toast';
+	import toast from 'svelte-french-toast';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	export let data: PageData;
 
@@ -82,7 +82,6 @@
 		}
 	]}
 />
-<Toaster />
 <form class="mx-5 md:w-4/5 md:mx-auto" use:form>
 	<div class="flex flex-col md:flex-row gap-4 md:gap-8 w-full mb-8">
 		<div class="sm:w-96 w-80">

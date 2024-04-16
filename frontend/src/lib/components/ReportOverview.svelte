@@ -4,7 +4,7 @@
 	import { Badge, Button, ButtonGroup } from 'flowbite-svelte';
 	import { DownloadSolid, FileCirclePlusSolid } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
-	import toast, { Toaster } from 'svelte-french-toast';
+	import toast from 'svelte-french-toast';
 	import StructuredReport from './StructuredReport.svelte';
 
 	export let numberOfReflectionsInUnit: number;
@@ -93,7 +93,6 @@
 	}
 </script>
 
-<Toaster />
 <div class="mt-12 w-full flex flex-col items-center mb-16">
 	<div class="flex w-4/5 items-center flex-wrap gap-4">
 		<ButtonGroup>
