@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import { render, screen } from '@testing-library/svelte';
-import Breadcrumb from '../src/lib/components/Breadcrumb.svelte';
+import Breadcrumb from '../../src/lib/components/Breadcrumb.svelte';
 
 describe('BreadcrumbComponent', () => {
 	test('renders the home breadcrumb and additional breadcrumb items', () => {

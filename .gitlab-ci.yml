@@ -93,6 +93,17 @@ test backend:
   only:
     - merge_requests
 
+test frontend:
+  stage: test
+  image: node:20
+  script:
+    - echo "Testing the frontend"
+    - cd frontend
+    - npm i --cache .npm --prefer-offline
+    - npm run test
+  only:
+    - merge_requests
+
 deploy-frontend:
   stage: deploy
   image: node:19
