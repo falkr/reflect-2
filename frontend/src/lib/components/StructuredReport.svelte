@@ -1,15 +1,6 @@
 <script lang="ts">
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
 
-	interface ReportContent {
-		[key: string]: string | { [key: string]: string[] };
-	}
-
-	interface ReportData {
-		report_content?: ReportContent;
-		unit_id?: number;
-	}
-
 	export let reportData: ReportData;
 	export let unitName: string | undefined;
 </script>

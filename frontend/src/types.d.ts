@@ -15,6 +15,15 @@ type ReportType =
 	  }
 	| undefined;
 
+type ReportData = {
+	course_id: string;
+	course_semester: string;
+	id: number;
+	number_of_answers: number;
+	report_content: [];
+	unit_id: number;
+};
+
 type Enrollment = {
 	uid: string;
 	course_id: string;

@@ -10,16 +10,14 @@
 	export let numberOfReflectionsInUnit: number;
 	export let data: Data;
 	const unitId = $page.params.unit;
-
-	let reportData: any;
-
+	let reportData: ReportData;
 	let unit = data.units.find((unit) => unit.id === parseInt(unitId.slice(4)));
 
 	onMount(async () => {
-		await fetchReportData(unit);
+		if (unit) await fetchReportData(unit);
 	});
 
-	async function fetchReportData(unit: any) {
+	async function fetchReportData(unit: Unit) {
 		try {
 			const response = await fetch(
 				`${PUBLIC_API_URL}/report?course_id=${unit.course_id}&unit_id=${unit.id}&course_semester=${unit.course_semester}`,
@@ -40,31 +38,34 @@
 
 	async function generateReport() {
 		isGenerating = true;
-		const response = await fetch(`${PUBLIC_API_URL}/generate_report`, {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				unit_id: unit?.id,
-				course_id: unit?.course_id,
-				course_semester: unit?.course_semester
-			})
-		});
-
-		if (!response.ok) {
-			toast.error('Failed to generate report');
-		} else {
-			toast.success('Report generated successfully', {
-				iconTheme: {
-					primary: '#36786F',
-					secondary: '#FFFFFF'
-				}
+		try {
+			const response = await fetch(`${PUBLIC_API_URL}/generate_report`, {
+				method: 'POST',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					unit_id: unit?.id,
+					course_id: unit?.course_id,
+					course_semester: unit?.course_semester
+				})
 			});
-			await fetchReportData(unit);
+			if (!response.ok) {
+				toast.error('Failed to generate report');
+			} else {
+				toast.success('Report generated successfully', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
+				if (unit) await fetchReportData(unit);
+			}
+			isGenerating = false;
+		} catch (error) {
+			console.error('Error generating report:', error);
 		}
-		isGenerating = false;
 	}
 
 	/**
@@ -111,7 +112,9 @@
 			<Button
 				class="focus:dark:outline-none dark:outline-none dark:bg-gray-900 dark:text-white text-sm md:text-xs"
 				on:click={downloadReport}
-				disabled={isGenerating || numberOfReflectionsInUnit <= 0 || !reportData}
+				disabled={isGenerating ||
+					numberOfReflectionsInUnit <= 0 ||
+					reportData?.report_content?.length == 0}
 			>
 				<DownloadSolid class="w-4 h-4 mr-2" />
 				Download report
