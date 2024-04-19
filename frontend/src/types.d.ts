@@ -12,6 +12,7 @@ type ReportType =
 			report_content: report_obj[];
 			unit_id: number;
 			course_id: number;
+			number_of_answers: number;
 	  }
 	| undefined;
 
@@ -52,7 +53,9 @@ type Unit = {
 	course_semester: string;
 	course: Course;
 	reflections: reflections[];
+	reflections_since_last_report: number;
 	unit_number: number;
+	reports: ReportType[];
 };
 
 type Question = {

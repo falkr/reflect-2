@@ -1,23 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { Button, Card, ButtonGroup, Badge } from 'flowbite-svelte';
+	import { Button, Card, ButtonGroup } from 'flowbite-svelte';
 	import { FileLinesSolid } from 'flowbite-svelte-icons';
+	import ReflectionsBadge from './ReflectionsBadge.svelte';
 
 	export let unitData: Unit;
 	export let unitTag: string;
-
-	let tagString: string;
-	let tagColor:
-		| 'none'
-		| 'red'
-		| 'yellow'
-		| 'green'
-		| 'indigo'
-		| 'purple'
-		| 'pink'
-		| 'blue'
-		| 'dark'
-		| 'primary';
 
 	let uniqueUserIds = new Set();
 	unitData.reflections.forEach((reflection) => {
@@ -25,19 +13,7 @@
 	});
 
 	let totalReflections = uniqueUserIds.size;
-	let reportIsGenerated = true; // TODO
-	let reflectionsSinceGeneratedReport = 10; // TODO
-
-	if (unitTag === 'ready' && reportIsGenerated && reflectionsSinceGeneratedReport > 0) {
-		tagString = `+${reflectionsSinceGeneratedReport} reflections since last report`;
-		tagColor = 'yellow';
-	} else if (unitTag === 'ready') {
-		tagString = 'Ready for report generating';
-		tagColor = 'green';
-	} else {
-		tagString = 'Not available yet';
-		tagColor = 'red';
-	}
+	let reflectionsSinceLastReport = unitData.reflections_since_last_report;
 
 	function reformatDate(isoDateString: Date): string {
 		const [year, month, day] = isoDateString.toString().split('-');
@@ -57,7 +33,7 @@
 	<div class="flex justify-between">
 		<div class="flex flex-col md:flex-row md:items-center">
 			<h2 class="text-xl text-gray-900 dark:text-white font-semibold mr-4">{unitData.title}</h2>
-			<!-- <Badge large color={tagColor} class="rounded-lg h-6 my-1 md:m-0">{tagString}</Badge> -->
+			<ReflectionsBadge {reflectionsSinceLastReport} {totalReflections} {unitTag} />
 		</div>
 		<ButtonGroup>
 			{#if unitTag === 'ready'}

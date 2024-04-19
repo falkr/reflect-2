@@ -356,13 +356,47 @@ def create_question(db: Session, question: str, comment: str):
 
 
 # --- Reflection ---
-def create_reflection(db: Session, reflection: schemas.ReflectionCreate):
-    db_obj = model.Reflection(**reflection, timestamp=datetime.now())
-    print("creating reflection")
+def create_reflection(db: Session, reflection_data: dict):
+    # Create a new reflection with current timestamp
+    db_obj = model.Reflection(**reflection_data, timestamp=datetime.now())
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
+
+    # Check if a reflection with the same unit_id and user_id already exists
+    existing_reflection_count = (
+        db.query(model.Reflection)
+        .filter(
+            model.Reflection.unit_id == reflection_data["unit_id"],
+            model.Reflection.user_id == reflection_data["user_id"],
+        )
+        .count()
+    )
+
+    # Increment reflections_since_last_report for the unit if this is the first reflection of its kind
+    if existing_reflection_count == 1:  # Includes the reflection we just added
+        unit = (
+            db.query(model.Unit)
+            .filter(model.Unit.id == reflection_data["unit_id"])
+            .first()
+        )
+        if unit:
+            unit.reflections_since_last_report += 1
+            db.commit()
+
     return db_obj
+
+
+def reset_reflections_count(db: Session, unit_id: int):
+    unit = db.query(model.Unit).filter(model.Unit.id == unit_id).first()
+    if unit:
+        unit.reflections_since_last_report = 0
+        db.commit()
+        print("Reflections count reset for Unit ID:", unit_id)
+        return unit
+    else:
+        print("Unit not found with ID:", unit_id)
+        return None
 
 
 def get_reflections(db: Session, user_id: str, unit_id: int):

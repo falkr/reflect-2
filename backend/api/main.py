@@ -328,7 +328,7 @@ async def create_reflection(
     if unit.date_available > date.today():
         raise HTTPException(403, detail="This unit is not available")
 
-    return crud.create_reflection(db, reflection=ref.dict())
+    return crud.create_reflection(db, reflection_data=ref.dict())
 
 
 # Example: /course?course_id=TDT4100&course_semester=fall2023
@@ -1140,6 +1140,7 @@ async def generate_report_endpoint(
                 ),
                 db=db,
             )
+            crud.reset_reflections_count(db, ref.unit_id)
         except:
             raise HTTPException(500, detail="An error occurred while saving the report")
         return HTTPException(200, detail="Report generated and saved successfully")

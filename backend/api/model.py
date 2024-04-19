@@ -84,6 +84,7 @@ class Unit(Base):
     )
     course = relationship("Course", back_populates="units")
     reflections = relationship("Reflection", back_populates="unit")
+    reflections_since_last_report = Column(Integer, default=0)
     reports = relationship("Report", back_populates="unit")
 
 

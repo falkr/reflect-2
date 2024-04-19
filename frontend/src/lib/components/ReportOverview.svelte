@@ -1,20 +1,44 @@
 <script lang="ts">
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { page } from '$app/stores';
-	import { Badge, Button, ButtonGroup } from 'flowbite-svelte';
+	import { Button, ButtonGroup } from 'flowbite-svelte';
 	import { DownloadSolid, FileCirclePlusSolid } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
 	import toast from 'svelte-french-toast';
 	import StructuredReport from './StructuredReport.svelte';
+	import ReflectionsBadge from './ReflectionsBadge.svelte';
 
 	export let numberOfReflectionsInUnit: number;
 	export let data: Data;
 	const unitId = $page.params.unit;
-	let reportData: ReportData;
-	let unit = data.units.find((unit) => unit.id === parseInt(unitId.slice(4)));
 
-	onMount(async () => {
-		if (unit) await fetchReportData(unit);
+	let reportData: ReportData;
+	let unitTag = '';
+	let totalReflections = 0;
+	let reflectionsSinceLastReport = 0;
+	let isGenerating = false;
+
+	let unit = data.units?.find((u) => u.id === parseInt(unitId.slice(4)));
+
+	$: if (unit) {
+		reflectionsSinceLastReport = unit.reflections_since_last_report ?? 0;
+		totalReflections = unit.reflections ? new Set(unit.reflections.map((r) => r.user_id)).size : 0;
+		unitTag = isUnitAvailable(unit) ? 'ready' : 'notAvailable';
+	}
+
+	function isUnitAvailable(unit: Unit) {
+		const date = new Date();
+		const stringDate = date.toISOString().split('T')[0];
+		return unit.date_available && unit.date_available.toString() <= stringDate;
+	}
+
+	onMount(() => {
+		if (unit) {
+			fetchReportData(unit).catch((error) => {
+				console.error('Error fetching report data:', error);
+				toast.error('Failed to load initial report data.');
+			});
+		}
 	});
 
 	async function fetchReportData(unit: Unit) {
@@ -34,63 +58,42 @@
 		}
 	}
 
-	let isGenerating = false;
-
 	async function generateReport() {
 		isGenerating = true;
 		try {
 			const response = await fetch(`${PUBLIC_API_URL}/generate_report`, {
 				method: 'POST',
 				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					unit_id: unit?.id,
 					course_id: unit?.course_id,
 					course_semester: unit?.course_semester
 				})
 			});
-			if (!response.ok) {
-				toast.error('Failed to generate report');
-			} else {
-				toast.success('Report generated successfully', {
-					iconTheme: {
-						primary: '#36786F',
-						secondary: '#FFFFFF'
-					}
-				});
-				if (unit) await fetchReportData(unit);
-			}
-			isGenerating = false;
+			if (!response.ok) throw new Error('Failed to generate report');
+			reflectionsSinceLastReport = 0;
+			toast.success('Report generated successfully', {
+				iconTheme: { primary: '#36786F', secondary: '#FFFFFF' }
+			});
+			if (unit) await fetchReportData(unit);
 		} catch (error) {
-			console.error('Error generating report:', error);
+			toast.error('Failed to generate report');
+		} finally {
+			isGenerating = false;
 		}
 	}
 
-	/**
-	 * Function to download a report.
-	 * If `data` and `data.course` are true, it opens a new window to download the report.
-	 * The URL includes query parameters for `course_id`, `unit_id` and `course_semester`.
-	 * If `data` or `data.course` is false, it gives a toast error
-	 */
 	function downloadReport() {
-		if (data && data.course) {
-			toast.success('Downloading report', {
-				iconTheme: {
-					primary: '#36786F',
-					secondary: '#FFFFFF'
-				}
-			});
-			const courseId = encodeURIComponent(data.course.id);
-			const unitIdEncoded = encodeURIComponent(unitId.slice(4));
-			const courseSemester = encodeURIComponent(data.course.semester);
-
-			const downloadUrl = `${PUBLIC_API_URL}/download?course_id=${courseId}&unit_id=${unitIdEncoded}&course_semester=${courseSemester}`;
-			window.open(downloadUrl);
-		} else {
-			toast.error('An error occurred while downloading the report');
+		if (!data || !data.course) {
+			toast.error('Data is incomplete, cannot download the report.');
+			return;
 		}
+		const downloadUrl = `${PUBLIC_API_URL}/download?course_id=${encodeURIComponent(data.course.id)}&unit_id=${encodeURIComponent(unitId.slice(4))}&course_semester=${encodeURIComponent(data.course.semester)}`;
+		window.open(downloadUrl);
+		toast.success('Downloading report...', {
+			iconTheme: { primary: '#36786F', secondary: '#FFFFFF' }
+		});
 	}
 </script>
 
@@ -120,11 +123,11 @@
 				Download report
 			</Button>
 		</ButtonGroup>
-		{#if reportData && reportData.number_of_answers < numberOfReflectionsInUnit}
-			<Badge large color="yellow" class="rounded-lg h-6 my-1 md:m-0"
-				>+{numberOfReflectionsInUnit - reportData.number_of_answers} reflections since last report</Badge
-			>
-		{/if}
+		<ReflectionsBadge
+			reflectionsSinceLastReport={reflectionsSinceLastReport || 0}
+			{totalReflections}
+			{unitTag}
+		/>
 	</div>
 	<div class="w-4/5 mt-8">
 		{#if numberOfReflectionsInUnit <= 0}

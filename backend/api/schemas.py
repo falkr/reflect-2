@@ -54,9 +54,22 @@ class UnitDelete(BaseModel):
     course_semester: str
 
 
+class ReportBase(BaseModel):
+    report_content: Union[list[dict], dict] = {}
+    number_of_answers: int
+    unit_id: int
+    course_id: str
+    course_semester: str
+
+    class Config:
+        orm_mode = True
+
+
 class Unit(UnitBase):
     id: int
     reflections: list[Reflection] = []
+    reflections_since_last_report: int
+    reports: List[ReportBase] = []
 
     class Config:
         orm_mode = True
@@ -171,17 +184,6 @@ class User(UserBase):
     enrollments: list[Enrollment] = []
     reflections: list[ReflectionBase] = []
     admin: bool
-
-    class Config:
-        orm_mode = True
-
-
-class ReportBase(BaseModel):
-    report_content: Union[list[dict], dict] = {}
-    number_of_answers: int
-    unit_id: int
-    course_id: str
-    course_semester: str
 
     class Config:
         orm_mode = True
