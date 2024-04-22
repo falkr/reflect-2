@@ -91,7 +91,7 @@ if is_prod():
     REDIRECT_URI = config("REDIRECT_URI", cast=str)
     BASE_URL = config("BASE_URL", cast=str)
 else:
-    REDIRECT_URI = "http://localhost/auth"
+    REDIRECT_URI = "http://127.0.0.1:8000/auth"
     BASE_URL = "http://127.0.0.1:5173"
 
 
