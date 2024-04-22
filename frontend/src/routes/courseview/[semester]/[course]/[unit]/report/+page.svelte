@@ -6,17 +6,7 @@
 	export let data: Data;
 
 	const unitId = $page.params.unit as string;
-
-	let uniqueUserIds = new Set();
-
-	if (data && data.units) {
-		const matchingUnit = data.units.find((unit) => unit.id === parseInt(unitId.slice(4)));
-		if (matchingUnit && matchingUnit.reflections) {
-			matchingUnit.reflections.forEach((reflection) => {
-				uniqueUserIds.add(reflection.user_id);
-			});
-		}
-	}
+	const matchingUnit = data.units.find((unit) => unit.id === parseInt(unitId.slice(4)));
 
 	// Reactively check the user's role
 	$: if (data && data.role !== 'lecturer') {
@@ -38,7 +28,7 @@
 
 {#if data}
 	{#if data.role === 'lecturer'}
-		<ReportOverview {data} numberOfReflectionsInUnit={uniqueUserIds.size} />
+		<ReportOverview {data} numberOfReflectionsInUnit={matchingUnit?.total_reflections ?? 0} />
 	{/if}
 {:else}
 	<h1 class="text-gray-500 dark:text-white mt-2">No report is generated for this unit yet.</h1>

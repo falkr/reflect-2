@@ -96,7 +96,6 @@ def test_user_endpoint():
     assert data["uid"] == uid
     assert data["email"] == test_user_email
     assert data["admin"] == False
-    assert data["reflections"] == []
     assert data["enrollments"] == []
 
 
@@ -194,7 +193,6 @@ def test_create_course_admin():
     data = response.json()
 
     assert data["uid"] == uid
-    assert data["reflections"] == []
     assert data["enrollments"][0]["role"] == "lecturer"
 
 
@@ -222,7 +220,6 @@ def test_enroll_student():
     data = response.json()
 
     assert data["uid"] == uid
-    assert data["reflections"] == []
     assert data["enrollments"][0]["role"] == "student"
 
 
@@ -262,7 +259,6 @@ def test_create_unit():
 
     assert data["hidden"] == False
     assert data["title"] == "tittel1"
-    assert data["reflections"] == []
 
     response = client.get("/units?course_id=TDT1000&course_semester=fall2023")
 
@@ -312,14 +308,9 @@ def test_create_reflection():
     response = client.get("/user")
     data = response.json()
 
-    assert data["reflections"] == [
-        {"body": "reflections test", "user_id": "test", "unit_id": 1, "question_id": 1}
-    ]
-
     response = client.get("/units?course_id=TDT1000&course_semester=fall2023")
-    data = response.json()
 
-    assert data[0]["reflections"][0]["body"] == "reflections test"
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio

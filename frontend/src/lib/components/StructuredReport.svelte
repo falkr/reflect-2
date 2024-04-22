@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
 
-	export let reportData: ReportData;
+	export let reportData: ReportType;
 	export let unitName: string | undefined;
+
+	const reportSections = reportData ? Object.entries(reportData.report_content) : [];
+
+	if (reportSections.length > 1) {
+		reportSections.unshift(reportSections.pop() as [string, any]);
+	}
 </script>
 
 {#if reportData && reportData.report_content}
@@ -14,7 +20,7 @@
 	</h2>
 
 	<div class="leading-relaxed text-gray-500 dark:text-white mt-2">
-		{#each Object.entries(reportData.report_content) as [section, content]}
+		{#each reportSections as [section, content]}
 			<div class="mt-6">
 				<p class="text-[22px]">{section}</p>
 				<Accordion flush>

@@ -37,7 +37,7 @@
 		</h1> -->
 		<div class="w-full pt-2 flex flex-wrap justify-start gap-6">
 			{#each units as unit}
-				{#if unit.date_available.toString() < stringDate && !checkReflectionSubmitted(unit.id)}
+				{#if unit.date_available.toString() <= stringDate && !checkReflectionSubmitted(unit.id)}
 					<UnitCardStudent unitData={unit} status="available" {data} />
 				{/if}
 			{/each}

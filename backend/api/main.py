@@ -482,7 +482,7 @@ async def get_units(
         if enrollment is None:
             raise HTTPException(401, detail="You are not enrolled in the course")
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
-        return (
+        units = (
             db.query(model.Unit)
             .filter(
                 model.Unit.course_id == course_id,
@@ -490,8 +490,10 @@ async def get_units(
             )
             .all()
         )
+        units = [unit.to_dict() for unit in units]
+        return units
     else:
-        return (
+        units = (
             db.query(model.Unit)
             .filter(
                 model.Unit.course_id == course_id,
@@ -500,6 +502,9 @@ async def get_units(
             )
             .all()
         )
+
+        units = [unit.to_dict() for unit in units]
+        return units
 
 
 @app.post("/create_unit", response_model=schemas.Unit)
@@ -1069,8 +1074,6 @@ async def unroll_course(
 ):
     if not is_logged_in(request):
         raise HTTPException(401, detail="You are not logged in")
-    if not is_admin(db, request):
-        raise HTTPException(403, detail="You are not an admin user")
     try:
         user = request.session.get("user")
         uid = user.get("uid")

@@ -7,12 +7,7 @@
 	export let unitData: Unit;
 	export let unitTag: string;
 
-	let uniqueUserIds = new Set();
-	unitData.reflections.forEach((reflection) => {
-		uniqueUserIds.add(reflection.user_id);
-	});
-
-	let totalReflections = uniqueUserIds.size;
+	let totalReflections = unitData.total_reflections;
 	let reflectionsSinceLastReport = unitData.reflections_since_last_report;
 
 	function reformatDate(isoDateString: Date): string {

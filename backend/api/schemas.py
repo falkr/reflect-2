@@ -55,7 +55,6 @@ class UnitDelete(BaseModel):
 
 
 class ReportBase(BaseModel):
-    report_content: Union[list[dict], dict] = {}
     number_of_answers: int
     unit_id: int
     course_id: str
@@ -67,8 +66,8 @@ class ReportBase(BaseModel):
 
 class Unit(UnitBase):
     id: int
-    reflections: list[Reflection] = []
     reflections_since_last_report: int
+    total_reflections: int = 0
     reports: List[ReportBase] = []
 
     class Config:

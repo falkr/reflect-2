@@ -12,18 +12,10 @@ type ReportType =
 			report_content: report_obj[];
 			unit_id: number;
 			course_id: number;
+			course_semester: string;
 			number_of_answers: number;
 	  }
 	| undefined;
-
-type ReportData = {
-	course_id: string;
-	course_semester: string;
-	id: number;
-	number_of_answers: number;
-	report_content: [];
-	unit_id: number;
-};
 
 type Enrollment = {
 	uid: string;
@@ -55,6 +47,7 @@ type Unit = {
 	reflections: reflections[];
 	reflections_since_last_report: number;
 	unit_number: number;
+	total_reflections: number;
 	reports: ReportType[];
 };
 

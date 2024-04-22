@@ -87,6 +87,16 @@ class Unit(Base):
     reflections_since_last_report = Column(Integer, default=0)
     reports = relationship("Report", back_populates="unit")
 
+    def to_dict(self):
+        unique_user_ids = {reflection.user_id for reflection in self.reflections}
+        return {
+            "total_reflections": len(unique_user_ids),
+            **{
+                c.key: getattr(self, c.key)
+                for c in class_mapper(self.__class__).columns
+            },
+        }
+
 
 class Question(Base):
     __tablename__ = "questions"

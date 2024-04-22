@@ -12,7 +12,7 @@
 	export let data: Data;
 	const unitId = $page.params.unit;
 
-	let reportData: ReportData;
+	let reportData: ReportType;
 	let unitTag = '';
 	let totalReflections = 0;
 	let reflectionsSinceLastReport = 0;
