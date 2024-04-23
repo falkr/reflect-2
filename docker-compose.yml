@@ -17,7 +17,7 @@ services:
       - "./certs/:/certs/"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   db:
-    image: postgres
+    image: postgres:latest
     volumes:
       - ./db-data:/var/lib/postgresql/data/pgdata
     env_file:
@@ -36,7 +36,7 @@ services:
         #      - 5173:3000
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`ref.iik.ntnu.no`)"
+      - "traefik.http.routers.frontend.rule=Host(`reflect.iik.ntnu.no`)"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.middlewares.frontend.redirectscheme.scheme=websecure"
@@ -58,7 +58,7 @@ services:
       - ./backend/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`ref.iik.ntnu.no`) && PathPrefix(`/api`) || Host(`ref.iik.ntnu.no`) && PathPrefix(`/auth`) "
+      - "traefik.http.routers.backend.rule=Host(`reflect.iik.ntnu.no`) && PathPrefix(`/api`) || Host(`reflect.iik.ntnu.no`) && PathPrefix(`/auth`) "
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"

@@ -251,13 +251,13 @@ Instructions:
    1. `country(CO)`. Set this to `"NO"`.
    2. `CN (Common Name)`. Set this to the domain name of the server. In our case `"ref.iik.ntnu.no"`
    3. The rest is filled out automatically using the information stored on NTNU on sectigo. In case the fields are obligatory, it is important that you fill in; `organization(O)`, `organization unit(OU)`, `city(L)`, `state or province(ST)`.
-      `O` is `"Norges Teknisk-Naturvitenskapelige Universitet NTNU"`, `L` is `"Trondheim"`, `ST` is `"Trøndelag"`.
+      `O` and `OU` is `"Norges Teknisk-Naturvitenskapelige Universitet NTNU"`, `L` is `"Trondheim"`, `ST` is `"Trøndelag"`.
    4. For those who need it, prefix www. is added to the GÉANT OV SSL-certificate type.
 
 5. Remember to save the CSR file someplace you'll find it. Then upload this on cert-manager.
 6. Certificates are controlled consecutively by the administrators. You will recieve a mail when the certificate is approved and ready.
 7. When the certificate is approved, you can download the certificate and the private key.
-8. The certificate is a `.pem` file, and the private key is a `.key` file. These files should be placed in a `certs` folder in the root of the project.
+8. The certificate is a `.pem` file, and the private key is a `.key` file. These files should be placed in a `certs` folder in the root of the project. The `.key` file was generated when creating the CSR file.
 9. The certificate is now ready to be used by traefik. Change the `traefik.toml` file to use the new certificate.
    This is done by changing the following lines in the `traefik.toml`file:
    ```bash
@@ -267,6 +267,7 @@ Instructions:
        keyFile: /certs/refPRIVATEKEY_nopass.key
    ```
 10. The application should now be able to run on the new server.
+11. Note: If you are using a different domain, you have to change the domain name in the `docker-compose.yml` file.
 
 #### Useful docker commands
 
