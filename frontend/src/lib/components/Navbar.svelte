@@ -99,7 +99,7 @@
 	}
 </script>
 
-{#if user.detail !== 'You are not logged in' && user !== undefined}
+{#if user && user.detail !== 'You are not logged in'}
 	<Navbar shadow class="p-6 sm:px-3 md:px-15 dark:bg-gray-800">
 		<NavBrand href="/overview">
 			<img

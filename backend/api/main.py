@@ -52,10 +52,7 @@ NOTIFICATION_LIMIT = config("NOTIFICATION_LIMIT", cast=int, default=2)
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
-if config("production", cast=bool, default=True):
-    allowed_origin = config("PRODUCTION_ORIGIN", cast=str, default="")
-else:
-    allowed_origin = "http://127.0.0.1:5173"
+allowed_origin = "*"
 
 app.add_middleware(
     CORSMiddleware,
@@ -177,7 +174,7 @@ async def start_db():
     course_name: str = "Informasjonsteknologi grunnkurs"
     db = SessionLocal()
     course = crud.get_course(db, course_id=course_id, course_semester=semester)
-    if course or is_prod():
+    if course:
         return
 
     course = crud.create_course(
