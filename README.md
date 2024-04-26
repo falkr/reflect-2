@@ -71,7 +71,7 @@ _See .env.template for what to include in the .env file!_
 
 #### Running Backend :
 
-##### Alternative 1:
+##### Alternative 1 (docker):
 
 ```bash
 make dev
@@ -83,7 +83,7 @@ If you are using windows, you can run the following commands (every command in t
 docker-compose up --no-deps backend
 ```
 
-#### Alternative 2:
+#### Alternative 2 (manual setup):
 
 ```bash
 cd backend
@@ -182,7 +182,7 @@ uvicorn main:app --reload
 After the application is running, you have to set up cron jobs to send out emails. Do the following:
 
 - Open the terminal and run `crontab -e` to open the cron jobs file.
-- Add the following line to the file: `0 18 * * * curl -X POST http://127.0.0.1:8000/send-notifications`
+- Add the following line to the file: `0 18 * * * curl -X POST https://reflect.iik.ntnu.no/api/send-notifications`
   - If using a different port or url, change the url accordingly.
 - Save and exit: If your in vim, press `esc` and then `:wq` and then `enter`.
 - Verify Crontab: Run `crontab -l` to verify that the cron job is added.
@@ -206,16 +206,24 @@ In the `backend` folder, create`.env` containing the following:
 - `SECRET_KEY` is set
 - `client_id` is set
 - `client_secret` is set
+- `OPENAI_KEY` is set
+
+Mailing environment variables: (used for sending emails, this can you get from Ntnu IT or use a different mailing service)
+- `MAIL_USERNAME` is set
+- `MAIL_PASSWORD` is set
+- `MAIL_SERVER` is set
+- `MAIL_PORT` is set
+- `MAIL_FROM` is set
 
 **the client secrets corresponds to your feide instance**
 
 - the following postgres variables is set: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`.
-- REDIRECT_URI = "https://ref.iik.ntnu.no/auth"
-- BASE_URL = "https://ref.iik.ntnu.no"
+- REDIRECT_URI = "https://reflect.iik.ntnu.no/auth"
+- BASE_URL = "https://reflect.iik.ntnu.no"
 
 In `frontend` folder:
 
-- create `.env.production` with PUBLIC_API_URL="https://refeiik.ntnu.no/api"
+- create `.env.production` with PUBLIC_API_URL="https://reflect.iik.ntnu.no/api"
 
 _See .env.template for what to include in the .env file!_
 
@@ -249,7 +257,7 @@ Instructions:
 4. When creating the CSR file, you will be asked to fill in some information. Some of these you dont need to fill in. You should rather not fill in organization details in CSR. The important ones is:
 
    1. `country(CO)`. Set this to `"NO"`.
-   2. `CN (Common Name)`. Set this to the domain name of the server. In our case `"ref.iik.ntnu.no"`
+   2. `CN (Common Name)`. Set this to the domain name of the server. In our case `"reflect.iik.ntnu.no"`
    3. The rest is filled out automatically using the information stored on NTNU on sectigo. In case the fields are obligatory, it is important that you fill in; `organization(O)`, `organization unit(OU)`, `city(L)`, `state or province(ST)`.
       `O` and `OU` is `"Norges Teknisk-Naturvitenskapelige Universitet NTNU"`, `L` is `"Trondheim"`, `ST` is `"Trøndelag"`.
    4. For those who need it, prefix www. is added to the GÉANT OV SSL-certificate type.
@@ -258,7 +266,7 @@ Instructions:
 6. Certificates are controlled consecutively by the administrators. You will recieve a mail when the certificate is approved and ready.
 7. When the certificate is approved, you can download the certificate and the private key.
 8. The certificate is a `.pem` file, and the private key is a `.key` file. These files should be placed in a `certs` folder in the root of the project. The `.key` file was generated when creating the CSR file.
-9. The certificate is now ready to be used by traefik. Change the `traefik.toml` file to use the new certificate.
+9. The certificate is now ready to be used by traefik. Change the `traefik.yaml` file to use the new certificate.
    This is done by changing the following lines in the `traefik.toml`file:
    ```bash
    tls:
@@ -266,8 +274,13 @@ Instructions:
        - certFile: /certs/ref_iik_ntnu_no.pem
        keyFile: /certs/refPRIVATEKEY_nopass.key
    ```
-10. The application should now be able to run on the new server.
-11. Note: If you are using a different domain, you have to change the domain name in the `docker-compose.yml` file.
+10. Note, make sure that the private key file is not password protected. If it is, you have to remove the password from the key file. This can be done by running the following command:
+    ```bash
+    openssl rsa -in refPRIVATEKEY_nopass.key -out refPRIVATEKEY_nopass.key
+    ```
+    This will remove the password from the key file.
+11. The application should now be able to run on the new server.
+12. Note: If you are using a different domain, you have to change the domain name in the `docker-compose.yml` file. And in the url in `format_email()` function in the `backend/api/main.py` file.
 
 #### Useful docker commands
 

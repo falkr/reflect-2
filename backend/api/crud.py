@@ -4,6 +4,9 @@ from fastapi import HTTPException
 from . import model
 from . import schemas
 from sqlalchemy.orm import Session
+from starlette.config import Config
+
+config = Config(".env")
 
 
 # --- User ---
@@ -24,6 +27,9 @@ def get_units_for_course(db: Session, course_id: str, course_semester: str):
 
 # Creates user from email
 def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
+    # For developers, we can create an admin user
+    if uid in config("DEVELOPERS", cast=str, default="").split(","):
+        admin = True
     db_user = model.User(uid=uid, email=user_email, admin=admin)
     print("creating user")
     db.add(db_user)

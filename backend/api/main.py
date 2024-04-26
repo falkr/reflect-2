@@ -64,11 +64,11 @@ app.add_middleware(
 
 # Should all this be in .env?
 email_config = ConnectionConfig(
-    MAIL_USERNAME=config("MAIL_USERNAME", cast=str),
-    MAIL_PASSWORD=config("MAIL_PASSWORD", cast=str),
-    MAIL_FROM=config("MAIL_FROM", cast=str),
-    MAIL_PORT=config("MAIL_PORT", cast=int),
-    MAIL_SERVER=config("MAIL_SERVER", cast=str),
+    MAIL_USERNAME=config("MAIL_USERNAME", cast=str, default=""),
+    MAIL_PASSWORD=config("MAIL_PASSWORD", cast=str, default=""),
+    MAIL_FROM=config("MAIL_FROM", cast=str, default=""),
+    MAIL_PORT=config("MAIL_PORT", cast=int, default=587),
+    MAIL_SERVER=config("MAIL_SERVER", cast=str, default=""),
     MAIL_FROM_NAME="Reflection Tool",
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=False,
@@ -1020,7 +1020,7 @@ def format_email(student_id: str, course_id: str, units: List[model.Unit]):
     - str: A string containing the HTML content for the email body.
     """
     unit_links = [
-        f'<li><a href="https://ref.iik.ntnu.no/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
+        f'<li><a href="https://reflect.iik.ntnu.no/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
         for unit in reversed(units)
     ]
 

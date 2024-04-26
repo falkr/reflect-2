@@ -146,3 +146,4 @@ playwright/.auth
 test.py
 test.txt
 .vercel
+.env.production
