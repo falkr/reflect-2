@@ -120,7 +120,7 @@
 			}
 			if (castedResponse.status == 409) {
 				defaultModal = true;
-				toast.error("Couldn't create course!");
+				toast.error("Couldn't create course, course already exists for this semester.");
 			}
 		},
 

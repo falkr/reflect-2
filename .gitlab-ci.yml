@@ -150,6 +150,7 @@ deploy-backend:
       USER_EMAIL = ""
       TEST_ACCOUNT = false
       OPENAI_KEY = $OPENAI_KEY
+      SERVERLESS = true
       EOF
     - echo "Waiting for 3 seconds before deploying"
     - sleep 3

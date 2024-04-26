@@ -728,7 +728,7 @@ async def download_file(
                 detail=f"An error occurred while generating the report, you may have not generated a report yet. Error: {str(e)}",
             )
 
-        if is_prod():
+        if config("SERVERLESS", cast=bool, default=False):
             return json.dumps(report_dict, indent=4)
 
         with open("report.txt", "w") as f:
@@ -1096,8 +1096,8 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
     return stringAnswered
 
 
-@app.delete("/unroll_course")
-async def unroll_course(
+@app.delete("/unenroll_course")
+async def unenroll_course(
     request: Request, ref: schemas.EnrollmentBase, db: Session = Depends(get_db)
 ):
     if not is_logged_in(request):

@@ -27,8 +27,10 @@ def get_units_for_course(db: Session, course_id: str, course_semester: str):
 
 # Creates user from email
 def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
+    print("creating user")
     # For developers, we can create an admin user
     if uid in config("DEVELOPERS", cast=str, default="").split(","):
+        print("Developer user detected")
         admin = True
     db_user = model.User(uid=uid, email=user_email, admin=admin)
     print("creating user")

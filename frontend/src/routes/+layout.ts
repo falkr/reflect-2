@@ -41,7 +41,7 @@ export const load: Load = async ({ fetch, url, depends }) => {
 		return { user: user };
 	} catch (error) {
 		console.log('-------------- Error connecting to server. Contact support. --------------');
-		toast.error('Error connecting to server. Contact support.');
+		toast.error('Error connecting to server. Contact lecturer.');
 		console.log(error);
 
 		logged_in.set(false);

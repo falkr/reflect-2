@@ -9,6 +9,16 @@
 
 	let unitCounter = 1;
 
+	units.sort((a, b) => {
+		if (a.date_available < b.date_available) {
+			return -1;
+		}
+		if (a.date_available > b.date_available) {
+			return 1;
+		}
+		return 0;
+	});
+
 	units.forEach((unit) => {
 		unit.unit_number = unitCounter;
 		unitCounter++;

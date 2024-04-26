@@ -204,7 +204,7 @@
 	}
 </script>
 
-<div class="mx-5 md:w-4/5 md:mx-auto mb-12 text-gray-900 dark:text-white flex">
+<div class="mx-5 md:w-4/5 md:mx-auto mb-6 text-gray-900 dark:text-white flex">
 	<Heading tag="h1" class="mt-2 text-xl">{'Unit ' + unit_number + ' - ' + unitName}</Heading>
 	{#if isUserLecturer}
 		<DeleteUnitModal {data} />
@@ -214,11 +214,7 @@
 {#if !isUserLecturer}
 	<div>
 		<form class="mx-5 md:w-4/5 md:mx-auto" on:submit={handleSubmit}>
-			<div class="flex-col md:flex-row gap-4 md:gap-8 w-full">
-				<p class="text-black dark:text-gray-300">
-					Write your reflection for this unit. Make sure not to include any sensitive or private
-					information.
-				</p>
+			<div class="flex-col md:flex-row gap-4 md:gap-8 w-full pb-8">
 				<Heading
 					tag="h5"
 					style="font-size: 1.5rem;"
@@ -281,6 +277,13 @@
 							Decline unit
 						</Button>
 					</div>
+					<p class="pt-8 text-sm text-gray-400">
+						Please note: Do not enter sensitive information, such as names of individuals. Your
+						responses will be used to generate a report for the lecturer. Reflection Tool uses an AI
+						service outside of NTNU to generate an aggregated report, but without the AI service
+						knowing your identity. The lecturer will see an aggregated report from the entire class
+						and all the responses, but will not know who wrote what.
+					</p>
 				{/if}
 			</div>
 		</form>

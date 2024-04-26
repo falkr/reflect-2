@@ -8,7 +8,7 @@
 	let date = new Date();
 	let stringDate = date.toISOString().split('T')[0];
 
-	let unitsIsHidden = false;
+	let unitsIsHidden = true;
 	let unitsButtonText = 'Show finished and unavailable units';
 
 	function hideUnits() {

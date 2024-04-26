@@ -50,15 +50,15 @@ describe('Check functionality for inviting and enrolling users', () => {
 		cy.contains('Course successfully deleted!').should('be.visible');
 	});
 
-	it('Unroll from coure and then eroll to course again', () => {
-		// Unroll from TDT4100 course
+	it('Unenroll from coure and then eroll to course again', () => {
+		// Unenroll from TDT4100 course
 		cy.get('#TDT4100').click();
 		cy.get('#deleteCourseButton').click();
 		cy.get('#deleteCourseModal').should('be.visible');
 		cy.get('#deleteCourseModalButton').click();
 
 		// Check that course has disappeared from overview
-		cy.contains('Unrolled from course successfully!').should('be.visible');
+		cy.contains('Unenrolled from course successfully!').should('be.visible');
 		cy.get('#TDT4100').should('not.exist');
 		cy.contains('You are not enrolled to any course yet').should('be.visible');
 		cy.wait(2000);

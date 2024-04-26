@@ -12,7 +12,7 @@
 
 	async function actionCourse() {
 		if (data.role === 'student') {
-			const response = await fetch(`${PUBLIC_API_URL}/unroll_course`, {
+			const response = await fetch(`${PUBLIC_API_URL}/unenroll_course`, {
 				method: 'DELETE',
 				credentials: 'include',
 				headers: {
@@ -27,14 +27,14 @@
 			if (response.ok) {
 				showModal = false;
 				goto('/overview');
-				toast.success('Unrolled from course successfully!', {
+				toast.success('Unenrolled from course successfully!', {
 					iconTheme: {
 						primary: '#36786F',
 						secondary: '#FFFFFF'
 					}
 				});
 			} else {
-				toast.error('Failed to unroll from course');
+				toast.error('Failed to unenroll from course');
 			}
 		} else {
 			const response = await fetch(`${PUBLIC_API_URL}/delete_course`, {
@@ -127,24 +127,24 @@
 		>
 	{/if}
 	<Button on:click={() => (showModal = true)} id="deleteCourseButton"
-		>{data.role === 'student' ? 'Unroll course' : 'Delete course'}</Button
+		>{data.role === 'student' ? 'Unenroll course' : 'Delete course'}</Button
 	>
 </ButtonGroup>
 
-<!--Delete/Unroll course modal-->
+<!--Delete/Unenroll course modal-->
 <Modal bind:open={showModal} size="xs" autoclose={false} class="w-full" id="deleteCourseModal">
 	<form class="flex flex-col space-y-3">
 		<h3 class=" text-xl font-normal text-gray-900 dark:text-white mx-auto">
-			{data.role === 'student' ? 'Unroll course' : 'Delete course'}
+			{data.role === 'student' ? 'Unenroll course' : 'Delete course'}
 		</h3>
 		<p class="text-sm text-gray-500 mx-auto">
-			Are you sure you want to {data.role === 'student' ? 'unroll from' : 'delete'} this course?
+			Are you sure you want to {data.role === 'student' ? 'unenroll from' : 'delete'} this course?
 		</p>
 		<Button
 			on:click={actionCourse}
 			id="deleteCourseModalButton"
 			class="w-full1 bg-red-700 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-600"
-			>{data.role === 'student' ? 'Unroll course' : 'Delete course'}</Button
+			>{data.role === 'student' ? 'Unenroll course' : 'Delete course'}</Button
 		>
 	</form>
 </Modal>
