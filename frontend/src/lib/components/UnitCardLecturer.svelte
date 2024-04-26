@@ -32,9 +32,9 @@
 		</div>
 		<ButtonGroup>
 			{#if unitTag === 'ready'}
-				<Button class="w-22 h-10" on:click={redirectToUnit}>Open unit</Button>
+				<Button id="openUnitButton" class="w-22 h-10" on:click={redirectToUnit}>Open unit</Button>
 			{:else}
-				<Button class="w-22 h-10" on:click={redirectToUnit}>Edit unit</Button>
+				<Button id="editUnitButton" class="w-22 h-10" on:click={redirectToUnit}>Edit unit</Button>
 			{/if}
 		</ButtonGroup>
 	</div>
@@ -45,6 +45,7 @@
 		<ButtonGroup class="mt-3">
 			{#if unitTag === 'ready'}
 				<Button
+					id="viewReportButton"
 					class="focus:dark:outline-none dark:outline-none dark:bg-gray-800 dark:text-white"
 					on:click={redirectToReport}
 				>

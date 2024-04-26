@@ -23,7 +23,7 @@
 		{#each reportSections as [section, content]}
 			<div class="mt-6">
 				<p class="text-[22px]">{section}</p>
-				<Accordion flush>
+				<Accordion flush id="categoryAccordion">
 					{#if typeof content === 'object' && content !== null}
 						{#each Object.entries(content) as [topic, responses]}
 							{#if Array.isArray(responses) && responses.length > 0}

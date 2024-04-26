@@ -45,20 +45,26 @@
 </script>
 
 <ButtonGroup>
-	<Button class="w-32" on:click={() => (showDeleteUnitModal = true)}>
+	<Button id="deleteUnitButton" class="w-32" on:click={() => (showDeleteUnitModal = true)}>
 		Delete unit
 		<TrashBinOutline class="w-4 h-4 ml-2" />
 	</Button>
 </ButtonGroup>
 <!--Invite users modal-->
-<Modal bind:open={showDeleteUnitModal} size="xs" autoclose={false} class="w-full">
+<Modal
+	bind:open={showDeleteUnitModal}
+	size="xs"
+	autoclose={false}
+	class="w-full"
+	id="deleteUnitModal"
+>
 	<div class="p-2">
 		<Heading tag="h3" class="text-xl">Delete unit</Heading>
 		<p class="mt-2">
 			Are you sure you want to delete this unit? All the unit data will be deleted permanently.
 		</p>
 		<div class="mt-6 w-full flex space-x-2 justify-center">
-			<Button on:click={deleteUnit} class="w-36 bg-red-500 text-white">
+			<Button id="deleteUnitConfirmButton" on:click={deleteUnit} class="w-36 bg-red-500 text-white">
 				Delete unit
 				<TrashBinOutline class="w-4 h-4 ml-2" />
 			</Button>

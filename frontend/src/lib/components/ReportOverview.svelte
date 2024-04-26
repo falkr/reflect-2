@@ -101,6 +101,7 @@
 	<div class="flex w-4/5 items-center flex-wrap gap-4">
 		<ButtonGroup>
 			<Button
+				id="generateReportButton"
 				on:click={generateReport}
 				disabled={isGenerating || numberOfReflectionsInUnit <= 0}
 				class="focus:dark:outline-none dark:outline-none dark:bg-gray-900 dark:text-white text-sm md:text-xs relative"
@@ -115,6 +116,7 @@
 			<Button
 				class="focus:dark:outline-none dark:outline-none dark:bg-gray-900 dark:text-white text-sm md:text-xs"
 				on:click={downloadReport}
+				id="downloadReportButton"
 				disabled={isGenerating ||
 					numberOfReflectionsInUnit <= 0 ||
 					reportData?.report_content?.length == 0}

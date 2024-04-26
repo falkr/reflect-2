@@ -100,7 +100,7 @@
 </script>
 
 {#if user && user.detail !== 'You are not logged in'}
-	<Navbar shadow class="p-6 sm:px-3 md:px-15 dark:bg-gray-800">
+	<Navbar shadow class="p-6 sm:px-3 md:px-15 dark:bg-gray-800" id="navbar">
 		<NavBrand href="/overview">
 			<img
 				src="/logo-horizontal-light.svg"
@@ -126,9 +126,10 @@
 		<div class="flex items-center gap-2 sm:gap-5">
 			<span class="hidden sm:inline">Logged in as {user.uid}</span>
 			<DarkMode class="align-bottom text-gray-700 dark:text-yellow-200" />
-			<div class="relative">
+			<div class="relative" id="mailIconDiv">
 				{#if invitations.length > 0}
 					<div
+						id="invitationCountNotification"
 						class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 hover:cursor-default focus:outline-none"
 					>
 						<span class="select-none text-[12px] font-bold text-white focus:outline-none"
@@ -142,7 +143,7 @@
 						dropdownOpen = !dropdownOpen;
 					}}
 				/>
-				<Dropdown open={dropdownOpen} class="w-max">
+				<Dropdown open={dropdownOpen} class="w-max" id="invitationDropdown">
 					{#if invitations.length > 0}
 						{#each invitations as invitation}
 							<DropdownItem
@@ -158,7 +159,13 @@
 						<DropdownItem>You have no new notifications</DropdownItem>
 					{/if}
 				</Dropdown>
-				<Modal bind:open={answerInvitationModal} size="xs" autoclose={false} class="w-full">
+				<Modal
+					bind:open={answerInvitationModal}
+					size="xs"
+					autoclose={false}
+					class="w-full"
+					id="answerInvitationModal"
+				>
 					<h3 class="p-0 text-xl font-medium text-gray-900 dark:text-white">Course invitation</h3>
 					<p>
 						Are you sure you want to join the course {activeInvitation.course_id} as {activeInvitation.role}?
@@ -174,7 +181,8 @@
 
 					<Button
 						type="submit"
-						class="w-full1 bg-teal-13 hover:bg-teal-10 dark:bg-blue-700 dark:hover:bg-blue-600"
+						id="declineInvitationButton"
+						class="w-full1 bg-red-500 hover:bg-red-400 "
 						on:click={() => {
 							deleteInvitation();
 							answerInvitationModal = false;

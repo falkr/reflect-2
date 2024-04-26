@@ -77,11 +77,13 @@
 		{#if status === 'available'}
 			<Button
 				on:click={gotoReflection}
+				id={`reflectUnit${unitData.id.toString()}Button`}
 				class="bg-teal-13 hover:bg-teal-10 dark:bg-blue-700 dark:hover:bg-blue-600"
 				size="sm">Start reflection</Button
 			>
 			<Button
 				on:click={declineUnit}
+				id={`declineUnit${unitData.id.toString()}Button`}
 				color="alternative"
 				class="box-border border-red-700 border-2 py-2 px-4 text-red-700 dark:text-white dark:border-red-700 dark:hover:bg-red-700 dark:hover:border-red-700"
 			>

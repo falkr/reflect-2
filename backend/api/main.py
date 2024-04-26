@@ -328,6 +328,37 @@ async def create_reflection(
     return crud.create_reflection(db, reflection_data=ref.dict())
 
 
+@app.delete("/delete_reflection", response_model=schemas.ReflectionDelete)
+async def delete_reflection(
+    request: Request, ref: schemas.ReflectionDelete, db: Session = Depends(get_db)
+):
+    """
+    Deletes a reflection based on the user ID, unit ID, and question ID provided in the `ref` object.
+
+    Parameters:
+    - request (Request): The request object, used here to access the user's session for
+      authentication and authorization checks.
+    - ref (schemas.ReflectionDelete): A Pydantic model containing the necessary data to delete a reflection.
+        This includes the user ID, unit ID, and question ID.
+    Returns:
+    - schemas.ReflectionDelete: The Pydantic model representation of the deleted reflection, confirming
+      the successful deletion.
+
+    Raises:
+    - HTTPException: 401 error if the user is not logged in.
+    - HTTPException: 403 error if the user does not have permission to delete the reflection.
+    """
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+
+    if is_admin(db, request):
+        return crud.delete_reflection(db, ref.user_id, ref.unit_id)
+    else:
+        raise HTTPException(
+            403, detail="You do not have permission to delete this reflection"
+        )
+
+
 # Example: /course?course_id=TDT4100&course_semester=fall2023
 @app.get("/course", response_model=schemas.Course)
 async def course(

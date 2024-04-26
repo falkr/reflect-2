@@ -21,6 +21,7 @@
 				goto(`/courseview/${data.course.semester}/${data.course.id}/create`, {
 					replaceState: false
 				})}
+			id="createUnitButton"
 			class="text-white w-1/2 mt-4 sm:mt-0 sm:w-44 bg-teal-13 hover:bg-teal-10 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-sm py-2.5 text-center inline-flex items-center dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-800"
 		>
 			Create new unit
@@ -47,11 +48,12 @@
 		{#if units.length === 0}
 			<h1 class="text-gray-500 dark:text-white mt-10">No units exists for this course yet</h1>
 		{:else}
-			{#each units as unit}
+			{#each [...units].reverse() as unit}
 				{#if unit.date_available.toString() <= stringDate}
 					<UnitCardLecturer unitData={unit} unitTag="ready" />
 				{/if}
 			{/each}
+
 			{#if units.some((unit) => new Date(unit.date_available) > new Date(stringDate))}
 				<h1 class="mt-16 text-xl font-semibold dark:text-white">Upcoming units</h1>
 				{#each units as unit}

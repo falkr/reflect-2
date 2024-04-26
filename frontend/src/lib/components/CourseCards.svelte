@@ -46,6 +46,7 @@
 	<Card
 		on:click={() => goto(`/courseview/${course.course_semester}/${course.course_id}`)}
 		class="m-auto cursor-pointer hover:bg-teal-2 dark:bg-gray-800 dark:hover:bg-gray-700"
+		id={course.course_id}
 	>
 		<h5
 			style="font-size: 1.25rem;"
@@ -53,15 +54,18 @@
 		>
 			{course.course_id} - {course.name}
 		</h5>
-		<p class="mb-3 select-none font-normal text-gray-700 dark:text-gray-300 leading-tight">
+		<p
+			class="mb-3 select-none font-normal text-gray-700 dark:text-gray-300 leading-tight"
+			id="courseSemesterText"
+		>
 			{formatSemester(course.course_semester)}
 		</p>
 		<div class="flex flex-row justify-between items-end">
 			<Button class="w-fit select-none bg-teal-13 dark:bg-blue-700">Open</Button>
 			{#if role == 'Lecturer'}
-				<Badge large color="yellow" class="ml-2 select-none">Lecturer</Badge>
+				<Badge large color="yellow" class="ml-2 select-none" id="lecturerBadge">Lecturer</Badge>
 			{:else}
-				<Badge large color="green" class="ml-2 select-none">Student</Badge>
+				<Badge large color="green" class="ml-2 select-none" id="studentBadge">Student</Badge>
 			{/if}
 		</div>
 	</Card>

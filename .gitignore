@@ -108,6 +108,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+cypress.env.json
 
 venv/
 
@@ -115,6 +116,7 @@ env.bak/
 venv.bak/
 .nvmrc
 !.env.template
+
 
 # Spyder project settings
 .spyderproject

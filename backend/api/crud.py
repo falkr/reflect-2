@@ -408,6 +408,38 @@ def get_reflections(db: Session, user_id: str, unit_id: int):
     )
 
 
+def delete_reflection(db: Session, user_id: str, unit_id: int):
+    """
+    Deletes all reflections for a given user and unit.
+
+    Args:
+        db (Session): The database session to use for querying and deleting.
+        user_id (str): The user identifier to match reflections.
+        unit_id (int): The unit identifier to match reflections.
+
+    Returns:
+        dict: A dictionary with the `user_id` and `unit_id` of the deleted reflections.
+
+    Raises:
+        HTTPException: If no reflections are found for the specified user and unit.
+    """
+    reflections = (
+        db.query(model.Reflection)
+        .filter(
+            model.Reflection.user_id == user_id, model.Reflection.unit_id == unit_id
+        )
+        .all()
+    )
+
+    if not reflections:
+        raise HTTPException(status_code=404, detail="Reflections not found")
+
+    for reflection in reflections:
+        db.delete(reflection)
+    db.commit()
+    return {"user_id": user_id, "unit_id": unit_id}
+
+
 # --- Invitation ---
 def create_invitation(db: Session, invitation: schemas.InvitationBase):
     db_obj = model.Invitation(**invitation)

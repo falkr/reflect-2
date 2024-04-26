@@ -227,33 +227,22 @@
 					Questions
 				</Heading>
 
-				{#each data.course.questions as questionType}
+				{#each data.course.questions as questionType, index}
 					<div class="my-4">
 						<Label for="question" class="text-sm block font-medium text-gray-900 dark:text-white"
 							>{questionType.comment}</Label
 						>
 					</div>
-					{#if data.reflected || !data.available}
-						<Textarea
-							id="question"
-							name="answer"
-							rows="4"
-							placeholder="Write your thoughts here..."
-							value={getReflectionByQuestion()}
-							disabled={data.reflected || !data.available}
-							style="resize: none"
-							class="mb-4"
-						/>
-					{:else}
-						<Textarea
-							id="question"
-							name="answer"
-							rows="4"
-							placeholder="Write your thoughts here..."
-							style="resize: none"
-							class="mb-4"
-						/>
-					{/if}
+					<Textarea
+						id={`question${index + 1}`}
+						name="answer"
+						rows="4"
+						placeholder="Write your thoughts here..."
+						value={getReflectionByQuestion()}
+						disabled={data.reflected || !data.available}
+						style="resize: none"
+						class="mb-4"
+					/>
 
 					<input name="question_id" bind:value={questionType.id} class="hidden" />
 				{/each}
@@ -273,6 +262,7 @@
 				{:else}
 					<div class="flex">
 						<Button
+							id="submitReflectionButton"
 							class="mr-8 mt-4 bg-teal-13 hover:bg-teal-10 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
 							label="Submit"
 							type="submit"
@@ -307,7 +297,7 @@
 				<Label for="first_name" class="mb-2">Unit name</Label>
 				<Input
 					type="text"
-					id="first_name"
+					id="editUnitName"
 					bind:value={unitName}
 					placeholder="Introduction and team setup"
 					disabled={isUnitOngoing}
@@ -318,7 +308,7 @@
 				<Label for="last_name" class="mb-2">Unit available from</Label>
 				<Input
 					type="date"
-					id="last_name"
+					id="editUnitDate"
 					bind:value={availableDate}
 					placeholder={new Date()}
 					disabled={isUnitOngoing}
@@ -346,7 +336,12 @@
 			/>
 			{#if !isUnitOngoing}
 				<div class="mt-6">
-					<Button type="submit" size="md" class="w-36 bg-teal-13 text-white">
+					<Button
+						id="editUnitSubmitButton"
+						type="submit"
+						size="md"
+						class="w-36 bg-teal-13 text-white"
+					>
 						Update unit
 						<FileCirclePlusSolid class="w-4 h-4 ml-2" />
 					</Button>

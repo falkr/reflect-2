@@ -188,6 +188,7 @@
 		<div class="fixed bottom-3 right-3 md:mb-8 md:mr-12 flex justify-center md:justify-end">
 			<Button
 				on:click={() => (defaultModal = true)}
+				id="createCourseButton"
 				class="text-white bg-teal-13 hover:bg-teal-9 dark:bg-blue-700 dark:hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-blue-800"
 			>
 				Create new course
@@ -213,14 +214,20 @@
 	{/if}
 
 	<!--Create course modal-->
-	<Modal bind:open={defaultModal} size="xs" autoclose={false} class="w-full">
+	<Modal bind:open={defaultModal} size="xs" autoclose={false} class="w-full" id="createCourseModal">
 		<form class="flex flex-col space-y-6" use:form>
 			<h3 class="p-0 text-xl text-center mb-5 font-normal text-gray-900 dark:text-white">
 				Create new course
 			</h3>
 			<Label class="space-y-2">
 				<span>Course name</span>
-				<Input type="text" name="name" placeholder="(e.g. Object-Oriented Programming)" required />
+				<Input
+					id="courseNameInput"
+					type="text"
+					name="name"
+					placeholder="(e.g. Object-Oriented Programming)"
+					required
+				/>
 			</Label>
 			<small>
 				{#if $errors.name}
@@ -231,7 +238,13 @@
 			</small>
 			<Label class="space-y-2">
 				<span>Course ID</span>
-				<Input type="text" name="course_id" placeholder="(e.g. TDT4100)" required />
+				<Input
+					id="courseIdInput"
+					type="text"
+					name="course_id"
+					placeholder="(e.g. TDT4100)"
+					required
+				/>
 			</Label>
 			<small>
 				{#if $errors.course_id}
@@ -244,6 +257,7 @@
 				<span>Semester</span>
 				<Select
 					class="mt-2"
+					id="selectSemester"
 					items={semesterOptions}
 					bind:value={selected}
 					placeholder="Select semester"
@@ -261,6 +275,7 @@
 
 			<Button
 				type="submit"
+				id="createCourseSubmit"
 				data-modal-target="defaultModal"
 				data-modal-toggle="defaultModal"
 				class="w-full1 bg-teal-13 hover:bg-teal-9 dark:bg-blue-700 dark:hover:bg-blue-600"

@@ -27,6 +27,12 @@
 			if (response.ok) {
 				showModal = false;
 				goto('/overview');
+				toast.success('Unrolled from course successfully!', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
 			} else {
 				toast.error('Failed to unroll from course');
 			}
@@ -45,6 +51,12 @@
 			if (response.ok) {
 				showModal = false;
 				goto('/overview');
+				toast.success('Course successfully deleted!', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
 			} else {
 				toast.error('Failed to delete course');
 			}
@@ -110,15 +122,17 @@
 
 <ButtonGroup>
 	{#if data.role === 'lecturer'}
-		<Button on:click={() => (showCreateUnitModal = true)}>Invite users</Button>
+		<Button on:click={() => (showCreateUnitModal = true)} id="inviteUsersButton"
+			>Invite users</Button
+		>
 	{/if}
-	<Button on:click={() => (showModal = true)}
+	<Button on:click={() => (showModal = true)} id="deleteCourseButton"
 		>{data.role === 'student' ? 'Unroll course' : 'Delete course'}</Button
 	>
 </ButtonGroup>
 
-<!--Delete course modal-->
-<Modal bind:open={showModal} size="xs" autoclose={false} class="w-full">
+<!--Delete/Unroll course modal-->
+<Modal bind:open={showModal} size="xs" autoclose={false} class="w-full" id="deleteCourseModal">
 	<form class="flex flex-col space-y-3">
 		<h3 class=" text-xl font-normal text-gray-900 dark:text-white mx-auto">
 			{data.role === 'student' ? 'Unroll course' : 'Delete course'}
@@ -128,6 +142,7 @@
 		</p>
 		<Button
 			on:click={actionCourse}
+			id="deleteCourseModalButton"
 			class="w-full1 bg-red-700 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-600"
 			>{data.role === 'student' ? 'Unroll course' : 'Delete course'}</Button
 		>
@@ -135,7 +150,13 @@
 </Modal>
 
 <!--Invite users modal-->
-<Modal bind:open={showCreateUnitModal} size="xs" autoclose={false} class="w-full">
+<Modal
+	bind:open={showCreateUnitModal}
+	size="xs"
+	autoclose={false}
+	class="w-full"
+	id="inviteUsersModal"
+>
 	<form class="flex flex-col space-y-3">
 		<h3 class=" text-xl font-normal text-gray-900 dark:text-white mx-auto">Invite Students</h3>
 		<Helper class="text-sm text-gray-500 mx-auto">Invite students by copying this link</Helper>
@@ -161,6 +182,7 @@
 		<Input type="text" name="enrollLecturer" id="enrollLecturer" placeholder={`Username`} />
 		<Button
 			on:click={() => createUserInvitation('lecturer')}
+			id="enrollLecturerButton"
 			class="w-full1 bg-teal-13 hover:bg-teal-8 dark:bg-blue-700 dark:hover:bg-blue-600"
 			>Send Invitation</Button
 		>

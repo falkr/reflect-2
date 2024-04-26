@@ -14,6 +14,11 @@ class ReflectionBase(BaseModel):
         orm_mode = True
 
 
+class ReflectionDelete(BaseModel):
+    user_id: str
+    unit_id: int
+
+
 class Reflection(ReflectionBase):
     id: int
     timestamp: date

@@ -8,7 +8,7 @@
 	let date = new Date();
 	let stringDate = date.toISOString().split('T')[0];
 
-	let unitsIsHidden = true;
+	let unitsIsHidden = false;
 	let unitsButtonText = 'Show finished and unavailable units';
 
 	function hideUnits() {
@@ -36,7 +36,7 @@
 			Click on an available unit to start your reflection
 		</h1> -->
 		<div class="w-full pt-2 flex flex-wrap justify-start gap-6">
-			{#each units as unit}
+			{#each [...units].reverse() as unit}
 				{#if unit.date_available.toString() <= stringDate && !checkReflectionSubmitted(unit.id)}
 					<UnitCardStudent unitData={unit} status="available" {data} />
 				{/if}

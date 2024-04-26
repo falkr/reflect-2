@@ -44,6 +44,7 @@
 	<Button
 		class="bg-teal-11 hover:bg-teal-9 dark:bg-blue-700 dark:hover:bg-blue-600"
 		size="lg"
+		id="loginFeideButton"
 		on:click={handleLogin}
 	>
 		<img src="/feide-white.svg" class="w-5 h-5 me-2" alt="Reflection Icon Logo" />

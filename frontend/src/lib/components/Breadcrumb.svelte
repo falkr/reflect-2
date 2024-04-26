@@ -9,7 +9,7 @@
 			><span class="hidden sm:block">Courses</span></BreadcrumbItem
 		>
 		{#each breadcrumbItems as { href, label }}
-			<BreadcrumbItem {href}>{label}</BreadcrumbItem>
+			<BreadcrumbItem id={`${label}-breadcrumb`} {href}>{label}</BreadcrumbItem>
 		{/each}
 	</Breadcrumb>
 </div>

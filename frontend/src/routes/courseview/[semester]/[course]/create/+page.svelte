@@ -86,7 +86,14 @@
 	<div class="flex flex-col md:flex-row gap-4 md:gap-8 w-full mb-8">
 		<div class="sm:w-96 w-80">
 			<Label for="first_name" class="mb-2">Unit name</Label>
-			<Input bind:value={unitName} type="text" id="first_name" placeholder="Unit name" required />
+			<Input
+				bind:value={unitName}
+				type="text"
+				id="unitNameCreate"
+				name="first_name"
+				placeholder="Unit name"
+				required
+			/>
 			<Helper class="text-sm mt-1">The name of the unit, visible to the students.</Helper>
 		</div>
 		<div class="sm:w-96 w-80">
@@ -94,7 +101,8 @@
 			<Input
 				bind:value={availableDate}
 				type="date"
-				id="last_name"
+				id="unitDateCreate"
+				name="last_name"
 				placeholder={new Date()}
 				required
 			/>
@@ -120,6 +128,7 @@
 		<div class="mt-6">
 			<Button
 				type="submit"
+				id="createUnitSubmitButton"
 				size="md"
 				class="w-36 bg-teal-13 hover:bg-teal-10 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
 			>
