@@ -950,6 +950,9 @@ async def send_notifications(db: Session = Depends(get_db)):
       successful notifications, skipped notifications due to the notification limit, and any errors encountered.
     """
     if crud.check_recent_notification(db, NOTIFICATION_COOLDOWN_DAYS):
+        print(
+            "Notification already sent in the last", NOTIFICATION_COOLDOWN_DAYS, "days"
+        )
         raise HTTPException(
             status_code=400,
             detail="A notification has already been sent in the last "

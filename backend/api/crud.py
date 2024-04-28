@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from . import model
 from . import schemas
 from sqlalchemy.orm import Session
+from sqlalchemy import not_
 from starlette.config import Config
 
 config = Config(".env")
@@ -720,7 +721,7 @@ def get_units_to_notify(
 ):
     """
     Retrieves units for which a user should be notified, based on a specific course and semester,
-    ensuring the user has not reached the notification limit for those units.
+    ensuring the user has not reached the notification limit for those units and that no reflections exist for the unit.
 
     Parameters:
     - db (Session): The SQLAlchemy session for database access.
@@ -732,6 +733,17 @@ def get_units_to_notify(
     Returns:
     - List[Unit]: A list of Unit objects for which the user should be notified.
     """
+
+    # Subquery to find units with existing reflections
+    subquery = (
+        db.query(model.Reflection.unit_id)
+        .filter(
+            model.Reflection.unit_id == model.Unit.id,
+            model.Reflection.user_id == user_id,
+        )
+        .exists()
+    )
+
     available_units = (
         db.query(model.Unit)
         .filter(
@@ -739,6 +751,7 @@ def get_units_to_notify(
             model.Unit.course_semester == course_semester,
             model.Unit.hidden == False,
             model.Unit.date_available <= date.today(),
+            not_(subquery),
         )
         .all()
     )
