@@ -420,6 +420,11 @@ async def user(request: Request, db: Session = Depends(get_db)):
                 if unit["id"] not in reflected_units
             ]
 
+            course = crud.get_course(
+                db, enrollment.course_id, enrollment.course_semester
+            )
+            enrollment.course_name = course.name
+
     if user == None:
         request.session.pop("user")
         raise HTTPException(404, detail="User not found")

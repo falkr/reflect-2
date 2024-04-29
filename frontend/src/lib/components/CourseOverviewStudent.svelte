@@ -62,6 +62,3 @@
 		{/if}
 	{/if}
 </div>
-
-<style>
-</style>

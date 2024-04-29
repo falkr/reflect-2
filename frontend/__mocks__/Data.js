@@ -62,13 +62,6 @@ const mockUser = {
 	email: 'test@ntnu.no',
 	enrollments: [
 		{
-			course_id: 'TDT4000',
-			course_semester: 'spring2024',
-			role: 'lecturer',
-			uid: 'test',
-			missingUnits: []
-		},
-		{
 			course_id: 'TDT4100',
 			course_semester: 'fall2023',
 			role: 'student',
@@ -83,10 +76,60 @@ const mockUser = {
 					date: '2022-08-30'
 				}
 			]
+		},
+		{
+			course_id: 'TDT4000',
+			course_semester: 'spring2024',
+			role: 'lecturer',
+			uid: 'test',
+			missingUnits: []
 		}
 	],
 	reflections: [],
-	admin: true
+	admin: true,
+	detail: 'test'
+};
+
+const mockLecturerUser = {
+	uid: 'test',
+	email: 'test@ntnu.no',
+	enrollments: [
+		{
+			course_id: 'TDT4100',
+			course_semester: 'fall2023',
+			role: 'lecturer',
+			uid: 'test',
+			missingUnits: [
+				{
+					id: 1,
+					date: '2025-08-23'
+				},
+				{
+					id: 2,
+					date: '2025-08-30'
+				}
+			]
+		},
+		{
+			course_id: 'TDT4000',
+			course_semester: 'spring2024',
+			role: 'lecturer',
+			uid: 'test',
+			missingUnits: [
+				{
+					id: 1,
+					date: '2025-08-23'
+				},
+				{
+					id: 2,
+					date: '2025-08-30'
+				}
+			]
+		}
+	],
+	reflections: [],
+	admin: true,
+	detail: 'test'
 };
 
 const mockCourse = {
@@ -148,13 +191,15 @@ const mockData = [
 		units: mockUnits,
 		unit: mockUnit,
 		unit_id: mockUnitId
+	},
+	{
+		user: mockUser,
+		course: mockCourse,
+		course_name: 'TDT4100',
+		role: 'lecturer',
+		units: mockUnits,
+		unit: mockUnit,
+		unit_id: mockUnitId
 	}
 ];
-module.exports = {
-	mockData,
-	mockUnits,
-	mockUnit,
-	mockUnitId,
-	mockCourse,
-	mockUser
-};
+export { mockData, mockUnits, mockUnit, mockUnitId, mockCourse, mockUser, mockLecturerUser };

@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"test": "vitest",
+		"test:coverage": "vitest --coverage",
 		"dev": "vite dev --host 127.0.0.1",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -23,6 +24,7 @@
 		"@types/jest": "^29.5.12",
 		"@typescript-eslint/eslint-plugin": "^7.1.1",
 		"@typescript-eslint/parser": "^7.1.1",
+		"@vitest/coverage-v8": "^1.5.0",
 		"autoprefixer": "^10.4.18",
 		"cypress": "^13.8.0",
 		"eslint": "^8.57.0",

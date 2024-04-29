@@ -146,7 +146,7 @@
 <Breadcrumb />
 <div>
 	{#if data.user.enrollments.length == 0}
-		<div class="mt-40 justify-center align-center self-center text-center">
+		<div class="justify-center align-center self-center text-center">
 			<img
 				src="/walking-in-rain-illustration-light.svg"
 				alt="Walking in rain illustration"
@@ -157,10 +157,8 @@
 				alt="Walking in rain illustration"
 				class="h-40 w-40 md:h-80 md:w-80 align-center self-center justify-center mx-auto mb-5 hidden dark:block"
 			/>
-			<p style="font-size: 18px" class="mt-12 font-light text-black dark:text-white">
-				You are not enrolled to any course yet
-			</p>
-			<p style="font-size: 12px" class="font-extralight text-black dark:text-white">
+			<p class="mt-12 text-black dark:text-gray-300">
+				You are not enrolled to any course yet<br />
 				{#if data.user.admin}
 					(As a lecturer, create a new course by clicking the create course button)
 				{:else}

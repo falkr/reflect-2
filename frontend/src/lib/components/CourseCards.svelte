@@ -5,36 +5,6 @@
 	import { Card, Button, Badge } from 'flowbite-svelte';
 	import { PUBLIC_API_URL } from '$env/static/public';
 
-	let coursesWithNames: (Enrollment & { name: string })[] = [];
-
-	//Update courseWithNames when a new course is created
-	$: {
-		(async () => {
-			coursesWithNames = await Promise.all(
-				courses.map(async (course) => {
-					const name = await getCourseName(course.course_id, course.course_semester);
-					return { ...course, name };
-				})
-			);
-		})();
-	}
-
-	//Fetch to get course names
-	async function getCourseName(courseId: string, courseSemester: string): Promise<string> {
-		const response = await fetch(
-			`${PUBLIC_API_URL}/course?course_id=${courseId}&course_semester=${courseSemester}`,
-			{
-				method: 'GET',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-		const res = await response.json();
-		return res.name;
-	}
-
 	const formatSemester = (semester: string): string => {
 		const season = semester.slice(0, -4);
 		const year = semester.slice(-4);
@@ -42,7 +12,7 @@
 	};
 </script>
 
-{#each coursesWithNames as course}
+{#each courses as course}
 	<Card
 		on:click={() => goto(`/courseview/${course.course_semester}/${course.course_id}`)}
 		class="m-auto cursor-pointer hover:bg-teal-2 dark:bg-gray-800 dark:hover:bg-gray-700"
@@ -52,7 +22,7 @@
 			style="font-size: 1.25rem;"
 			class="mb-1 select-none text-4xl font-bold tracking-tight text-gray-900 dark:text-white text-ellipsis overflow-hidden whitespace-nowrap"
 		>
-			{course.course_id} - {course.name}
+			{course.course_id} - {course.course_name}
 		</h5>
 		<p
 			class="mb-3 select-none font-normal text-gray-700 dark:text-gray-300 leading-tight"

@@ -141,6 +141,7 @@ class EnrollUser(EnrollmentBase):
 class Enrollment(EnrollmentBase):
     uid: str
     missingUnits: Any = []
+    course_name: str = ""
 
 
 class UserAdmin(BaseModel):

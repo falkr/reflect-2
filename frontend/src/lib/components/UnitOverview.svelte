@@ -16,7 +16,7 @@
 
 	let availableDate = data.unit.unit.date_available;
 	let isUnitOngoing: boolean = false;
-	let isUserLecturer: boolean = false;
+	let isUserLecturer: boolean = data.role === 'lecturer';
 	let decline: boolean = false;
 	let answers: string[] = [];
 
@@ -79,7 +79,6 @@
 		const availableDate = new Date(data.unit.unit.date_available);
 		const today = new Date();
 		isUnitOngoing = availableDate <= today;
-		isUserLecturer = data.role === 'lecturer'; //Sets the value to true if the user is a lecturer
 		decline = false;
 	});
 

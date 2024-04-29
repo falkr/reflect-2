@@ -116,6 +116,7 @@ env.bak/
 venv.bak/
 .nvmrc
 !.env.template
+coverage/
 
 
 # Spyder project settings

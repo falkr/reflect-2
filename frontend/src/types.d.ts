@@ -22,6 +22,7 @@ type Enrollment = {
 	course_id: string;
 	course_semester: string;
 	role: string;
+	course_name: string;
 };
 
 type Course = {
