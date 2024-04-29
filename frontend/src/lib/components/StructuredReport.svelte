@@ -3,6 +3,7 @@
 
 	export let reportData: ReportType;
 	export let unitName: string | undefined;
+	export let unit_number: number;
 
 	const reportSections = reportData ? Object.entries(reportData.report_content) : [];
 
@@ -13,7 +14,7 @@
 
 {#if reportData && reportData.report_content}
 	<h1 class="text-xl font-semibold text-gray-600 dark:text-white">
-		Report for unit {reportData.unit_id} - {unitName}
+		Report for unit {unit_number} - {unitName}
 	</h1>
 	<h2 class="text-gray-500 dark:text-white mt-2">
 		Please note, this report was generated using AI and may contain errors or inaccuracies.

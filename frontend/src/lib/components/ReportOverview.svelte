@@ -10,6 +10,7 @@
 
 	export let numberOfReflectionsInUnit: number;
 	export let data: Data;
+	export let unit_number: number;
 	const unitId = $page.params.unit;
 
 	let reportData: ReportType;
@@ -139,7 +140,7 @@
 		{:else if (reportData && reportData.number_of_answers === 0) || !reportData}
 			<h1 class="text-gray-500 dark:text-white mt-2">No report is generated for this unit yet.</h1>
 		{:else if reportData && reportData.report_content}
-			<StructuredReport {reportData} unitName={unit?.title} />
+			<StructuredReport {reportData} {unit_number} unitName={unit?.title} />
 		{/if}
 	</div>
 </div>
