@@ -16,8 +16,6 @@ from datetime import date
 
 enum_values = Enum("lecturer", "teaching assistant", "student", name="enrollment_roles")
 
-# Course question (specify a relationship between a course and a question)
-
 
 class User(Base):
     __tablename__ = "users"
@@ -87,6 +85,7 @@ class Unit(Base):
     reflections_since_last_report = Column(Integer, default=0)
     reports = relationship("Report", back_populates="unit")
 
+    # Has its own to_dict method to include the number of reflections since last report
     def to_dict(self):
         unique_user_ids = {reflection.user_id for reflection in self.reflections}
         return {
@@ -152,11 +151,11 @@ class Report(Base):
             c.key: getattr(self, c.key) for c in class_mapper(self.__class__).columns
         } """
 
+    # Has its own so that Summary get moved to the top level of the dict
+    # This also makes it easier to serialize the object to JSON
     def to_dict(self):
         report_content = self.report_content.copy()  # Create a copy of report_content
-        summary = report_content.pop(
-            "Summary", None
-        )  # Remove 'Summary' from the copy and get its value
+        summary = report_content.pop("Summary", None)
 
         return {
             "Summary": summary,

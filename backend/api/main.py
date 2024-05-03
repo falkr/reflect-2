@@ -62,7 +62,6 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
-# Should all this be in .env?
 email_config = ConnectionConfig(
     MAIL_USERNAME=config("MAIL_USERNAME", cast=str, default=""),
     MAIL_PASSWORD=config("MAIL_PASSWORD", cast=str, default=""),
@@ -127,6 +126,11 @@ def is_logged_in(request):
     return user is not None
 
 
+def protect_route(request: Request):
+    if not is_logged_in(request):
+        raise HTTPException(401, detail="You are not logged in")
+
+
 def is_admin(db, request):
     if config("isAdmin", cast=bool, default=False):
         return True
@@ -169,6 +173,9 @@ def check_is_admin(bearer_token):
 @app.on_event("startup")
 async def start_db():
     print("init database")
+    if is_prod():
+        return
+
     course_id: str = "TDT4100"
     semester: str = "fall2023"
     course_name: str = "Informasjonsteknologi grunnkurs"
@@ -218,29 +225,12 @@ async def start_db():
         ),
     ]
 
-    """
-    questions = [
-        crud.create_question(
-            db=db,
-            question="Læringsprestasjon",
-            comment="Hva lærte du i denne enheten? Hva var din klareste innsikt, eller din beste læringsprestasjon?",
-        ),
-        crud.create_question(
-            db=db,
-            question="Vanskeligst",
-            comment="Hva var vanskeling denne gangen? Var det et konsept som du slet mest med, eller noe som du synes var uklart?",
-        ),
-    ]
-    for q in questions:
-        course.questions.append(q)
-    """
-
     for u in units:
         course.units.append(u)
         u.course_id = course.id
         u.course_semester = semester
 
-    enrollment = await crud.create_enrollment(
+    await crud.create_enrollment(
         db=db,
         course_id="TDT4100",
         course_semester=semester,
@@ -262,7 +252,6 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     try:
         token = await oauth.feide.authorize_access_token(request)
     except OAuthError as error:
-        raise error
         return HTMLResponse(f"<h1>{error.error}</h1>")
     bearer_token = token.get("access_token")
     print("bearer_token", bearer_token)
@@ -304,8 +293,7 @@ async def logout(request: Request):
 async def create_reflection(
     request: Request, ref: schemas.ReflectionCreate, db: Session = Depends(get_db)
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     unit = crud.get_unit(db, ref.unit_id)
     if unit is None:
@@ -348,8 +336,7 @@ async def delete_reflection(
     - HTTPException: 401 error if the user is not logged in.
     - HTTPException: 403 error if the user does not have permission to delete the reflection.
     """
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     if is_admin(db, request):
         return crud.delete_reflection(db, ref.user_id, ref.unit_id)
@@ -367,8 +354,7 @@ async def course(
     course_semester: str,
     db: Session = Depends(get_db),
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     course = crud.get_course(db, course_id=course_id, course_semester=course_semester)
     if course is None:
@@ -383,8 +369,8 @@ async def course(
 async def create_course(
     request: Request, ref: schemas.CourseCreate, db: Session = Depends(get_db)
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
+
     if not is_admin(db, request):
         raise HTTPException(403, detail="You are not an admin user")
     try:
@@ -396,8 +382,7 @@ async def create_course(
 
 @app.get("/user", response_model=schemas.User)
 async def user(request: Request, db: Session = Depends(get_db)):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -440,9 +425,7 @@ async def user(request: Request, db: Session = Depends(get_db)):
 async def enroll(
     request: Request, ref: schemas.EnrollmentCreate, db: Session = Depends(get_db)
 ):
-
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     course = crud.get_course(
         db, course_id=ref.course_id, course_semester=ref.course_semester
@@ -494,8 +477,7 @@ async def get_units(
     course_semester: str,
     db: Session = Depends(get_db),
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -563,8 +545,7 @@ async def create_unit(
     - HTTPException: 403 error if the user does not have sufficient permissions (not an admin or
       a lecturer/teaching assistant in the course) to create a new unit.
     """
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -613,8 +594,7 @@ async def update_unit(
     - HTTPException: 404 error if the specified unit is not found in the database.
     - HTTPException: 403 error if the user does not have permission to edit the unit for this course.
     """
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -708,8 +688,7 @@ async def download_file(
     Raises:
         HTTPException: If the user is not logged in or if an error occurs while generating the report.
     """
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -759,8 +738,7 @@ async def get_unit_data(
     unit_id: int,
     db: Session = Depends(get_db),
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     email: str = user.get("uid")
@@ -781,8 +759,6 @@ async def get_unit_data(
     )
     if unit:
         questions = [to_dict(question) for question in course.questions]
-        # Somehow needed to get reflections on Unit dict, even thought its never accessed
-        reflections = [to_dict(reflection) for reflection in unit.reflections]
 
         if is_admin(db, request) or enrollment.role in [
             "lecturer",
@@ -812,7 +788,8 @@ async def get_unit_data(
     raise HTTPException(404, detail="Unit not found")
 
 
-@app.post("/save_report", response_model=schemas.ReportCreate)
+# This can be uncommented to test the functionality for development purposes
+# @app.post("/save_report", response_model=schemas.ReportCreate)
 async def save_report_endpoint(
     request: Request, ref: schemas.ReportCreate, db: Session = Depends(get_db)
 ):
@@ -847,8 +824,7 @@ async def get_report(
     - HTTPException with status code 401 if the user is not logged in.
     - HTTPException with status code 404 if the report is not found.
     """
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
     report = crud.get_report(
         db,
         course_id=params.course_id,
@@ -865,8 +841,7 @@ async def get_report(
 async def edit_created_report(
     request: Request, ref: schemas.ReportBase, db: Session = Depends(get_db)
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -886,13 +861,11 @@ async def edit_created_report(
     )
 
 
-# create new invitation
 @app.post("/create_invitation", response_model=schemas.Invitation)
 async def create_invitation(
     request: Request, ref: schemas.InvitationBase, db: Session = Depends(get_db)
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
     user = request.session.get("user")
     uid: str = user.get("uid")
     user = crud.get_user(db, uid)
@@ -915,8 +888,7 @@ async def create_invitation(
 # get all invitations by user
 @app.get("/get_invitations", response_model=List[schemas.Invitation])
 async def get_invitations(request: Request, db: Session = Depends(get_db)):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -927,8 +899,7 @@ async def get_invitations(request: Request, db: Session = Depends(get_db)):
 # delete invitation
 @app.delete("/delete_invitation/{id}")
 async def delete_invitation(request: Request, id: int, db: Session = Depends(get_db)):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
 
     return crud.delete_invitation(db, id=id)
 
@@ -1108,8 +1079,7 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
 async def unenroll_course(
     request: Request, ref: schemas.EnrollmentBase, db: Session = Depends(get_db)
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
     try:
         user = request.session.get("user")
         uid = user.get("uid")
@@ -1122,8 +1092,7 @@ async def unenroll_course(
 async def delete_course(
     request: Request, ref: schemas.CourseBase, db: Session = Depends(get_db)
 ):
-    if not is_logged_in(request):
-        raise HTTPException(401, detail="You are not logged in")
+    protect_route(request)
     if not is_admin(db, request):
         raise HTTPException(403, detail="You are not an admin user")
     try:

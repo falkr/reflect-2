@@ -24,6 +24,7 @@ users = {
 }
 
 
+# Custom endpoint to skip oauth2 authentication for testing purposes
 @app.get("/test/set-test-user")
 def set_test_user(request: Request, uid: str, email: str):
     """
@@ -33,9 +34,6 @@ def set_test_user(request: Request, uid: str, email: str):
         request (Request): The FastAPI request object.
         uid (str): The user ID.
         email (str): The user email.
-
-    Returns:
-        None
     """
     request.session["user"] = {
         "uid": uid,
@@ -51,9 +49,6 @@ def create_user(uid: str, email: str, admin: bool = False) -> None:
         uid (str): The user ID.
         email (str): The user email.
         admin (bool, optional): Whether the user is an admin. Defaults to False.
-
-    Returns:
-        None
     """
     db = TestingSessionLocal()
     crud.create_user(db=db, uid=uid, user_email=email, admin=admin)
@@ -68,9 +63,6 @@ def login_user(uid: str, email: str) -> None:
     Args:
         uid (str): The user ID.
         email (str): The user email.
-
-    Returns:
-        None
     """
     client.get(f"/test/set-test-user?uid={uid}&email={email}")
 
@@ -236,7 +228,6 @@ def test_get_units():
     assert data == []
 
 
-# test for create_unit
 @pytest.mark.asyncio
 def test_create_unit():
     """
@@ -304,10 +295,6 @@ def test_create_reflection():
         },
     )
     assert response.status_code == 200
-
-    response = client.get("/user")
-    data = response.json()
-
     response = client.get("/units?course_id=TDT1000&course_semester=fall2023")
 
     assert response.status_code == 200
@@ -318,13 +305,7 @@ def test_analyze_feedback_invalid_data():
     """
     Test the /analyze_feedback endpoint with invalid data.
     """
-    # Construct an invalid request payload
-    request_payload = {
-        # Missing or invalid fields here
-    }
-
-    response = client.post("/analyze_feedback", json=request_payload)
-
+    response = client.post("/analyze_feedback", json={})
     assert response.status_code == 422
 
 
@@ -333,13 +314,7 @@ def test_generate_report_invalid_data():
     """
     Test the /generate_report endpoint with invalid data.
     """
-    # Construct an invalid request payload
-    request_payload = {
-        # Missing or invalid fields here
-    }
-
-    response = client.post("/generate_report", json=request_payload)
-
+    response = client.post("/generate_report", json={})
     assert response.status_code == 422
 
 
@@ -372,6 +347,7 @@ def session_get_side_effect(key, default=None):
     return default
 
 
+@pytest.mark.asyncio
 def test_is_admin_with_admin_config(config_patch):
     def local_config_side_effect(key, cast=None, default=None):
         if key == "isAdmin":
@@ -379,17 +355,17 @@ def test_is_admin_with_admin_config(config_patch):
         return default
 
     config_patch.side_effect = local_config_side_effect
-
     mock_request.session.get.side_effect = session_get_side_effect
-
     assert is_admin(mock_db, mock_request) == True
 
 
+@pytest.mark.asyncio
 def test_is_admin_no_user_logged_in(config_patch):
     mock_request.session.get.side_effect = lambda key, default=None: default
     assert is_admin(mock_db, mock_request) == False
 
 
+@pytest.mark.asyncio
 def test_is_admin_user_not_in_db(config_patch, crud_patch):
     config_patch.return_value = MagicMock(return_value=False)
     crud_patch.get_user.return_value = None
@@ -399,6 +375,7 @@ def test_is_admin_user_not_in_db(config_patch, crud_patch):
     assert is_admin(mock_db, mock_request) == False
 
 
+@pytest.mark.asyncio
 def test_is_admin_user_not_admin(config_patch, crud_patch):
     config_patch.return_value = MagicMock(return_value=False)
     crud_patch.get_user.return_value = MagicMock(admin=False)
@@ -408,6 +385,7 @@ def test_is_admin_user_not_admin(config_patch, crud_patch):
     assert is_admin(mock_db, mock_request) == False
 
 
+@pytest.mark.asyncio
 def test_is_admin_user_is_admin(config_patch, crud_patch):
     config_patch.return_value = MagicMock(return_value=False)
     crud_patch.get_user.return_value = MagicMock(admin=True)
@@ -419,67 +397,15 @@ def test_is_admin_user_is_admin(config_patch, crud_patch):
 
 @pytest.mark.asyncio
 async def test_generate_report_non_admin_access():
-    # Simulate a non-admin user session
     login_user(users["test"]["uid"], users["test"]["email"])
 
-    # Attempt to generate a report
     response = client.post(
         "/generate_report",
         json={
-            # Provide necessary request payload here
             "course_id": "TDT1000",
             "unit_id": 1,
             "course_semester": "fall2023",
         },
     )
 
-    # Assert that access is forbidden for non-admin users
     assert response.status_code == 403
-
-
-def test_save_report_admin_user():
-    with patch("api.main.is_admin", return_value=True), patch(
-        "api.main.crud.save_report"
-    ) as mock_save_report:
-        test_report_data = {
-            "report_content": {"section1": {"subsection1": ["item1", "item2"]}},
-            "number_of_answers": 5,
-            "unit_id": 1,
-            "course_id": "course123",
-            "course_semester": "2023S",
-        }
-        expected_response_data = test_report_data.copy()
-        mock_save_report.return_value = {"id": 1, **test_report_data}
-        response = client.post("/save_report", json=test_report_data)
-        assert response.status_code == 200
-        assert response.json() == expected_response_data
-
-
-def test_save_report_access_denied_for_non_admin_user():
-    with patch("api.main.is_admin", return_value=False):
-        test_report_data = {
-            "report_content": {"section1": {"subsection1": ["item1", "item2"]}},
-            "number_of_answers": 5,
-            "unit_id": 1,
-            "course_id": "course123",
-            "course_semester": "2023S",
-        }
-        response = client.post("/save_report", json=test_report_data)
-        assert response.status_code == 403
-        assert response.json() == {"detail": "You are not an admin user"}
-
-
-def test_save_report_integrity_error():
-    with patch("api.main.is_admin", return_value=True), patch(
-        "api.main.crud.save_report", side_effect=IntegrityError(None, None, None)
-    ):
-        test_report_data = {
-            "report_content": {"section1": {"subsection1": ["item1", "item2"]}},
-            "number_of_answers": 5,
-            "unit_id": 1,
-            "course_id": "course123",
-            "course_semester": "2023S",
-        }
-        response = client.post("/save_report", json=test_report_data)
-        assert response.status_code == 409
-        assert "An error occurred while saving the report:" in response.json()["detail"]
