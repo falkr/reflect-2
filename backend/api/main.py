@@ -389,6 +389,8 @@ async def user(request: Request, db: Session = Depends(get_db)):
     user = crud.get_user(db, uid)
 
     for enrollment in user.enrollments:
+        course = crud.get_course(db, enrollment.course_id, enrollment.course_semester)
+        enrollment.course_name = course.name
         if enrollment.role not in ["lecturer", "teaching assistant"]:
             today = datetime.now().date()
             enrollment.missingUnits = [
@@ -404,11 +406,6 @@ async def user(request: Request, db: Session = Depends(get_db)):
                 for unit in enrollment.missingUnits
                 if unit["id"] not in reflected_units
             ]
-
-            course = crud.get_course(
-                db, enrollment.course_id, enrollment.course_semester
-            )
-            enrollment.course_name = course.name
 
     if user == None:
         request.session.pop("user")
