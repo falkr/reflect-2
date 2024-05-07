@@ -4,7 +4,6 @@
 	import ReportOverview from '$lib/components/ReportOverview.svelte';
 	import { goto } from '$app/navigation';
 	export let data: Data;
-	export let unitData: Unit;
 
 	const semester = $page.params.semester as string;
 	const courseId = $page.params.course as string;
@@ -12,6 +11,10 @@
 		(unit) => unit.course_id === courseId && unit.course_semester === semester
 	);
 
+	/**
+	 * Sort the units by date available in ascending order.
+	 * @return {number} - The comparison result.
+	 */
 	matchingUnits.sort((a, b) => {
 		if (a.date_available < b.date_available) {
 			return -1;
@@ -45,6 +48,7 @@
 	]}
 />
 
+<!-- If the data is available, display the report overview -->
 {#if data}
 	{#if data.role === 'lecturer'}
 		<ReportOverview

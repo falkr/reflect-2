@@ -13,4 +13,4 @@
 		}
 	]}
 />
-<CourseOverview {data} {units} role={data.role} />
+<CourseOverview {data} {units} />

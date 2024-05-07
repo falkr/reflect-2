@@ -6,6 +6,9 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 
+	/**
+	 * Redirects the user to the login page.
+	 */
 	export function handleLogin() {
 		location.href = `${PUBLIC_API_URL}/login`;
 	}

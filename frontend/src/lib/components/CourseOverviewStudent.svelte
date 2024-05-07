@@ -11,6 +11,9 @@
 	let unitsIsHidden = true;
 	let unitsButtonText = 'Show finished and unavailable units';
 
+	/**
+	 * Hides the finished and unavailable units when the button is clicked.
+	 */
 	function hideUnits() {
 		if (unitsIsHidden) {
 			unitsButtonText = 'Hide finished and unavailable units';
@@ -19,11 +22,18 @@
 		}
 		unitsIsHidden = !unitsIsHidden;
 	}
+
+	/**
+	 * Checks if the reflection for a unit has been submitted.
+	 * @param unit_id - The unit id to check for.
+	 * @returns True if the reflection has been submitted, false otherwise.
+	 */
 	function checkReflectionSubmitted(unit_id: number) {
 		return data.user.reflections.some((reflection) => reflection.unit_id === unit_id);
 	}
 </script>
 
+<!-- The CourseOverviewStudent component displays the units cards of a course for a student. -->
 <div class="relative flex-col md:mx-24 mx-10">
 	<div class="flex justify-end mb-2">
 		<CourseActions {data} />

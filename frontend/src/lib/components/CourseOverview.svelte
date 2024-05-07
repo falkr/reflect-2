@@ -3,12 +3,18 @@
 	import CourseOverviewLecturer from './CourseOverviewLecturer.svelte';
 
 	export let data: Data;
-	export let role: string;
 	export let units: Unit[];
 	$: units = data.units;
 
 	let unitCounter = 1;
 
+	/**
+	 * Sorts the units by date available in ascending order.
+	 * This is done to ensure that the units are displayed in the correct order.
+	 * @param a - The first unit to compare.
+	 * @param b - The second unit to compare.
+	 * @returns -1 if a is less than b, 1 if a is greater than b, 0 if a is equal to b.
+	 */
 	units.sort((a, b) => {
 		if (a.date_available < b.date_available) {
 			return -1;

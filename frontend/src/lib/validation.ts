@@ -1,4 +1,9 @@
-//Validate the course name input in creation of course
+/**
+ * Validate the course ID input in creation of course
+ * @param courseId The course ID to validate
+ * @returns An array of error messages if the input is invalid, less than 4 characters,
+ * does not contain at least one letter and one number
+ */
 export function validateCourseId(courseId: string) {
 	if (!courseId) {
 		return [
@@ -13,14 +18,22 @@ export function validateCourseId(courseId: string) {
 	}
 }
 
-//Validate the course ID input in creation of course
+/**
+ * Validate the course semester input in creation of course
+ * @param semester The course semester to validate
+ * @returns An array of error messages if the input is invalid
+ */
 export function validateCourseSemester(semester: string) {
 	if (!semester) {
 		return ['Must choose one option!'];
 	}
 }
 
-//Validate the course semester input in creation of course
+/**
+ * Validate the course name input in creation of course
+ * @param name The course name to validate
+ * @returns An array of error messages if the input is invalid, less than 4 characters
+ */
 export function validateCourseName(name: string) {
 	if (!name) {
 		return ['Must not be empty', 'Must be over 4 characters'];
@@ -29,7 +42,11 @@ export function validateCourseName(name: string) {
 	}
 }
 
-//validate unit title input in creation of unit
+/**
+ * Validate the unit title input in unit creation
+ * @param name The unit title to validate
+ * @returns An array of error messages if the input is invalid, less than 4 characters
+ */
 export function validateUnitTitle(name: string) {
 	if (!name) {
 		return ['Must not be empty', 'Must be over 4 characters'];
@@ -38,7 +55,11 @@ export function validateUnitTitle(name: string) {
 	}
 }
 
-//validate invitation emails
+/**
+ * Validate the email address input
+ * @param emailAdresses The email address to validate
+ * @returns An array of error messages if the email address is invalid, empty, contains @stud.ntnu.no or does not contain @ntnu.no
+ */
 export function validateEmailAddresses(emailAdresses: string) {
 	const emailList = emailAdresses.split(' ');
 	if (!emailAdresses) {
@@ -55,13 +76,22 @@ export function validateEmailAddresses(emailAdresses: string) {
 	}
 }
 
+/**
+ * Validate the invite role input
+ * @param inviteRole The invite role to validate
+ * @returns An error message if the input is invalid
+ */
 export function validateInviteRole(inviteRole: string) {
 	if (!inviteRole) {
 		return ['Must choose one option!'];
 	}
 }
 
-//validate unit title input in creation of unit
+/**
+ * Validate the unit date input in unit creation
+ * @param name The unit date to validate
+ * @returns An array of error messages if the input is invalid, less than 4 characters
+ */
 export function validateUnitDate(name: string) {
 	if (!name) {
 		return ['Must not be empty', 'Must be over 4 characters'];

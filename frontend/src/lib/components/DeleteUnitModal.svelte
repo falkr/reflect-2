@@ -8,6 +8,13 @@
 	export let data: any;
 	let showDeleteUnitModal = false;
 
+	/**
+	 * Deletes the unit from the course by making an API call to the backend server.
+	 * The function sends a DELETE request to the server with the unit id, course id, and course semester.
+	 * Upon successful deletion, it redirects to the previous page and shows a success toast.
+	 * On failure, it displays an error toast.
+	 * @return {Promise<{result: any, status: number}>} - The result of the API call and the HTTP status.
+	 */
 	async function deleteUnit() {
 		const response = await fetch(`${PUBLIC_API_URL}/delete_unit/${data.unit_id}`, {
 			method: 'DELETE',
@@ -44,13 +51,14 @@
 	}
 </script>
 
+<!--Delete unit button-->
 <ButtonGroup>
 	<Button id="deleteUnitButton" class="w-32" on:click={() => (showDeleteUnitModal = true)}>
 		Delete unit
 		<TrashBinOutline class="w-4 h-4 ml-2" />
 	</Button>
 </ButtonGroup>
-<!--Invite users modal-->
+<!--Delete unit modal-->
 <Modal
 	bind:open={showDeleteUnitModal}
 	size="xs"

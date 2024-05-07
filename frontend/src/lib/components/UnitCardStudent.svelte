@@ -9,15 +9,29 @@
 	export let status: string;
 	export let data: Data;
 
+	/**
+	 * Reformat the date from ISO string to a human-readable format.
+	 * @param isoDateString - The date in ISO string format.
+	 * @returns The date in the format 'dd.mm.yyyy'.
+	 */
 	function reformatDate(isoDateString: Date): string {
 		const [year, month, day] = isoDateString.toString().split('-');
 		return `${day}.${month}.${year}`;
 	}
 
+	/**
+	 * Redirects the user to the reflection page.
+	 */
 	function gotoReflection() {
 		goto(`${window.location.pathname}/${unitData.id}`, { replaceState: false });
 	}
 
+	/**
+	 * Declines the unit by sending an empty reflection to the backend.
+	 * The function sends a POST request to the server with the user id, unit id, and question id.
+	 * Upon successful submission, it invalidates the layoutUser store and redirects to the course view page.
+	 * On failure, it displays an error toast.
+	 */
 	async function declineUnit() {
 		const questions = ['1', '2'];
 
@@ -66,6 +80,7 @@
 	}
 </script>
 
+<!-- Unit card for students displaying buttons based on if it is already submitted -->
 <Card class="h-36 lg:max-w-96 md:max-w-80 max-w-96 sm:p-4 mb-4 ml-0 dark:bg-gray-800">
 	<div class="relative">
 		<h2 class="text-xl text-gray-900 dark:text-white font-bold">{unitData.title}</h2>

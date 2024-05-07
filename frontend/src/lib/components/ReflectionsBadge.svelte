@@ -30,6 +30,7 @@
 	}
 </script>
 
+<!-- The ReflectionsBadge component displays a badge with a tag string and color based on the number of reflections since the last report. -->
 {#if reflectionsSinceLastReport !== 0 || unitTag === 'notAvailable'}
 	<Badge large color={tagColor} class="rounded-lg h-6 my-1 md:m-0">{tagString}</Badge>
 {/if}

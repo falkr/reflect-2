@@ -6,8 +6,20 @@ import { PUBLIC_API_URL } from '$env/static/public';
 import type { Load } from '@sveltejs/kit';
 import toast from 'svelte-french-toast';
 
-// load function that runs on every page, fetching user
-// also handles redirecting to correct route after login if specific url was accessed before login
+/**
+ * Load function for a SvelteKit application that ensures the user is authenticated,
+ * redirects users to the appropriate route post-login, and fetches user data. This function
+ * runs on every page and is integral to handling user sessions and routing based on authentication status.
+ *
+ * @param {Function} fetch - A SvelteKit-provided fetch function, configured to handle credentials, used for server-side requests.
+ * @param {Object} url - Contains the current URL object of the request.
+ * @param {Function} depends - Used to declare dependencies for this load call which invalidates the data when the specified key changes.
+ *
+ * @returns {Promise<Object>|void} - Returns a promise resolving to an object containing the user's data if authenticated,
+ * or performs redirection if the user is not authenticated or on fetching error.
+ *
+ * @throws {Error} - Outputs error to console and sets user authentication status to false in case of fetching errors. Redirects to home if needed.
+ */
 export const load: Load = async ({ fetch, url, depends }) => {
 	depends('app:layoutUser');
 

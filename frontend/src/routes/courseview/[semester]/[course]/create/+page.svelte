@@ -13,8 +13,20 @@
 	let unitName = '';
 	let availableDate = '';
 
-	//function for creating unit
+	/**
+	 * Asynchronously creates a new unit within a course using data submitted via the form.
+	 * This function constructs a POST request with the new unit's details and handles the response.
+	 * If successful, the course overview cache is invalidated to reflect the new unit.
+	 *
+	 * @param {FormData} form - The FormData object containing details of the new unit to be created.
+	 * @returns {Promise<{result: any, status: number}>} - The JSON result of the API call and the HTTP status code.
+	 */
 	async function createUnit(form: FormData) {
+		if (!unitName || !availableDate) {
+			toast.error('Please fill in all fields');
+			return;
+		}
+
 		const response = await fetch(`${PUBLIC_API_URL}/create_unit`, {
 			method: 'POST',
 			credentials: 'include',
@@ -35,7 +47,13 @@
 		return { result, status };
 	}
 
-	//Form for creating unit
+	/**
+	 * Configuration and hooks for the form used to create a new unit. This includes the submission
+	 * process, success handling, error handling, and validation logic.
+	 * Utilizes the Felte library to manage form state and behavior.
+	 *
+	 * @type {ReturnType<typeof createForm>} - Returns the form instance created by Felte, including properties for managing form state and handling submissions.
+	 */
 	const { form, errors, isSubmitting } = createForm({
 		//on submit, create a course
 		onSubmit: async (values, { form }) => {
@@ -64,6 +82,8 @@
 			if ($isSubmitting) {
 				const titleErrors = validateUnitTitle(values.title);
 				if (titleErrors) {
+					console.log('------ errrrooo');
+
 					errors.title = Array.isArray(titleErrors) ? titleErrors : [titleErrors];
 				}
 			}
@@ -82,6 +102,7 @@
 		}
 	]}
 />
+<!--  Form for creating a new unit within a course. -->
 <form class="mx-5 md:w-4/5 md:mx-auto" use:form>
 	<div class="flex flex-col md:flex-row gap-4 md:gap-8 w-full mb-8">
 		<div class="sm:w-96 w-80">

@@ -20,6 +20,13 @@
 	let decline: boolean = false;
 	let answers: string[] = [];
 
+	/**
+	 * Edits the unit by making an API call to the backend server.
+	 * The function sends a PATCH request to the server with the unit id, course id, course semester, title, date available, and hidden status.
+	 * Upon successful update, it invalidates the course overview store and shows a success toast.
+	 * On failure, it displays an error toast.
+	 * @param form - The form data containing the unit title and date available.
+	 */
 	async function editUnit(form: FormData) {
 		const response = await fetch(`${PUBLIC_API_URL}/update_unit/${data.unit_id}`, {
 			method: 'PATCH',
@@ -41,7 +48,12 @@
 		return { result, status };
 	}
 
-	//Form for edit unit
+	/**
+	 * Configuration and hooks for the form used to edit a unit.
+	 * This includes the submission process, success handling, error handling, and validation logic.
+	 * Utilizes the Felte library to manage form state and behavior.
+	 * @type {ReturnType<typeof createForm>} - Returns the form instance created by Felte, including properties for managing form state and handling submissions.
+	 */
 	const { form, errors, isSubmitting } = createForm({
 		//on submit, create a course
 		onSubmit: async (values, { form }) => {
@@ -82,7 +94,12 @@
 		decline = false;
 	});
 
-	//Return the reflection by question
+	/**
+	 * Gets the reflection for the current question.
+	 * The function shifts the first element from the answers array and returns it.
+	 * If the answers array is empty, it returns an empty string.
+	 * @returns The reflection for the current question.
+	 */
 	function getReflectionByQuestion() {
 		let answerString = answers.shift();
 		if (answerString == undefined) {
@@ -91,11 +108,19 @@
 		return answerString;
 	}
 
+	/**
+	 * Handles the decline button click event.
+	 * Sets the decline variable to true.
+	 */
 	function handleDecline() {
 		decline = true;
 	}
 
-	//Submit or decline based on button pressed
+	/**
+	 * Handles the form submission event.
+	 * The function creates a FormData object from the form data and calls the createReflection or declineReflection function based on the decline variable.
+	 * @param e - The form submission event.
+	 */
 	function handleSubmit(e: SubmitEvent) {
 		const formData = new FormData(e.target as HTMLFormElement);
 		if (decline === false) {
@@ -105,7 +130,13 @@
 		}
 	}
 
-	//Submitting a reflection
+	/**
+	 * Creates a reflection for the unit.
+	 * The function sends a POST request to the server with the user id, unit id, question id, and reflection body.
+	 * Upon successful submission, it invalidates the layoutUser store and redirects to the course view page.
+	 * On failure, it displays an error toast.
+	 * @param form - The form data containing the reflection answers.
+	 */
 	async function createReflection(form: FormData) {
 		let questions = form.getAll('question_id');
 		let answers = form.getAll('answer');
@@ -154,7 +185,13 @@
 			});
 	}
 
-	//Declining a reflection
+	/**
+	 * Declines the unit by sending an empty reflection to the backend.
+	 * The function sends a POST request to the server with the user id, unit id, and question id.
+	 * Upon successful submission, it invalidates the layoutUser store and redirects to the course view page.
+	 * On failure, it displays an error toast.
+	 * @param form - The form data containing the question ids.
+	 */
 	async function declineReflection(form: FormData) {
 		let questions = form.getAll('question_id');
 
@@ -203,6 +240,7 @@
 	}
 </script>
 
+<!-- Delete unit modal component only showed to lecturers -->
 <div class="mx-5 md:w-4/5 md:mx-auto mb-6 text-gray-900 dark:text-white flex">
 	<Heading tag="h1" class="mt-2 text-xl">{'Unit ' + unit_number + ' - ' + unitName}</Heading>
 	{#if isUserLecturer}
@@ -210,6 +248,7 @@
 	{/if}
 </div>
 
+<!-- Reflection form shown for students when clicking on reflecct button -->
 {#if !isUserLecturer}
 	<div>
 		<form class="mx-5 md:w-4/5 md:mx-auto" on:submit={handleSubmit}>
@@ -287,6 +326,7 @@
 			</div>
 		</form>
 	</div>
+	<!-- Edit/view unit form shown for lecturers when clicking on edit/view unit button -->
 {:else}
 	<form class="mx-5 md:w-4/5 md:mx-auto" use:form>
 		{#if isUnitOngoing}

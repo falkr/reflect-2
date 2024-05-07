@@ -23,6 +23,12 @@
 	let dropdownOpen = false;
 	let answerInvitationModal = false;
 
+	/**
+	 * Fetches the invitations for the user from the backend server.
+	 * The function sends a GET request to the server to fetch the invitations.
+	 * Upon successful response, it stores the invitations in the invitations array.
+	 * @returns The invitations array.
+	 */
 	async function getInvitations() {
 		const response = await fetch(`${PUBLIC_API_URL}/get_invitations`, {
 			method: 'GET',
@@ -38,11 +44,22 @@
 
 	onMount(getInvitations);
 
+	/**
+	 * Handles the click event on the invitation notification.
+	 * The function sets the active invitation to the clicked invitation and opens the answer invitation modal.
+	 * @param invitation - The invitation object that was clicked.
+	 */
 	function handleInviteClick(invitation: Invitation) {
 		activeInvitation = invitation;
 		answerInvitationModal = true;
 	}
 
+	/**
+	 * Enrolls the user to the course from the invitation.
+	 * The function sends a POST request to the server to enroll the user to the course.
+	 * Upon successful enrollment, it redirects to the overview page.
+	 * @returns The response from the server.
+	 */
 	async function enrollUser() {
 		const course_id = activeInvitation.course_id;
 		const course_semester = activeInvitation.course_semester;
@@ -67,12 +84,21 @@
 		return { js };
 	}
 
+	/**
+	 * Accepts the invitation and enrolls the user to the course.
+	 * The function calls the enrollUser function to enroll the user to the course and then deletes the invitation.
+	 */
 	function acceptInvitation() {
 		enrollUser();
 		deleteInvitation();
 	}
 
-	// function for deleting invitation, using DELETE method
+	/**
+	 * Deletes the invitation from the backend server.
+	 * The function sends a DELETE request to the server to delete the invitation.
+	 * Upon successful deletion, it invalidates the layout user store and removes the invitation from the invitations array.
+	 * @returns The response from the server.
+	 */
 	async function deleteInvitation() {
 		const invitation_id = activeInvitation.id;
 		const response = await fetch(`${PUBLIC_API_URL}/delete_invitation/${invitation_id}`, {
@@ -88,6 +114,10 @@
 		return { js };
 	}
 
+	/**
+	 * Logs out the user from the application.
+	 * The function sets the logged_in store to false and redirects to the logout endpoint.
+	 */
 	async function handleLogOut() {
 		try {
 			logged_in.set(false);
@@ -99,6 +129,7 @@
 	}
 </script>
 
+<!-- Navbar component -->
 {#if user && user.detail !== 'You are not logged in'}
 	<Navbar shadow class="p-6 sm:px-3 md:px-15 dark:bg-gray-800" id="navbar">
 		<NavBrand href="/overview">

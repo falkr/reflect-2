@@ -2,6 +2,20 @@ import { redirect } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 import { PUBLIC_API_URL } from '$env/static/public';
 
+/**
+ * A load function for a SvelteKit page that fetches detailed data for a specific unit within a course.
+ * The function verifies the existence of the unit, checks if the user has reflected on the unit, and
+ * determines if the unit is available based on its date. It also fetches additional data about the unit
+ * if the unit exists and handles errors during the fetch operation.
+ *
+ * @param {Object} params - Parameters from the route, used to get the specific unit ID and course ID.
+ * @param {Function} parent - A function that returns the parent context, typically includes user details, course details, and units related to the course.
+ *
+ * @returns {Promise<Object>} - Returns an object containing details about the user, course, specific unit, and other relevant data. This object shapes the initial state of the page.
+ *
+ * @throws {redirect} - Redirects to the course overview page if the unit does not exist within the course.
+ * @throws {Error} - Throws an error and logs it to the console if there is a failure in fetching detailed unit data.
+ */
 export const load: PageLoad = async ({ params, parent }) => {
 	const { course, user, units } = await parent();
 

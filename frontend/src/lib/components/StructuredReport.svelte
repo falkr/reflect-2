@@ -12,6 +12,7 @@
 	}
 </script>
 
+<!-- The StructuredReport component displays the report for a unit in a structured way with accordions. -->
 {#if reportData && reportData.report_content}
 	<h1 class="text-xl font-semibold text-gray-600 dark:text-white">
 		Report for unit {unit_number} - {unitName}

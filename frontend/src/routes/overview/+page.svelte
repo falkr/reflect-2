@@ -11,13 +11,14 @@
 	export let data: Data;
 
 	let defaultModal = false;
-
 	let courseToBeMade = '';
-	//selected option in semester dropwdown
 	let selected = '';
-	//semester dropdown values
 	let semesterOptions: { value: string; name: string }[] = [];
-	//function for filling dropdown select values
+
+	/**
+	 * Fills the semester options for the dropdown in the form. It generates semester options for the current year
+	 * and the next four years, with each year having a 'Spring' and 'Fall' semester.
+	 */
 	function fillSemesterOptions() {
 		let currentYear = new Date().getFullYear();
 		for (let i = 0; i < 5; i++) {
@@ -32,7 +33,10 @@
 		}
 	}
 
-	//onmount updates the site directly!
+	/**
+	 * Executes when the component mounts. It invalidates the user layout cache and fills the semester options
+	 * for the course creation form.
+	 */
 	onMount(async () => {
 		invalidate('app:layoutUser');
 		fillSemesterOptions();
@@ -47,7 +51,14 @@
 
 	let selectedSemester: FormDataEntryValue | null;
 
-	//action for creatign a course
+	/**
+	 * Asynchronously creates a new course with the specified details from the form submission.
+	 * It constructs a POST request to the backend API and handles the response by returning
+	 * the result and status of the API call.
+	 *
+	 * @param {FormData} form - FormData object containing the new course details.
+	 * @returns {Promise<{result: any, status: number}>} - The result of the API call and the HTTP status.
+	 */
 	async function createCourse(form: FormData) {
 		const name = form.get('name');
 		const id_str = form.get('course_id')?.toString().toUpperCase() as string;
@@ -70,6 +81,10 @@
 		return { result, status };
 	}
 
+	/**
+	 * Enrolls the user as a lecturer for the newly created course. This function makes a POST request
+	 * to the backend API. It handles response status and displays toast messages based on the outcome.
+	 */
 	async function enrollUserAsLecturer() {
 		const course_id = courseToBeMade;
 		const role = 'lecturer';
@@ -104,7 +119,12 @@
 		}
 	}
 
-	//form to use
+	/**
+	 * Sets up the Felte form configuration for the create course form. This includes defining the form submission
+	 * behavior, handling successful or conflicting submissions, and providing field validation.
+	 *
+	 * @type {ReturnType<typeof createForm>} - Returns the form instance created by Felte, including properties for managing form state and handling submissions.
+	 */
 	const { form, errors, isSubmitting } = createForm({
 		//on submit, create a course
 		onSubmit: async (values, { form }) => {

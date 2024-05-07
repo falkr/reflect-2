@@ -23,6 +23,7 @@ type Enrollment = {
 	course_semester: string;
 	role: string;
 	course_name: string;
+	missingUnits: Any[];
 };
 
 type Course = {

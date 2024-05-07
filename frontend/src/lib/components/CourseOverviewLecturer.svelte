@@ -11,6 +11,7 @@
 	let stringDate = date.toISOString().split('T')[0];
 </script>
 
+<!-- The CourseOverviewLecturer component displays the units cards of a course for a lecturer. -->
 <div class="mt-16 w-full flex flex-col items-center mb-16">
 	<div class="flex sm:flex-row flex-col justify-between w-11/12 sm:w-4/5">
 		<div class="flex gap-4">

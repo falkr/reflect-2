@@ -9,8 +9,8 @@ describe('CourseCards component', () => {
 		const { getByText } = render(CourseCards, {
 			props: {
 				courses: [
-					{ course_id: '1', course_semester: 'fall2021', name: 'Course 1' },
-					{ course_id: '2', course_semester: 'spring2022', name: 'Course 2' }
+					{ course_id: '1', course_semester: 'fall2021', name: 'Course 1', missingUnits: [''] },
+					{ course_id: '2', course_semester: 'spring2022', name: 'Course 2', missingUnits: [''] }
 				],
 				role: 'Student'
 			}
@@ -26,7 +26,9 @@ describe('CourseCards component', () => {
 	it('renders role badge correctly', async () => {
 		const { getByText } = render(CourseCards, {
 			props: {
-				courses: [{ course_id: '1', course_semester: 'fall2021', name: 'Course 1' }],
+				courses: [
+					{ course_id: '1', course_semester: 'fall2021', name: 'Course 1', missingUnits: [''] }
+				],
 				role: 'Lecturer'
 			}
 		});
@@ -37,7 +39,9 @@ describe('CourseCards component', () => {
 	it('navigates to course view on card click', async () => {
 		const { getByText } = render(CourseCards, {
 			props: {
-				courses: [{ course_id: '1', course_semester: 'fall2021', name: 'Course 1' }],
+				courses: [
+					{ course_id: '1', course_semester: 'fall2021', name: 'Course 1', missingUnits: [''] }
+				],
 				role: 'Student'
 			}
 		});

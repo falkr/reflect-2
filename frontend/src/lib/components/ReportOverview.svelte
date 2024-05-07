@@ -27,6 +27,11 @@
 		unitTag = isUnitAvailable(unit) ? 'ready' : 'notAvailable';
 	}
 
+	/**
+	 * Checks if the unit is available for generating a report.
+	 * @param unit - The unit object to check.
+	 * @returns True if the unit is available, false otherwise.
+	 */
 	function isUnitAvailable(unit: Unit) {
 		const date = new Date();
 		const stringDate = date.toISOString().split('T')[0];
@@ -42,6 +47,13 @@
 		}
 	});
 
+	/**
+	 * Fetches the report data for the given unit.
+	 * The function sends a GET request to the server to fetch the report data for the unit.
+	 * Upon successful response, it stores the report data in the reportData variable.
+	 * On failure, it logs an error message.
+	 * @param unit - The unit object to fetch the report data for.
+	 */
 	async function fetchReportData(unit: Unit) {
 		try {
 			const response = await fetch(
@@ -59,6 +71,12 @@
 		}
 	}
 
+	/**
+	 * Generates a new report for the unit.
+	 * The function sends a POST request to the server to generate a new report for the unit.
+	 * Upon successful response, it resets the reflectionsSinceLastReport counter and shows a success toast.
+	 * On failure, it shows an error toast.
+	 */
 	async function generateReport() {
 		isGenerating = true;
 		try {
@@ -85,6 +103,11 @@
 		}
 	}
 
+	/**
+	 * Downloads the report for the unit.
+	 * The function sends a GET request to the server to download the report for the unit.
+	 * Upon successful response, it opens the download link in a new tab. On failure, it shows an error toast.
+	 */
 	function downloadReport() {
 		if (!data || !data.course) {
 			toast.error('Data is incomplete, cannot download the report.');
@@ -98,6 +121,7 @@
 	}
 </script>
 
+<!-- Report overview component for displaying report for a unit an buttons for genrate/regenerate and downlaod report -->
 <div class="mt-12 w-full flex flex-col items-center mb-16">
 	<div class="flex w-4/5 items-center flex-wrap gap-4">
 		<ButtonGroup>

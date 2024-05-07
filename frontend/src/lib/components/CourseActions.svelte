@@ -10,6 +10,11 @@
 	let showCreateUnitModal = false;
 	let showModal = false;
 
+	/**
+	 * Handles actions related to course modification such as unenrolling a student from a course or deleting a course by a lecturer.
+	 * The function decides the action based on the user's role and makes API call to either delete or unenroll the course.
+	 * Upon successful API response, it redirects to the overview page and shows a success toast. On failure, it displays an error toast.
+	 */
 	async function actionCourse() {
 		if (data.role === 'student') {
 			const response = await fetch(`${PUBLIC_API_URL}/unenroll_course`, {
@@ -63,6 +68,10 @@
 		}
 	}
 
+	/**
+	 * Copies the enrollment link to the clipboard. This function retrieves the placeholder value from the input element,
+	 * which contains the link, and uses the Clipboard API to copy it. It triggers a toast notification on success or failure.
+	 */
 	function copyPlaceholderToClipboard() {
 		const inputElement = document.getElementById('enrollLinkStudent') as HTMLInputElement;
 		const placeholderValue = inputElement.placeholder;
@@ -84,6 +93,12 @@
 		}
 	}
 
+	/**
+	 * Sends invitations to users based on the provided role. This function is primarily used for inviting lecturers.
+	 * It constructs a list from input, makes a POST request for each user, and handles the response by showing a toast.
+	 *
+	 * @param {string} role - The role to assign to the invited user, typically 'lecturer'.
+	 */
 	async function createUserInvitation(role: string) {
 		const course_id = data.course.id;
 		const uids = document.getElementById('enrollLecturer') as HTMLInputElement;
