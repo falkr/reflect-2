@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import { invalidate } from '$app/navigation';
 	import { validateUnitTitle } from '$lib/validation';
-	import { Input, Label, Helper, Textarea, Heading, P, Button } from 'flowbite-svelte';
+	import { Input, Label, Helper, Textarea, Heading, Button } from 'flowbite-svelte';
 	import { FileCirclePlusSolid } from 'flowbite-svelte-icons';
 	import { createForm } from 'felte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';

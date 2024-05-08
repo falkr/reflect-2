@@ -1,5 +1,4 @@
 from unittest.mock import MagicMock, patch
-from sqlalchemy.exc import IntegrityError
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

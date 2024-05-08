@@ -11,7 +11,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship, class_mapper
-from sqlalchemy.schema import ForeignKeyConstraint, Table
+from sqlalchemy.schema import ForeignKeyConstraint
 from datetime import date
 
 enum_values = Enum("lecturer", "teaching assistant", "student", name="enrollment_roles")
