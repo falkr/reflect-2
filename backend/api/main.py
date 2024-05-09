@@ -61,7 +61,7 @@ app.add_middleware(
 email_config = ConnectionConfig(
     MAIL_USERNAME=config("MAIL_USERNAME", cast=str, default=""),
     MAIL_PASSWORD=config("MAIL_PASSWORD", cast=str, default=""),
-    MAIL_FROM=config("MAIL_FROM", cast=str, default=""),
+    MAIL_FROM=config("MAIL_FROM", cast=str, default="test@test.no"),
     MAIL_PORT=config("MAIL_PORT", cast=int, default=587),
     MAIL_SERVER=config("MAIL_SERVER", cast=str, default=""),
     MAIL_FROM_NAME="Reflection Tool",
