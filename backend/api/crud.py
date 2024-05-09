@@ -9,12 +9,15 @@ from starlette.config import Config
 
 config = Config(".env")
 
-
 # --- User ---
+
+
+# Returns user based on uid
 def get_user(db: Session, uid: str):
     return db.query(model.User).filter(model.User.uid == uid).first()
 
 
+# Returns all units for a course
 def get_units_for_course(db: Session, course_id: str, course_semester: str):
     return (
         db.query(model.Unit)
@@ -45,11 +48,8 @@ def create_user(db: Session, uid: str, user_email: str, admin: bool = False):
 async def create_enrollment(
     db: Session, uid: str, course_id: str, course_semester: str, role: str
 ):
-    # getting student
     db_user = get_user(db, uid)
-    # getting course
     db_course = get_course(db, course_id, course_semester)
-    # Creating enrollment
     db_enrollment = model.Enrollment(
         uid=uid,
         course_id=course_id,
@@ -65,6 +65,7 @@ async def create_enrollment(
     return db_enrollment
 
 
+# Deletes a student's enrollment from a course
 def delete_enrollment(db: Session, uid: str, course_id: str, course_semester: str):
     enrollment = (
         db.query(model.Enrollment)
@@ -84,6 +85,8 @@ def delete_enrollment(db: Session, uid: str, course_id: str, course_semester: st
 
 
 # --- Course ---
+
+
 # Creates course
 def create_course(db: Session, course: schemas.CourseCreate):
     course_data = {key: value for key, value in course.items() if key != "questions"}
@@ -112,13 +115,14 @@ def create_course(db: Session, course: schemas.CourseCreate):
     for q in questions:
         db_course.questions.append(q)
 
-    print("creating course")
+    print("Creating course")
     db.add(db_course)
     db.commit()
     db.refresh(db_course)
     return db_course
 
 
+# Returns course based on course_id and course_semester
 def get_course(db: Session, course_id: str, course_semester: str):
     return (
         db.query(model.Course)
@@ -127,6 +131,7 @@ def get_course(db: Session, course_id: str, course_semester: str):
     )
 
 
+# Deletes from database
 def delete_records(db: Session, model, filters):
     records = db.query(model).filter(*filters).all()
     for record in records:
@@ -134,6 +139,7 @@ def delete_records(db: Session, model, filters):
     db.commit()
 
 
+# Deletes course from database, inlcuding all related records such as enrollments, units, invitations, and questions
 def delete_course(db: Session, course_id: str, course_semester: str):
     delete_records(
         db,
@@ -173,6 +179,7 @@ def delete_course(db: Session, course_id: str, course_semester: str):
 # --- Enrollment ---
 
 
+# Returns enrollment for a course based on course_id, course_semester, and uid
 def get_enrollment(db: Session, course_id: str, course_semester: str, uid: str):
     return (
         db.query(model.Enrollment)
@@ -186,7 +193,9 @@ def get_enrollment(db: Session, course_id: str, course_semester: str, uid: str):
 
 
 # --- Unit ---
-# create unit
+
+
+# Creates an unit
 def create_unit(
     db: Session,
     title: str,
@@ -194,20 +203,6 @@ def create_unit(
     course_id: str,
     course_semester: str,
 ):
-    """
-    Creates a new unit and its associated initial report in the database. If a unit with the same
-    ID already exists, it updates the existing unit with the provided details.
-
-    Parameters:
-    - db (Session): The database session used to perform operations.
-    - title (str): The title of the unit.
-    - date_available (str): The date the unit becomes available to users, in a string format.
-    - course_id (str): The identifier of the course to which the unit belongs.
-    - course_semester (str): The semester during which the unit is offered.
-
-    Returns:
-    - model.Unit: An instance of the Unit model representing the newly created unit.
-    """
     db_obj = model.Unit(
         title=title,
         date_available=date_available,
@@ -239,7 +234,7 @@ def create_unit(
     return db_obj
 
 
-# update unit
+# Updates an unit
 def update_unit(
     db: Session,
     unit_id: int,
@@ -248,24 +243,6 @@ def update_unit(
     course_id: str,
     course_semester: str,
 ):
-    """
-    Updates an existing unit with new information provided as parameters. This function
-    allows updating the unit's title and availability date.
-
-    Parameters:
-    - db (Session): The database session used to perform operations.
-    - unit_id (int): The unique identifier of the unit to be updated.
-    - title (str): The new title for the unit.
-    - date_available (str): The new availability date for the unit.
-    - course_id (str): The course ID to which the unit is associated.
-    - course_semester (str): The semester during which the unit is offered.
-
-    Returns:
-    - model.Unit: The updated unit object if the operation is successful.
-
-    Raises:
-    - HTTPException: A 404 error if no unit matches the provided `unit_id`.
-    """
     db_obj = db.query(model.Unit).filter(model.Unit.id == unit_id).first()
     if db_obj:
         db_obj.title = title
@@ -281,25 +258,8 @@ def update_unit(
         raise HTTPException(status_code=404, detail="Unit not found")
 
 
-# delete unit
+# Deletes an unit
 def delete_unit(db: Session, unit_id: int, course_id: str, course_semester: str):
-    """
-    Deletes a specified unit, along with all associated reflections and reports, from the database.
-
-    Parameters:
-    - db (Session): The database session used to execute the database operations.
-    - unit_id (int): The unique identifier of the unit to be deleted.
-    - course_id (str): The ID of the course to which the unit belongs. Used to ensure the
-      correct report is deleted along with the unit.
-    - course_semester (str): The semester of the course to which the unit belongs. Used in
-      conjunction with `course_id` to identify the correct report.
-
-    Returns:
-    - The deleted unit object if the operation is successful.
-
-    Raises:
-    - HTTPException: A 404 error if the specified unit cannot be found in the database.
-    """
     reflections = (
         db.query(model.Reflection).filter(model.Reflection.unit_id == unit_id).all()
     )
@@ -318,10 +278,12 @@ def delete_unit(db: Session, unit_id: int, course_id: str, course_semester: str)
         raise HTTPException(status_code=404, detail="Unit not found")
 
 
+# Returns a single unit based on unit_id
 def get_unit(db: Session, unit_id: int):
     return db.query(model.Unit).filter(model.Unit.id == unit_id).first()
 
 
+# Returns multiple units that belongs to a course based on course_id, course_semester
 def get_units(db: Session, course_id: int, course_semester):
     return (
         db.query(model.Unit)
@@ -333,31 +295,21 @@ def get_units(db: Session, course_id: int, course_semester):
     )
 
 
+# Returns all units
 def get_all_units(db: Session):
     return db.query(model.Unit).all()
 
 
+# Returns all units that are available, regardless of course
 def get_all_available_units(db: Session):
-    """
-    Retrieves all unit records from the database where the date_available is before the current date,
-    indicating that the units are currently available.
-
-    Parameters:
-        db (Session): The database session used to execute the query.
-
-    Returns:
-        List[Unit]: A list of Unit model instances that are currently available based on their date_available field.
-    """
-    # Get the current date to compare against the units' date_available
     current_date = datetime.utcnow().date()
-
-    # Query the database for all units where date_available is before (or equal to) the current date
     return db.query(model.Unit).filter(model.Unit.date_available <= current_date).all()
 
 
+# Creates a question that will be used in a unit reflection
 def create_question(db: Session, question: str, comment: str):
     db_obj = model.Question(question=question, comment=comment)
-    print("creating question")
+    print("Creating question")
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
@@ -365,8 +317,10 @@ def create_question(db: Session, question: str, comment: str):
 
 
 # --- Reflection ---
+
+
+# Creates a reflection
 def create_reflection(db: Session, reflection_data: dict):
-    # Create a new reflection with current timestamp
     db_obj = model.Reflection(**reflection_data, timestamp=datetime.now())
     db.add(db_obj)
     db.commit()
@@ -396,6 +350,7 @@ def create_reflection(db: Session, reflection_data: dict):
     return db_obj
 
 
+# Resets the reflections count for a unit
 def reset_reflections_count(db: Session, unit_id: int):
     unit = db.query(model.Unit).filter(model.Unit.id == unit_id).first()
     if unit:
@@ -408,30 +363,8 @@ def reset_reflections_count(db: Session, unit_id: int):
         return None
 
 
-def get_reflections(db: Session, user_id: str, unit_id: int):
-    return (
-        db.query(model.Reflection)
-        .filter(model.Reflection.user_id == user_id)
-        .filter(model.Reflection.unit_id == unit_id)
-        .all()
-    )
-
-
+# Deletes a reflection the database
 def delete_reflection(db: Session, user_id: str, unit_id: int):
-    """
-    Deletes all reflections for a given user and unit.
-
-    Args:
-        db (Session): The database session to use for querying and deleting.
-        user_id (str): The user identifier to match reflections.
-        unit_id (int): The unit identifier to match reflections.
-
-    Returns:
-        dict: A dictionary with the `user_id` and `unit_id` of the deleted reflections.
-
-    Raises:
-        HTTPException: If no reflections are found for the specified user and unit.
-    """
     reflections = (
         db.query(model.Reflection)
         .filter(
@@ -450,6 +383,9 @@ def delete_reflection(db: Session, user_id: str, unit_id: int):
 
 
 # --- Invitation ---
+
+
+# Creates an invitation
 def create_invitation(db: Session, invitation: schemas.InvitationBase):
     db_obj = model.Invitation(**invitation)
     print("creating invitation")
@@ -459,10 +395,12 @@ def create_invitation(db: Session, invitation: schemas.InvitationBase):
     return db_obj
 
 
+# Returns all invitations that match the uid
 def get_invitations(db: Session, uid: str):
     return db.query(model.Invitation).filter(model.Invitation.uid == uid).all()
 
 
+# TODO
 def get_priv_invitations_course(
     db: Session, uid: str, course_id: str, course_semester: str
 ):
@@ -478,6 +416,7 @@ def get_priv_invitations_course(
     )
 
 
+# Deletes an invitation to a course
 def delete_invitation(db: Session, id: int):
     invitation = db.query(model.Invitation).filter(model.Invitation.id == id).first()
     if invitation:
@@ -488,6 +427,7 @@ def delete_invitation(db: Session, id: int):
         raise HTTPException(status_code=404, detail="Invitation not found")
 
 
+# Returns the number of questions in a unit
 def get_number_of_unit_questions(db: Session, unit_id: int):
     return (
         db.query(model.Course.units)
@@ -497,10 +437,12 @@ def get_number_of_unit_questions(db: Session, unit_id: int):
     )
 
 
+# Returns a question used in a unit reflection
 def get_question(db: Session, question_id: int):
     return db.query(model.Question).filter(model.Question.id == question_id).first()
 
 
+# Returns a boolean indicating if a user has already reflected on a spesific question in a spesific unit
 def user_already_reflected_on_question(
     db: Session, unit_id: int, user_id: int, question_id
 ):
@@ -517,6 +459,7 @@ def user_already_reflected_on_question(
     return existing_reflection is not None
 
 
+# Returns a report based on course_id, unit_id, and course_semester
 def get_report(db: Session, course_id: str, unit_id: int, course_semester: str):
     return (
         db.query(model.Report)
@@ -527,36 +470,8 @@ def get_report(db: Session, course_id: str, unit_id: int, course_semester: str):
     )
 
 
-def edit_created_report(
-    db: Session, course_id: int, unit_id: int, report: list[dict], course_semester: str
-):
-
-    db_obj = (
-        db.query(model.Report)
-        .filter(model.Report.course_id == course_id)
-        .filter(model.Report.course_semester == course_semester)
-        .filter(model.Report.unit_id == unit_id)
-        .first()
-    )
-    if db_obj:
-        db_obj.report_content = report
-
-    db.commit()
-    db.refresh(db_obj)
-    return db_obj
-
-
+# Saves or updates a report in the database
 def save_report(db: Session, report: schemas.ReportCreate) -> model.Report:
-    """
-    Save or update a report in the database based on the provided report details.
-
-    Parameters:
-    - db (Session): The database session used to perform database operations.
-    - report (schemas.ReportCreate): An instance of ReportCreate schema containing the report details.
-
-    Returns:
-    - model.Report: The updated or newly created report object from the database.
-    """
     existing_report = (
         db.query(model.Report)
         .filter(
@@ -579,17 +494,8 @@ def save_report(db: Session, report: schemas.ReportCreate) -> model.Report:
     return db_obj
 
 
+# Checks if a notification has been sent within a specified cooldown period
 def check_recent_notification(db: Session, cooldown_days: int) -> bool:
-    """
-    Checks if a notification has been sent within a specified cooldown period.
-
-    Parameters:
-        db (Session): The database session to execute the query.
-        cooldown_days (int): The number of days to look back from the current date.
-
-    Returns:
-        bool: True if a notification has been sent within the cooldown period, False otherwise.
-    """
     cooldown_date = datetime.utcnow().date() - timedelta(days=cooldown_days)
     return (
         db.query(model.NotificationLog)
@@ -599,16 +505,8 @@ def check_recent_notification(db: Session, cooldown_days: int) -> bool:
     )
 
 
+# Creates a new notification log entry in the database with the current UTC time
 def create_notification_log(db: Session):
-    """
-    Creates a new notification log entry in the database with the current UTC time.
-
-    Parameters:
-        db (Session): The database session to add and commit the new log entry.
-
-    Returns:
-        The newly created NotificationLog object with the current UTC time as the sent timestamp.
-    """
     new_log = model.NotificationLog(sent_at=datetime.utcnow())
 
     db.add(new_log)
@@ -618,18 +516,8 @@ def create_notification_log(db: Session):
     return new_log
 
 
+# Adds a notification count for a specific user and unit
 def add_notification_count(db: Session, user_id: str, unit_id: int):
-    """
-    Increments the notification count for a specific user and unit, or creates a new entry if none exists.
-
-    Parameters:
-        db (Session): The database session to execute the query and update records.
-        user_id (str): The id of the user for whom to update the notification count.
-        unit_id (int): The ID of the unit for which to update the notification count.
-
-    Returns:
-        The updated or newly created UserUnitNotificationCount object.
-    """
     notification_entry = (
         db.query(model.UserUnitNotificationCount)
         .filter_by(user_id=user_id, unit_id=unit_id)
@@ -649,18 +537,8 @@ def add_notification_count(db: Session, user_id: str, unit_id: int):
     return notification_entry
 
 
+# Retrieves the notification count for a specific user and unit
 def get_notification_count(db: Session, user_id: str, unit_id: int) -> int:
-    """
-    Retrieves the notification count for a specific user and unit.
-
-    Parameters:
-        db (Session): The database session to execute the query.
-        user_id (str): The id of the user for whom to retrieve the notification count.
-        unit_id (int): The ID of the unit for which to retrieve the notification count.
-
-    Returns:
-        int: The notification count for the specified user and unit, or 0 if no entry exists.
-    """
     notification_entry = (
         db.query(model.UserUnitNotificationCount)
         .filter_by(user_id=user_id, unit_id=unit_id)
@@ -673,31 +551,13 @@ def get_notification_count(db: Session, user_id: str, unit_id: int) -> int:
         return 0
 
 
+# Retrieves all courses from the database
 def get_all_courses(db: Session):
-    """
-    Fetches all courses from the database.
-
-    Parameters:
-    - db (Session): The SQLAlchemy session for database access.
-
-    Returns:
-    - List[Course]: A list of Course objects representing all courses in the database.
-    """
     return db.query(model.Course).all()
 
 
+# Retrieves all students enrolled in a specific course and semester
 def get_all_students_in_course(db: Session, course_id: str, course_semester: str):
-    """
-    Fetches all students enrolled in a specific course and semester.
-
-    Parameters:
-    - db (Session): The SQLAlchemy session for database access.
-    - course_id (str): The unique identifier for the course.
-    - course_semester (str): The semester during which the course is offered.
-
-    Returns:
-    - List[User]: A list of User objects representing the student enrolled in the specified course and semester.
-    """
     users_in_course = (
         db.query(model.User)
         .join(model.Enrollment)
@@ -712,6 +572,7 @@ def get_all_students_in_course(db: Session, course_id: str, course_semester: str
     return users_in_course
 
 
+# Retrieves units for which a user should be notified, based on a specific course and semester
 def get_units_to_notify(
     db: Session,
     user_id: str,
@@ -719,22 +580,6 @@ def get_units_to_notify(
     course_id: str,
     course_semester: str,
 ):
-    """
-    Retrieves units for which a user should be notified, based on a specific course and semester,
-    ensuring the user has not reached the notification limit for those units and that no reflections exist for the unit.
-
-    Parameters:
-    - db (Session): The SQLAlchemy session for database access.
-    - user_id (str): The unique identifier of the user.
-    - notification_limit (int): The maximum number of notifications a user can receive for a unit.
-    - course_id (str): The unique identifier of the course.
-    - course_semester (str): The semester in which the course is offered.
-
-    Returns:
-    - List[Unit]: A list of Unit objects for which the user should be notified.
-    """
-
-    # Subquery to find units with existing reflections
     subquery = (
         db.query(model.Reflection.unit_id)
         .filter(

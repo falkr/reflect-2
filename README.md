@@ -1,314 +1,170 @@
-# NTNU Reflect Application
+# About the project
+
+Reflection Tool is a website where students can reflect on their learning experience. This is a platform where teachers can create courses and units representing lectures. Students can then enroll in these courses and reflect on the units by submitting their learning experiences. The website is created using Svelte for the frontend, in addition to Python and FastAPI in the backend. The backend uses a Postgres database, and is set up to use SQLite as well.
+
+The Reflection Tool Project is deployed in this [link](https://reflect.iik.ntnu.no/).
+
+The main goal to this project is to create a platform where students can reflect on their learning experiences, and have an AI model summarize and categorize these reflections. The current deployment uses GPT-3.5-turbo from OpenAI as the AI model. (GPT-4 is optional but not currently used since the improvements are not significant).
+
+### Demo video
+
+A demo video of the project can be found [here](https://www.youtube.com/watch?v=Q0LlpVkIMfc).
+
+## How to use the website (Lecturer view)
+
+The website uses Feide, which is a Norwegian authentication system. This means that in order to use the website, you have to be registrered as a student or a teacher in Norway.
+
+After logging in, you will see a `Create new course +`-button if you are registered as a teacher in Feide. By clickin this button, you'll create a new course, and you will now see a new card-component on the home-screen representing this newly created course. Note: If you are enrolled into a course, the card-component will look the same, other than the badge saying `Student` instead of `Lecturer`.
+
+<img src="./docs/Pictures/applicationView/homeScreen.png" width="50%" alt="Home Screen" />
+
+After clickin on a course, you can create new units. Units represents the different lectures of the course. You can create a new unit by clicking the `Create new unit +`-button, and after creating a unit, you will see a new card-component on the course home-screen representing the newly created unit. When on the course home-screen, you can also click on `Invite users` to add students or lecturers to the course. After you've created a unit and the students have submitted some reflections, you can get a view like this:
+Note: Here, we can see that the teacher has already generated a previous AI report for this unit, and that a new student has submitted a reflection for this unit since the last time the teacher generated a report.
+
+<img src="./docs/Pictures/applicationView/coursePage.png" width="50%" alt="Course Page" />
+
+And when clicking on `View report`, you can get a page like this where you can generate and download the report.
+
+<img src="./docs/Pictures/applicationView/unitPage.png" width="50%" alt="Unit Page" />
+
+### How to use the website (Student view)
+
+How to use the website as a student is visible [here](./docs/StudentView.md).
+
+# Run the project
 
 This app is split into 2 main parts:
 
 1. Frontend ([Sveltekit](https://kit.svelte.dev/docs/introduction))
-2. Backend in Python ([FastAPI](https://fastapi.tiangolo.com/) + [SqlAlchemy](https://docs.sqlalchemy.org) + [Postgres](https://www.postgresql.org/docs/))
-
-## Feide:
-
-Feide with Oauth is used to authorize users. It can be a bit tricky understand the flow, but here is a diagram trying to show how the authorization is done:
-
-![Feide Oauth sequence diagram](./feide_oauth_diagram.png)
-
-## Frontend
-
-Frontend is developed using sveltekit. The application uses client-side for fetching and requesting data.
-The project uses some installed frameworks to make life easier.
-
-#### [Tailwind CSS](https://tailwindcss.com/)
-
-The CSS library used for styling the pages and components. Tailwind is easy to pick up and learn, and comes with great documentation. Tailwind is also fully integreated with the components library used in the procject, Svelte Flowbite, meaning you can easily style the finished components how you like.
-
-#### [Flowbite Svelte](https://flowbite-svelte.com/)
-
-Flowbite svelte is a components library that offers styled components. The components are easy to modify, and comes with alot of functionality. This saves the project from containing alot of boilerplate code and self-made components. The navbar used in the application is an example of this.
-
-#### [Felte](https://v0.felte.dev/docs)
-
-Felte is a framework for handling forms in Svelte. Error handling in forms, aswell as handling form submission is done using Felte in the project. All the form-handling is done client side.
-
-## Backend
-
-The backend is split into 3 main parts.
-This consist of FastAPI, SqlAlchemy and Postgres. [FastAPI](https://fastapi.tiangolo.com/) is a framework for creating APIs in python. [SqlAlchemy](https://docs.sqlalchemy.org) is an ORM (Object Relational Mapper) that makes it easy to work with databases in python. [Postgres](https://www.postgresql.org/docs/) is the database used in production. In development, sqlite is used.
-
-## Enrollment
-
-Students can enroll in a course at the endpoint: `/enroll/<semester>/<course id>` or by invitation in the application.
-Teaching assistants can only be enrolled via invitation.
-
-# Setup & running
-
-### Development
+2. Backend in Python ([FastAPI](https://fastapi.tiangolo.com/) + [SqlAlchemy](https://docs.sqlalchemy.org) + [Postgres](https://www.postgresql.org/docs/) / [SQLite](https://www.sqlite.org/docs.html))
 
 ##### Requirements:
 
-- Python (v3.10)
+- [Docker](https://docs.docker.com/get-docker/) or [Python](https://www.python.org/downloads/) (v3.9) & [Sqlite](https://www.sqlite.org/download.html)
 - [Node + npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [Sqlite](https://www.sqlite.org/download.html)
 
-##### Environment:
+## Backend
 
-`.env` is not commited to this repo because of security, so this file has to be created.
+To set up the backend, you have to create a `.env`-file in the `backend`-folder based on the `.env.template`-file. For full documentation on how to set up the backend, see the [backend documentation](./backend/README.md).
 
-**Both frontend and backend folders includes a `.env.template` file. This file contains the variables that has to be set in the new `.env` file.**
-
-In the **`backend`** folder, create`.env`file containing the following:
-
-- `production = false`
-- `SECRET_KEY` is set
-- `client_id` is set
-- `client_secret` is set
-
-**The client secrets corresponds to your feide instance!**
-
-In **`frontend`** folder:
-
-- create `.env.development` with PUBLIC_API_URL="http://127.0.0.1:8000".
-
-_See .env.template for what to include in the .env file!_
-
-#### Running Backend :
-
-##### Alternative 1 (docker):
+After setup of enviroments you can run the following commands:
 
 ```bash
 make dev
 ```
 
-If you are using windows, you can run the following commands (every command in the makefile) manually in the terminal:
-
-```bash
-docker-compose up --no-deps backend
-```
-
-#### Alternative 2 (manual setup):
+or if you are using Windows, you can run the following commands:
 
 ```bash
 cd backend
-
-# Creates virtual environment
-python -m venv venv # only do once
-
-# Activates virtual environment
-source ./venv/bin/activate #Troubleshooting for windows below
-
-# Installing python packages
-pip install -r requirements.txt
-
-# Apply migration scripts
-alembic upgrade head
-
-# Run the backend
-uvicorn main:app --reload
-
-# Running at 127.0.0.1:8000
+docker-compose up --no-deps backend
 ```
 
-**Migration**: alembic is used for databse migration (kind of git for databases).
-You can read more about alembic [here](https://alembic.sqlalchemy.org/en/latest/tutorial.html), or take a look at this tutorial [video](https://www.youtube.com/watch?v=SdcH6IEi6nE&list=WL&index=6).
+## Frontend
 
-When ANY changes is made to the database model file, then a migration has to happen. This is done by the following commands:
+To set up the frontend, you have to create a `.env`-file in the `frontend`-folder based on the `.env.template`-file. For full documentation on how to set up the frontend, see the [frontend documentation](./frontend/README.md).
 
-```bash
-# Create migration
-alembic revision --autogenerate -m "Revision message, something relevant here"
-
-# Apply latest migration
-alembic upgrade head
-```
-
-#### Running Frontend:
-
-Running frontend:
+After setup of enviroments you can run the following commands:
 
 ```bash
 cd frontend
 npm install
-npm run dev #Remember the host IP. Important for feide login
-
-# Running at 127.0.0.1:5173
+npm run dev
 ```
 
-**NB:**
+# Production deployment
 
-When using feide login locally, it will redirect to localhost/auth. Then you have to manually change the url to 127.0.0.1:8000/auth for it to complete properly. (this could be fixed by updating our feide oauth redirect url, but can only be done by feide...)
+For full documentation on how to deploy the project in production, see the [production documentation](./docs/Deployment.md).
 
-#### Troubleshooting
+# Libraries, frameworks and tech stack
 
-The command
+## Frontend
+
+- [Svelte](https://svelte.dev) - A modern frontend compiler that allows you to build high-performance web applications.
+- [Vite](https://vitejs.dev) - A build tool that significantly improves the frontend development experience.
+- [SvelteKit](https://kit.svelte.dev) - A framework for building server-side rendered applications with Svelte.
+- [TypeScript](https://www.typescriptlang.org) - A typed superset of JavaScript that compiles to plain JavaScript, enhancing code quality and maintainability.
+- [Tailwind CSS](https://tailwindcss.com) - A utility-first CSS framework for rapidly building custom designs.
+- [PostCSS](https://postcss.org) - A tool for transforming CSS with JavaScript, used in this project to process Tailwind CSS.
+- [Prettier](https://prettier.io) - An opinionated code formatter that supports many languages, ensuring consistent code style.
+- [ESLint](https://eslint.org) - A static code analysis tool for identifying problematic patterns found in JavaScript code.
+- [Cypress](https://www.cypress.io) - An end-to-end testing framework for anything that runs in a browser.
+- [Vitest](https://vitest.dev) - A Vite-native test runner that is fast and lightweight, used for unit and integration testing.
+- [Flowbite](https://flowbite.com) - A free and open-source Tailwind CSS component library that provides a set of components and templates.
+- [Felte](https://felte.dev) - A form library for Svelte that is lightweight, fast, and easy to use.
+
+## Backend
+
+- [FastAPI](https://fastapi.tiangolo.com) - A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
+- [Uvicorn](https://www.uvicorn.org) - An ASGI server for Python, built on uvloop and httptools, providing lightning-fast asynchronous capabilities.
+- [Pydantic](https://pydantic-docs.helpmanual.io) - A data validation and settings management using Python type annotations.
+- [SQLAlchemy](https://www.sqlalchemy.org) - A SQL toolkit and Object-Relational Mapping (ORM) system for Python, providing a full suite of well-known enterprise-level persistence patterns.
+- [SQLite](https://www.sqlite.org/index.html) - A C-language library that implements a small, fast, self-contained, high-reliability, full-featured SQL database engine.
+- [PostgreSQL](https://www.postgresql.org) - A powerful, open source object-relational database system with over 30 years of active development.
+- [Alembic](https://alembic.sqlalchemy.org) - A lightweight database migration tool for use with SQLAlchemy.
+- [Jinja2](https://jinja.palletsprojects.com) - A modern and designer-friendly templating language for Python, modeled after Django’s templates.
+- [Starlette](https://www.starlette.io) - A lightweight ASGI framework/toolkit, which is ideal for building high performance asyncio services.
+- [Authlib](https://authlib.org) - A ready-to-use authentication library for OAuth, OAuth2, OpenID clients, and token servers.
+- [OpenAI](https://beta.openai.com/docs) - An API that provides access to the GPT-3.5-turbo model, allowing for advanced natural language processing capabilities.
+
+## Reverse Proxy
+
+- [Traefik](https://doc.traefik.io/traefik) - A modern HTTP reverse proxy and load balancer that makes deploying microservices easy.
+
+## Container
+
+- [Docker](https://www.docker.com) - A platform for developing, shipping, and running applications in containers.
+
+## CI/CD
+
+- [GitLab CI/CD](https://docs.gitlab.com/ee/ci) - A continuous integration and continuous deployment tool built into GitLab that automates the testing and deployment of code changes.
+
+# Run tests
+
+To run tests, you have to set up the backend and frontend as described above. Then you can run the following commands:
+
+### Backend:
 
 ```bash
-source ./venv/bin/activate
+make test-backend
 ```
 
-Is intended for Linux and does not always work on windows.
-Therefore, windows users using VS code, could install the extension `Powershell` (Picture below), to run the activate script in the `venv`-folder. Then manually run the script by clicking the script and clicking `run`.
+Or if you are using Windows, you can run the following described in the Makefile [here](./Makefile):
 
-1. First install the `Powershell` extension
-
-![Step 1 windows](../docs/Pictures/troubleshooting_4.PNG)
-
-2. Then go into `backend/venv/Scripts/Activate.ps1` and run the script.
-
-![Step 2.1 windows](docs/Pictures/troubleshooting_1.PNG)
-![Step 2.2 windows](docs/Pictures/troubleshooting_2.PNG)
-
-3. Click this file and run it. If you see a green `(venv)` in the terminal, then the virtual environment is activates. You can now run the rest of the commands above.
-
-![Step 3 windows](docs/Pictures/troubleshooting_3.PNG)
-
-4. You can now run the rest of the commands to setup and run backend
+### Frontend:
 
 ```bash
-
-# Installing python packages
-pip install -r requirements.txt
-
-# Apply migration scripts
-alembic upgrade head
-
-# Run the backend
-uvicorn main:app --reload
-
-# Running at 127.0.0.1:8000
+cd frontend
+npm run test
 ```
 
-### Production
+### End-to-end tests:
 
-#### Setup cron jobs:
+To run end-to-end tests, you have to set up a `cypress.env.json`-file in the `frontend`-folder based on the `cypress.env.template.json`-file. The `SESSION_COOKIE` can be found when running the application locally and logging in found in the cookies. (inspect -> application -> cookies -> session).
 
-After the application is running, you have to set up cron jobs to send out emails. Do the following:
-
-- Open the terminal and run `crontab -e` to open the cron jobs file.
-- Add the following line to the file: `0 18 * * * curl -X POST https://reflect.iik.ntnu.no/api/send-notifications`
-  - If using a different port or url, change the url accordingly.
-- Save and exit: If your in vim, press `esc` and then `:wq` and then `enter`.
-- Verify Crontab: Run `crontab -l` to verify that the cron job is added.
-
-Note: this cron job will send out emails every day at 18:00 and works only for linux. If you are using windows, you can use the windows task scheduler to do the same thing, but it is not covered in this documentation as it is not used in production.
-
-#### Running containers:
-
-In production we have dockerized all the applications and use Postgres as the database. Docker compose is used to setup all the containers together and [traefik](https://doc.traefik.io/) is used as a reverse proxy to the containers and handle ssl.
-
-**Requirements:**
-
-- Docker
-- Docker compose
-
-##### Environment:
-
-In the `backend` folder, create`.env` containing the following:
-
-- `production = true`
-- `SECRET_KEY` is set
-- `client_id` is set
-- `client_secret` is set
-- `OPENAI_KEY` is set
-
-Mailing environment variables: (used for sending emails, this can you get from Ntnu IT or use a different mailing service)
-- `MAIL_USERNAME` is set
-- `MAIL_PASSWORD` is set
-- `MAIL_SERVER` is set
-- `MAIL_PORT` is set
-- `MAIL_FROM` is set
-
-**the client secrets corresponds to your feide instance**
-
-- the following postgres variables is set: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`.
-- REDIRECT_URI = "https://reflect.iik.ntnu.no/auth"
-- BASE_URL = "https://reflect.iik.ntnu.no"
-
-In `frontend` folder:
-
-- create `.env.production` with PUBLIC_API_URL="https://reflect.iik.ntnu.no/api"
-
-_See .env.template for what to include in the .env file!_
-
-Also make sure that there exists a `certs` folder with the ssl privatekey and certificate (More on this below).
-
-#### Running containers:
+Make sure that the backend is running.
+Then you can run the following commands:
 
 ```bash
-docker-compose build
-docker-compose up -d
+cd frontend
+npx cypress run
 ```
 
-**OBS:**
+# Sustainability and Accessibility
 
-If you have a firewall on the production server, make sure port 443 is open.
+If you want to learn about the measures taken to make the project sustainable and accessible, you can read more about it [here](./docs/SustainabilityAccessibility.md).
 
-Frontend is running on URL/
-Backend api is running on URL/api/
-Backend docs is running on URL/api/docs
-Backend auth is running on URL/auth
+# Architecture
 
-#### Setting up certificates
+If you want to learn about the architecture of the project, you can read more about it [here](./docs/Architecture.md).
 
-This section is for how to set up a certificate for a production server. Only use this if theres a need for hosting the application on a new server.
-In order for the server to use HTTPS, a TLS certificate is needed.
-Instructions:
+# Contribution
 
-1. Set up a certificate on [cert manager](https://cert-manager.com/customer/Uninett/idp/ssl/vUMoaUELCX71mTS4x7NC/select).
-2. Choose "Feide", not "FEIDE" when logging in. Here you can enroll a new certificate. Click the "enroll certificate" button. On this page you can upload a CSR (Certificate Signing Request) file.
-3. Create a new CSR file using this [tutorial](https://www.ssl.com/how-to/manually-generate-a-certificate-signing-request-csr-using-openssl/). You need [openSSL](https://www.openssl.org/source/) in order to do this.
-4. When creating the CSR file, you will be asked to fill in some information. Some of these you dont need to fill in. You should rather not fill in organization details in CSR. The important ones is:
-
-   1. `country(CO)`. Set this to `"NO"`.
-   2. `CN (Common Name)`. Set this to the domain name of the server. In our case `"reflect.iik.ntnu.no"`
-   3. The rest is filled out automatically using the information stored on NTNU on sectigo. In case the fields are obligatory, it is important that you fill in; `organization(O)`, `organization unit(OU)`, `city(L)`, `state or province(ST)`.
-      `O` and `OU` is `"Norges Teknisk-Naturvitenskapelige Universitet NTNU"`, `L` is `"Trondheim"`, `ST` is `"Trøndelag"`.
-   4. For those who need it, prefix www. is added to the GÉANT OV SSL-certificate type.
-
-5. Remember to save the CSR file someplace you'll find it. Then upload this on cert-manager.
-6. Certificates are controlled consecutively by the administrators. You will recieve a mail when the certificate is approved and ready.
-7. When the certificate is approved, you can download the certificate and the private key.
-8. The certificate is a `.pem` file, and the private key is a `.key` file. These files should be placed in a `certs` folder in the root of the project. The `.key` file was generated when creating the CSR file.
-9. The certificate is now ready to be used by traefik. Change the `traefik.yaml` file to use the new certificate.
-   This is done by changing the following lines in the `traefik.toml`file:
-   ```bash
-   tls:
-   certificates:
-       - certFile: /certs/ref_iik_ntnu_no.pem
-       keyFile: /certs/refPRIVATEKEY_nopass.key
-   ```
-10. Note, make sure that the private key file is not password protected. If it is, you have to remove the password from the key file. This can be done by running the following command:
-    ```bash
-    openssl rsa -in refPRIVATEKEY_nopass.key -out refPRIVATEKEY_nopass.key
-    ```
-    This will remove the password from the key file.
-11. The application should now be able to run on the new server.
-12. Note: If you are using a different domain, you have to change the domain name in the `docker-compose.yml` file. And in the url in `format_email()` function in the `backend/api/main.py` file.
-
-#### Useful docker commands
-
-**List all containers**
-
-```bash
-docker ps
-```
-
-**Get logs of a container**
-
-After running `docker ps` to get the container id, run:
-
-```bash
-docker logs `<CONTAINER ID>`
-```
-
-You dont need to fill in the entire ID, just enough to make it unique.
-
-**Take down all containers**
-
-```bash
-docker-compose down
-```
+The project is developed by students at NTNU. If you want to contribute to the project, you can read more about it [here](./docs/Contribution.md).
 
 # Folder structure
 
-The project is split into 2 main folders, `frontend` and `backend`. The frontend folder contains all the frontend code, and the backend folder contains all the backend code.
+The project is split into 2 main folders, `frontend` and `backend`. The frontend-folder contains all the frontend code, and the backend-folder contains all the backend code.
 
 #### Root
 
@@ -318,6 +174,7 @@ The project is split into 2 main folders, `frontend` and `backend`. The frontend
     ├── frontend                # Frontend files
     ├── docker-compose.yml      # docker-compose file. Used for running the project in docker
     ├── traefik.yaml            # Traefik file. Used as reverse proxy
+    └── Makefile                # Makefile. Contains all the commands for running the backend
 
 #### backend
 
@@ -328,16 +185,28 @@ The project is split into 2 main folders, `frontend` and `backend`. The frontend
     ├── Dockerfile              # Dockerfile. Used for building docker image.
     ├── Dockerfile.test         # Dockerfile for testing.
     ├── requirements.txt        # Requirements file. Contains all the python packages used in the project.
-    │   ├── app                 # app folder. Contains main code.
+    │   ├── api                 # api folder. Contains main code.
             ├── crud.py                 # Crud methods. Functions for performing CRUD operations on database.
             ├── database.py             # Database file. Contains database setup, connection and session.
             ├── main.py                 # Main file. Contains all the routes for the API.
             ├── model.py                # Database model. Contains all the database models.
             ├── schemas.py              # Schemas. Contains all the schemas used for validating data sent between frontend and backend.
-    │   ├── test                 # Test folder. Contains all the tests for the project.
-            ├── test_main.py           # Test main. Contains tests for the main file.
-    │   ├── prompting            # Prompting folder. Contains all the code for gpt prompting.
-            ├── main.py                 # GPT file. Contains the gpt model and methods for prompting.
+        │   └── utils               # Utils folder. Contains all the utility code.
+                └── exceptions.py          # Exceptions, used to handle some exceptions.
+    │   ├── prompting           # Prompting folder. Contains all the code for gpt prompting.
+            ├── createCategories.py     # Create categories. Contains code for creating categories.
+            ├── enforceUniqueCategories.py  # Enforce unique categories. Contains code for enforcing unique categories.
+            ├── sort.py                # Sort. Contains code for sorting.
+            ├── summary.py             # Summary. Contains code for summarizing.
+            └── transformKeysToAnswers.py  # Transform keys to answers. Contains code for transforming keys to answers.
+    │   ├── test                # Test folder. Contains all the tests for the project.
+            ├── test_main.py            # Test main. Contains tests for the main file.
+        │   └── openai                  # OpenAI folder. Contains all the code for openai testing.
+                ├── test_createCategories.py           # Test create categories. Contains tests for creating categories.
+                ├── test_enforceUniqueCategories.py    # Test enforce unique categories. Contains tests for enforcing unique categories.
+                ├── test_sort.py                       # Test sort. Contains tests for sorting.
+                ├── test_summary.py                    # Test summary. Contains tests for summary.
+                └── test_transformKeysToAnswers.py     # Test transform keys to answers. Contains tests for transforming keys to answers.
 
 #### Frontend
 
@@ -347,9 +216,11 @@ The project is split into 2 main folders, `frontend` and `backend`. The frontend
     ├── src                     # Src folder. Contains all the source code.
     │   ├── lib                 # Lib folder. Contains utils.
             ├── components      # Components folder. Contains svelte components.
+            │   └── ...         # Contains all the svelte components.
             ├── stores.ts       # Stores. Contains the svelte stores.
-            ├── validation.ts   # Validation. Contain validation methods used in forms.
+            └── validation.ts   # Validation. Contain validation methods used in forms.
     │   ├── routes              # Routes folder. Contains all the pages in the application.
+        │    └── ...             # Contains all the pages in the application.
     │   └── types.d.ts          # Typescript types. Contains all the typescript types used in the project.
     ├── tests                   # Tests folder. Contains all the tests for the project. Playwright is used for testing.
     ├── dockerfile              # Dockerfile. Used for building docker image.
@@ -358,3 +229,10 @@ The project is split into 2 main folders, `frontend` and `backend`. The frontend
     ├── playwright.config.ts    # Playwright config. Contains all the config for playwright.
     ├── svelte.config.js        # Svelte config. Contains all the config for svelte.
     ├── tailwind.config.cjs     # Tailwind config. Contains all the config for tailwind.
+    ├── cyperess.config.ts      # Cypress config. Contains all the config for cypress.
+    ├── static                  # Static folder. Contains all the static files.
+    │   └──  ...                # Contains all the static files.
+    ├── test                    # Test folder. Contains all the tests for the project. Cypress is used for testing.
+    │   └── ...                 # Contains all the tests for the project.
+    ├── cypress                 # Cypress folder. Contains all the cypress tests.
+    │   └── ...                 # Contains all the cypress tests.

@@ -12,8 +12,6 @@ from prompting.transformKeysToAnswers import transformKeysToAnswers
 from prompting.sort import sort
 from prompting.createCategories import createCategories
 
-# from prompting.main import analyze_student_feedback
-
 from . import crud
 from . import model
 from . import schemas
@@ -52,11 +50,9 @@ NOTIFICATION_LIMIT = config("NOTIFICATION_LIMIT", cast=int, default=2)
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
-allowed_origin = "*"
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origin,
+    allow_origins="*",
     allow_credentials=True,
     allow_headers=["*"],
     allow_methods=["*"],
@@ -112,6 +108,9 @@ oauth.register(
 
 
 def get_user_data(bearer_token):
+    """
+    This function retrieves user data from the Dataporten API using the provided bearer token.
+    """
     url = "https://api.dataporten.no/userinfo/v1/userinfo"
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
@@ -146,6 +145,9 @@ def is_admin(db, request):
 
 
 def check_is_admin(bearer_token):
+    """
+    Checks if the user is an admin by querying the Dataporten API for group memberships.
+    """
     url = "https://groups-api.dataporten.no/groups/me/groups"
     headers = {"Accept": "application/json", "Authorization": f"Bearer {bearer_token}"}
 
@@ -172,10 +174,15 @@ def check_is_admin(bearer_token):
 
 @app.on_event("startup")
 async def start_db():
-    print("init database")
+    """
+    Used for creating dummy data in the database for development purposes when running locally.
+
+    It creates a course, units, and users, and enrolls a test user in the course.
+    """
     if is_prod():
         return
 
+    print("init database")
     course_id: str = "TDT4100"
     semester: str = "fall2023"
     course_name: str = "Informasjonsteknologi grunnkurs"
@@ -249,18 +256,25 @@ async def login(request: Request):
 
 @app.get("/auth")
 async def auth(request: Request, db: Session = Depends(get_db)):
+    """
+    This is the callback route for the OAuth2 authentication process.
+    It retrieves the access token from the request and stores it in the user's session.
+
+    Also creates a user in the database if the user does not already exist.
+    """
     try:
         token = await oauth.feide.authorize_access_token(request)
     except OAuthError as error:
         return HTMLResponse(f"<h1>{error.error}</h1>")
     bearer_token = token.get("access_token")
-    print("bearer_token", bearer_token)
+    # print("bearer_token", bearer_token)
     request.session["scope"] = token.get("scope")
     request.session["bearer_token"] = bearer_token
     request.session["user_data"] = get_user_data(bearer_token)
     user = get_user_data(bearer_token)
     if user:
         user = json.loads(user)
+        #  For testing purposes, we can set the user to a test user
         if config("TEST_ACCOUNT", cast=bool, default=False):
             user["uid"] = "test"
             user["mail"] = "test@mail.no"
@@ -293,6 +307,10 @@ async def logout(request: Request):
 async def create_reflection(
     request: Request, ref: schemas.ReflectionCreate, db: Session = Depends(get_db)
 ):
+    """
+    Creates a reflection based on the data provided in the `ref` object.
+    This saves the response a user has given to a question in a unit.
+    """
     protect_route(request)
 
     unit = crud.get_unit(db, ref.unit_id)
@@ -322,19 +340,6 @@ async def delete_reflection(
 ):
     """
     Deletes a reflection based on the user ID, unit ID, and question ID provided in the `ref` object.
-
-    Parameters:
-    - request (Request): The request object, used here to access the user's session for
-      authentication and authorization checks.
-    - ref (schemas.ReflectionDelete): A Pydantic model containing the necessary data to delete a reflection.
-        This includes the user ID, unit ID, and question ID.
-    Returns:
-    - schemas.ReflectionDelete: The Pydantic model representation of the deleted reflection, confirming
-      the successful deletion.
-
-    Raises:
-    - HTTPException: 401 error if the user is not logged in.
-    - HTTPException: 403 error if the user does not have permission to delete the reflection.
     """
     protect_route(request)
 
@@ -354,6 +359,9 @@ async def course(
     course_semester: str,
     db: Session = Depends(get_db),
 ):
+    """
+    Retrieves a course based on the course ID and course semester provided.
+    """
     protect_route(request)
 
     course = crud.get_course(db, course_id=course_id, course_semester=course_semester)
@@ -369,6 +377,9 @@ async def course(
 async def create_course(
     request: Request, ref: schemas.CourseCreate, db: Session = Depends(get_db)
 ):
+    """
+    Creates a course based on the data provided in the `ref` object.
+    """
     protect_route(request)
 
     if not is_admin(db, request):
@@ -382,6 +393,11 @@ async def create_course(
 
 @app.get("/user", response_model=schemas.User)
 async def user(request: Request, db: Session = Depends(get_db)):
+    """
+    Retrieves the user's data based on the user ID stored in the session.
+
+    It will also return the users enrollments and missing units.
+    """
     protect_route(request)
 
     user = request.session.get("user")
@@ -422,6 +438,10 @@ async def user(request: Request, db: Session = Depends(get_db)):
 async def enroll(
     request: Request, ref: schemas.EnrollmentCreate, db: Session = Depends(get_db)
 ):
+    """
+    Enrolls a user in a course based on the data provided in the `ref` object.
+    This will also enroll a user if they have a private invitation to the course.
+    """
     protect_route(request)
 
     course = crud.get_course(
@@ -435,17 +455,7 @@ async def enroll(
     uid: str = user.get("uid")
     if user is None:
         raise HTTPException(401, detail="Cannot find your user")
-    if ref.role == "student":
-        try:
-            return await crud.create_enrollment(
-                db,
-                role=ref.role,
-                course_id=ref.course_id,
-                course_semester=ref.course_semester,
-                uid=uid,
-            )
-        except IntegrityError:
-            raise HTTPException(409, detail="User already enrolled in this course")
+
     invitations = crud.get_invitations(db, uid)
     if invitations is not None:
         priv_inv = crud.get_priv_invitations_course(
@@ -463,6 +473,19 @@ async def enroll(
                 )
             except IntegrityError:
                 raise HTTPException(409, detail="User already enrolled in this course")
+
+    if ref.role == "student" or is_admin(db, request):
+        try:
+            return await crud.create_enrollment(
+                db,
+                role=ref.role,
+                course_id=ref.course_id,
+                course_semester=ref.course_semester,
+                uid=uid,
+            )
+        except IntegrityError:
+            raise HTTPException(409, detail="User already enrolled in this course")
+
     raise HTTPException(403, detail="User not allowed to enroll")
 
 
@@ -474,6 +497,12 @@ async def get_units(
     course_semester: str,
     db: Session = Depends(get_db),
 ):
+    """
+    Retrieves all units for a specific course based on the course ID and course semester provided.
+    If a user is not enrolled in the course, they will be enrolled as a student.
+
+    And if they are a lecturer or teaching assistant, they will see all units including the hidden ones.
+    """
     protect_route(request)
 
     user = request.session.get("user")
@@ -481,6 +510,7 @@ async def get_units(
     course = crud.get_course(db, course_id, course_semester)
     if course is None:
         raise HTTPException(404, detail="Course not found")
+
     enrollment = crud.get_enrollment(db, course_id, course_semester, uid)
     if enrollment is None:
         await crud.create_enrollment(
@@ -493,6 +523,7 @@ async def get_units(
         enrollment = crud.get_enrollment(db, course_id, course_semester, uid)
         if enrollment is None:
             raise HTTPException(401, detail="You are not enrolled in the course")
+
     if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
         units = (
             db.query(model.Unit)
@@ -524,23 +555,7 @@ async def create_unit(
     request: Request, ref: schemas.UnitCreate, db: Session = Depends(get_db)
 ):
     """
-    Creates a new unit with the details provided in the `ref` object.
-
-    Parameters:
-    - request (Request): The request object, used here to access the user's session for
-      authentication and authorization checks.
-    - ref (schemas.UnitCreate): A Pydantic model containing the necessary data to create a new unit.
-      This includes the unit's title, date of availability, course ID, and course semester.
-    - db (Session): Dependency injection of the database session for executing database operations.
-
-    Returns:
-    - schemas.Unit: The Pydantic model representation of the newly created unit, confirming
-      the successful creation.
-
-    Raises:
-    - HTTPException: 401 error if the user is not logged in or not enrolled in the specified course.
-    - HTTPException: 403 error if the user does not have sufficient permissions (not an admin or
-      a lecturer/teaching assistant in the course) to create a new unit.
+    Creates a new unit with the unit-details from the 'ref' object, if the user-details provided in `ref` is admin.
     """
     protect_route(request)
 
@@ -572,24 +587,6 @@ async def update_unit(
     """
     Updates the details of an existing unit identified by `unit_id` with new information
     provided in the `ref` object, which includes the unit's title and date available.
-
-    Parameters:
-    - unit_id (int): The unique identifier of the unit to be updated.
-    - request (Request): The request object, used here to access the user's session for
-      authentication and authorization checks.
-    - ref (schemas.UnitCreate): A Pydantic model representing the new data for the unit. This model
-      includes fields such as `title`, `date_available`, `course_id`, and `course_semester`.
-    - db (Session): Dependency injection of the database session for executing database operations.
-
-    Returns:
-    - schemas.UnitCreate: The Pydantic model representation of the updated unit, confirming
-      the successful update. Note: Depending on your application's design, you might return the updated
-      unit model (schemas.UnitUpdate might be more appropriate if it exists).
-
-    Raises:
-    - HTTPException: 401 error if the user is not logged in or not enrolled in the course.
-    - HTTPException: 404 error if the specified unit is not found in the database.
-    - HTTPException: 403 error if the user does not have permission to edit the unit for this course.
     """
     protect_route(request)
 
@@ -623,24 +620,7 @@ async def delete_unit(
     db: Session = Depends(get_db),
 ):
     """
-    Deletes a specific unit based on the unit ID, course ID, and course semester provided.
-
-    Parameters:
-    - unit_id (int): The unique identifier of the unit to be deleted.
-    - ref (schemas.UnitDelete): A Pydantic model that includes the `course_id` and `course_semester`
-      of the unit to ensure that the deletion is specific to the context of a particular course offering.
-    - request (Request): The request object, used here to access the user's session.
-    - db (Session): Dependency injection of the database session for executing database operations.
-
-    Returns:
-    - schemas.UnitDelete: The Pydantic model representation of the deleted unit,
-      confirming the successful deletion.
-
-    Raises:
-    - HTTPException: 401 error if the user is not logged in.
-    - HTTPException: 404 error if the specified unit is not found.
-    - HTTPException: 403 error if the user does not have permission to delete the unit,
-      based on their role or enrollment status.
+    Deletes a specific unit based on the unit ID, course ID, and course semester provided, if user-details from 'ref' object is admin.
     """
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -672,18 +652,8 @@ async def download_file(
     db: Session = Depends(get_db),
 ):
     """
-    Download a report file.
-
-    Args:
-        request (Request): The HTTP request object.
-        ref (schemas.AutomaticReport): The reference to the report.
-        db (Session): The database session.
-
-    Returns:
-        Union[FileResponseWithDeletion, Response]: The file response or a response with a status code.
-
-    Raises:
-        HTTPException: If the user is not logged in or if an error occurs while generating the report.
+    Retrieves a report stored in the database based on course id, unit id, and course semester provided in the `ref` object.
+    Downloads the provided report file.
     """
     protect_route(request)
 
@@ -725,7 +695,6 @@ def to_dict(obj):
     return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
 
 
-# Get unit data with course and semester required, better error handling/security (unit_id is just an incrementing number)
 # Example: /unit_data?course_id=TDT4100&course_semester=fall2023&unit_id=1
 @app.get("/unit_data", response_model=schemas.UnitData)
 async def get_unit_data(
@@ -735,6 +704,9 @@ async def get_unit_data(
     unit_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    Retrieves a specific unit based on the course ID, course semester, and unit ID provided.
+    """
     protect_route(request)
 
     user = request.session.get("user")
@@ -807,19 +779,7 @@ async def get_report(
     db: Session = Depends(get_db),
 ):
     """
-    Retrieve a report from the db based on the provided parameters.
-
-    Args:
-    - request: The incoming request object.
-    - params: An instance of the AutomaticReport schema, containing the parameters for the report.
-    - db: The database session.
-
-    Returns:
-    - The retrieved report.
-
-    Raises:
-    - HTTPException with status code 401 if the user is not logged in.
-    - HTTPException with status code 404 if the report is not found.
+    Retrieve a report from the database based on the provided parameters such as course id, unit id, and course semester.
     """
     protect_route(request)
     report = crud.get_report(
@@ -833,35 +793,13 @@ async def get_report(
     return report
 
 
-# Also created new report if not created
-@app.post("/edit_created_report", response_model=schemas.Report)
-async def edit_created_report(
-    request: Request, ref: schemas.ReportBase, db: Session = Depends(get_db)
-):
-    protect_route(request)
-
-    user = request.session.get("user")
-    uid: str = user.get("uid")
-    enrollment = crud.get_enrollment(db, ref.course_id, ref.course_semester, uid)
-    if enrollment is None:
-        raise HTTPException(401, detail="You are not enrolled in the course")
-    if is_admin(db, request) or enrollment.role in ["lecturer", "teaching assistant"]:
-        return crud.edit_created_report(
-            db,
-            ref.course_id,
-            ref.unit_id,
-            ref.report_content,
-            course_semester=ref.course_semester,
-        )
-    raise HTTPException(
-        403, detail="You do not have permission to edit report for this course"
-    )
-
-
 @app.post("/create_invitation", response_model=schemas.Invitation)
 async def create_invitation(
     request: Request, ref: schemas.InvitationBase, db: Session = Depends(get_db)
 ):
+    """
+    Creates an invitation to an user for a course based on user-details and course-details provided in the `ref` object.
+    """
     protect_route(request)
     user = request.session.get("user")
     uid: str = user.get("uid")
@@ -885,6 +823,9 @@ async def create_invitation(
 # get all invitations by user
 @app.get("/get_invitations", response_model=List[schemas.Invitation])
 async def get_invitations(request: Request, db: Session = Depends(get_db)):
+    """
+    Retrieves all invitations for a user based on the user ID stored in the session.
+    """
     protect_route(request)
 
     user = request.session.get("user")
@@ -896,6 +837,9 @@ async def get_invitations(request: Request, db: Session = Depends(get_db)):
 # delete invitation
 @app.delete("/delete_invitation/{id}")
 async def delete_invitation(request: Request, id: int, db: Session = Depends(get_db)):
+    """
+    Deletes an invitation based on the invitation ID provided.
+    """
     protect_route(request)
 
     return crud.delete_invitation(db, id=id)
@@ -910,17 +854,6 @@ async def send_notifications(db: Session = Depends(get_db)):
     for which students have not yet reached the notification limit. It then sends a reminder
     email to each student about their pending units, updating the notification count for each unit
     per student.
-
-    Parameters:
-    - db (Session): The database session used to perform database operations.
-
-    Raises:
-    - HTTPException: If a notification has already been sent within the cooldown period defined
-      by NOTIFICATION_COOLDOWN_DAYS.
-
-    Returns:
-    - JSONResponse: A summary of the notification sending process, including information on
-      successful notifications, skipped notifications due to the notification limit, and any errors encountered.
     """
     if crud.check_recent_notification(db, NOTIFICATION_COOLDOWN_DAYS):
         print(
@@ -986,14 +919,6 @@ async def send_notifications(db: Session = Depends(get_db)):
 def format_email(student_id: str, course_id: str, units: List[model.Unit]):
     """
     Generates the HTML content for an email reminder to a student about providing feedback on learning units.
-
-    Parameters:
-    - student_id (str): The unique identifier of the student receiving the email.
-    - course_id (str): The unique identifier of the course for which feedback is requested.
-    - units (List[model.Unit]): A list of Unit objects representing the learning units for which feedback is requested.
-
-    Returns:
-    - str: A string containing the HTML content for the email body.
     """
     unit_links = [
         f'<li><a href="https://reflect.iik.ntnu.no/courseview/{unit.course_semester}/{unit.course_id}/{unit.id}">{unit.title}</a></li>'
@@ -1025,12 +950,6 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
     3. Sorting the feedback into the identified categories.
     4. Transforming sorted keys into actual answers for a readable format.
     5. Generating a summary of the categorized feedback.
-
-    Parameters:
-    - ref (schemas.ReflectionJSON): An object containing all necessary data for the feedback analysis. This includes the API key for OpenAI, a list of questions, the student feedback in a structured format, and a flag indicating whether to use a cheaper model for processing.
-
-    Returns:
-    - dict: A dictionary containing the categorized feedback and a summary.
     """
 
     # Adds a key to each student feedback dict to identify the student and filter out irrelevant information
@@ -1076,6 +995,9 @@ async def analyze_feedback(ref: schemas.ReflectionJSON):
 async def unenroll_course(
     request: Request, ref: schemas.EnrollmentBase, db: Session = Depends(get_db)
 ):
+    """
+    Unenrolls the user from a course based on the course ID and course semester provided in the `ref` object.
+    """
     protect_route(request)
     try:
         user = request.session.get("user")
@@ -1089,6 +1011,9 @@ async def unenroll_course(
 async def delete_course(
     request: Request, ref: schemas.CourseBase, db: Session = Depends(get_db)
 ):
+    """
+    Deletes a course based on the course ID and course semester provided in the `ref` object.
+    """
     protect_route(request)
     if not is_admin(db, request):
         raise HTTPException(403, detail="You are not an admin user")
@@ -1102,6 +1027,9 @@ async def delete_course(
 async def generate_report_endpoint(
     request: Request, ref: schemas.AutomaticReport, db: Session = Depends(get_db)
 ):
+    """
+    Generates and saves a report for a specific unit based on the course ID, course semester, and unit ID provided in the `ref` object.
+    """
     if not is_admin(db, request):
         raise HTTPException(403, detail="You are not an admin user")
     try:

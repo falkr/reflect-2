@@ -5,6 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from starlette.config import Config
 from starlette.datastructures import Secret
 
+# Selects which DB to use based on the environment
+
 config = Config(".env")
 
 if config("production", cast=bool, default=False):
