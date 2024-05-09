@@ -373,24 +373,6 @@ async def course(
     return course
 
 
-@app.post("/create_course", response_model=schemas.Course)
-async def create_course(
-    request: Request, ref: schemas.CourseCreate, db: Session = Depends(get_db)
-):
-    """
-    Creates a course based on the data provided in the `ref` object.
-    """
-    protect_route(request)
-
-    if not is_admin(db, request):
-        raise HTTPException(403, detail="You are not an admin user")
-    try:
-        return crud.create_course(db, course=ref.dict())
-
-    except IntegrityError:
-        raise HTTPException(409, detail="Course already exists")
-
-
 @app.get("/user", response_model=schemas.User)
 async def user(request: Request, db: Session = Depends(get_db)):
     """
@@ -431,6 +413,33 @@ async def user(request: Request, db: Session = Depends(get_db)):
         user.admin = True
 
     return user
+
+
+@app.post("/create_course", response_model=schemas.Enrollment)
+async def create_course(
+    request: Request, ref: schemas.CourseCreate, db: Session = Depends(get_db)
+):
+    """
+    Creates a course based on the data provided in the `ref` object.
+    """
+    protect_route(request)
+    user = request.session.get("user")
+    uid: str = user.get("uid")
+
+    if not is_admin(db, request):
+        raise HTTPException(403, detail="You are not an admin user")
+    try:
+        crud.create_course(db, course=ref.dict())
+        return await crud.create_enrollment(
+            db,
+            role="lecturer",
+            course_id=ref.id,
+            course_semester=ref.semester,
+            uid=uid,
+        )
+
+    except IntegrityError:
+        raise HTTPException(409, detail="Course already exists")
 
 
 # enroll self in course

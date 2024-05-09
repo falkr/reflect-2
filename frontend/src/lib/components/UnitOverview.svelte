@@ -242,8 +242,8 @@
 
 <!-- Delete unit modal component only showed to lecturers -->
 <div class="mx-5 md:w-4/5 md:mx-auto mb-6 text-gray-900 dark:text-white flex">
-	<Heading tag="h1" class="mt-2 text-xl">{'Unit ' + unit_number + ' - ' + unitName}</Heading>
-	{#if isUserLecturer}
+	<Heading tag="h2" class="mt-2 text-xl">{'Unit ' + unit_number + ' - ' + unitName}</Heading>
+	{#if isUserLecturer && !isUnitOngoing}
 		<DeleteUnitModal {data} />
 	{/if}
 </div>
@@ -253,14 +253,6 @@
 	<div>
 		<form class="mx-5 md:w-4/5 md:mx-auto" on:submit={handleSubmit}>
 			<div class="flex-col md:flex-row gap-4 md:gap-8 w-full pb-8">
-				<Heading
-					tag="h5"
-					style="font-size: 1.5rem;"
-					class="mt-2 text-xl text-gray-900 dark:text-white"
-				>
-					Questions
-				</Heading>
-
 				{#each data.course.questions as questionType, index}
 					<div class="my-4">
 						<Label for="question" class="text-sm block font-medium text-gray-900 dark:text-white"

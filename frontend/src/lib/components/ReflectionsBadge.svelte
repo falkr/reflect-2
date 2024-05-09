@@ -19,7 +19,7 @@
 		| 'primary';
 
 	if (totalReflections === reflectionsSinceLastReport && totalReflections > 0) {
-		tagString = 'Ready for report generating';
+		tagString = 'Ready for report generation';
 		tagColor = 'green';
 	} else if (reflectionsSinceLastReport > 0) {
 		tagString = `+${reflectionsSinceLastReport} reflections since last report`;

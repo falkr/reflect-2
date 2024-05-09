@@ -4,7 +4,7 @@ import ReflectionsBadge from '../../src/lib/components/ReflectionsBadge.svelte';
 
 describe('ReflectionsBadge component', () => {
 	//Basic rendering with first time generating available
-	it('renders "Ready for report generating" when totalReflections equals reflectionsSinceLastReport and totalReflections is greater than 0', () => {
+	it('renders "Ready for report generation" when totalReflections equals reflectionsSinceLastReport and totalReflections is greater than 0', () => {
 		const { getByText } = render(ReflectionsBadge, {
 			props: {
 				reflectionsSinceLastReport: 5,
@@ -13,7 +13,7 @@ describe('ReflectionsBadge component', () => {
 			}
 		});
 
-		expect(getByText('Ready for report generating')).toBeInTheDocument();
+		expect(getByText('Ready for report generation')).toBeInTheDocument();
 	});
 
 	//Correctly renders the number of reflections since last report

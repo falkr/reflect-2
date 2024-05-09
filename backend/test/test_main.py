@@ -164,22 +164,6 @@ def test_create_course_admin():
 
     assert response.status_code == 200
 
-    response = client.post(
-        "/enroll",
-        json={
-            "course_id": "TDT1000",
-            "course_semester": "fall2023",
-            "role": "lecturer",
-        },
-    )
-
-    assert response.status_code == 200
-
-    data = response.json()
-    assert data["role"] == "lecturer"
-    assert data["course_id"] == "TDT1000"
-    assert data["uid"] == uid
-
     response = client.get("/user")
     data = response.json()
 

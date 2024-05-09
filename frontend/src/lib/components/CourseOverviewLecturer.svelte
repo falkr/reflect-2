@@ -1,6 +1,6 @@
 <script lang="ts">
 	import UnitCardLecturer from './UnitCardLecturer.svelte';
-	import { Button } from 'flowbite-svelte';
+	import { Button, Heading } from 'flowbite-svelte';
 	import { goto } from '$app/navigation';
 	import CourseActions from './CourseActions.svelte';
 
@@ -12,7 +12,8 @@
 </script>
 
 <!-- The CourseOverviewLecturer component displays the units cards of a course for a lecturer. -->
-<div class="mt-16 w-full flex flex-col items-center mb-16">
+<div class="mt-8 w-full flex flex-col items-center mb-16">
+	<Heading tag="h2" class="mb-6 text-xl w-11/12 sm:w-4/5">{data.course.name}</Heading>
 	<div class="flex sm:flex-row flex-col justify-between w-11/12 sm:w-4/5">
 		<div class="flex gap-4">
 			<CourseActions {data} />

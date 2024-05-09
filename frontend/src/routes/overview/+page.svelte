@@ -77,46 +77,27 @@
 			})
 		});
 		const status = response.status;
+
+		invalidate('app:layoutUser');
+		switch (status) {
+			case 200:
+				toast.success('Course successfully created!', {
+					iconTheme: {
+						primary: '#36786F',
+						secondary: '#FFFFFF'
+					}
+				});
+				break;
+			case 409:
+				defaultModal = true;
+				toast.error("Couldn't create course, course already exists for this semester.");
+				break;
+			default:
+				toast.error("Couldn't create course");
+				break;
+		}
 		const result = await response.json();
 		return { result, status };
-	}
-
-	/**
-	 * Enrolls the user as a lecturer for the newly created course. This function makes a POST request
-	 * to the backend API. It handles response status and displays toast messages based on the outcome.
-	 */
-	async function enrollUserAsLecturer() {
-		const course_id = courseToBeMade;
-		const role = 'lecturer';
-		if (selectedSemester == null) {
-			toast.error('Failed setting semester!');
-			return;
-		}
-
-		const response = await fetch(`${PUBLIC_API_URL}/enroll`, {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				course_id: course_id,
-				role: role,
-				course_semester: selectedSemester
-			})
-		});
-		const status = response.status;
-		invalidate('app:layoutUser');
-		if (status != 200) {
-			toast.error("Couldn't enroll lecuturer!");
-		} else {
-			toast.success('Course successfully created!', {
-				iconTheme: {
-					primary: '#36786F',
-					secondary: '#FFFFFF'
-				}
-			});
-		}
 	}
 
 	/**
@@ -135,12 +116,9 @@
 			const castedResponse = response as Response;
 			if (castedResponse.status == 200) {
 				defaultModal = false;
-
-				enrollUserAsLecturer();
 			}
 			if (castedResponse.status == 409) {
 				defaultModal = true;
-				toast.error("Couldn't create course, course already exists for this semester.");
 			}
 		},
 
