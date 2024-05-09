@@ -24,13 +24,13 @@ In the **`backend`** folder, create`.env`file containing the following:
 - `production = false` (This is used to determine if the database should be sqlite or postgres)
 - `SECRET_KEY = random_string` (This is used for hashing)
 
-Feide instance:
+Feide instance (this can be created [here](https://dashboard.dataporten.no)):
 - `client_id` is set
 - `client_secret` is set
 - `REDIRECT_URI` is set
 - `BASE_URL` is set
 
-OpenAI authentication:
+OpenAI authentication (this can be created [here](https://platform.openai.com/account/api-keys)):
 - `OPENAI_KEY` is set
 
 Note: There are some optional variables in the `.env.template` file. These are not necessary for the application to run, but can be used for testing and development.
@@ -89,6 +89,19 @@ alembic revision --autogenerate -m "Revision message, something relevant here"
 # Apply latest migration
 alembic upgrade head
 ```
+
+### Run tests:
+To run the tests, run the following command:
+
+```bash
+make test-backend
+```
+
+Or if you are using Windows, you can run the following described in the Makefile [here](./Makefile)
+
+### Test result:
+<img src="../docs/Pictures/tests/backend.png" alt="Test result" width="50%"/>
+
 ### Troubleshooting (for manual setup):
 
 The command

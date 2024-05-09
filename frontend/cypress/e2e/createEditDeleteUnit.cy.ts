@@ -1,17 +1,8 @@
+import loginUser from './loginUser';
+
 describe('Create new unit, then edit the unit and finally delete it', () => {
 	beforeEach(() => {
-		// Clear all cookies initially to ensure a clean state
-		const sessionCookie = Cypress.env('SESSION_COOKIE');
-		cy.clearCookies();
-
-		// Set the 'session' cookie
-		cy.setCookie('session', sessionCookie).then(() => {
-			cy.getCookie('session').should('have.property', 'value', sessionCookie);
-		});
-
-		cy.visit('http://127.0.0.1:5173/overview');
-		cy.wait(500);
-		cy.reload();
+		loginUser();
 	});
 
 	it('Create course, then create and edit unit, and finally delete the unit', () => {
@@ -50,18 +41,18 @@ describe('Create new unit, then edit the unit and finally delete it', () => {
 		// Edit unit
 		cy.get('#editUnitButton').click();
 		cy.get('#editUnitName').clear().type('Edited Unit');
-		cy.get('#editUnitDate').clear().type('2023-12-12');
+		cy.get('#editUnitDate').clear().type('2025-12-12');
 		cy.get('#editUnitSubmitButton').click();
 		cy.wait(500);
 
 		// Check that unit is edited
 		cy.contains('Unit updated successfully').should('be.visible');
 		cy.contains('Edited Unit').should('be.visible');
-		cy.contains('Unit 1 - 12.12.2023').should('be.visible');
-		cy.get('#openUnitButton').should('be.visible');
+		cy.contains('Unit 1 - 12.12.2025').should('be.visible');
+		cy.get('#editUnitButton').should('be.visible');
 
 		// Delete the unit
-		cy.get('#openUnitButton').click();
+		cy.get('#editUnitButton').click();
 		cy.get('#deleteUnitButton').click();
 		cy.get('#deleteUnitModal').should('be.visible');
 		cy.contains(

@@ -49,3 +49,23 @@ This project uses Vite for testing. This will also give you a coverage report. T
 cd frontend
 npm run test:coverage
 ```
+
+### Test result:
+
+<img src="../docs/Pictures/tests/vitests.png" alt="Test result" width="50%"/>
+
+## End-to-end tests:
+
+To run end-to-end tests, you have to set up a `cypress.env.json`-file in the `frontend`-folder based on the `cypress.env.template.json`-file.
+
+Make sure that the backend and frontend is running. Note: This needs that the `.env`-file in the backend has `UID` and `EMAIL_USER` set to the correct values. And that `reflect.db` is newly created (delete the file and restart the backend).
+Then you can run the following commands:
+
+```bash
+cd frontend
+npx cypress run
+```
+
+### End-to-end test result:
+
+<img src="../docs/Pictures/tests/cypress_test.png" alt="Cypress test result" width="50%"/>

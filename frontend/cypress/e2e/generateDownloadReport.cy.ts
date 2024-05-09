@@ -1,3 +1,5 @@
+import loginUser from './loginUser';
+
 const reflections = [
 	{
 		userId: 'user1',
@@ -45,18 +47,7 @@ const questionIds = [1, 2];
 
 describe('Check functionality for generating report and then downlaod it', () => {
 	beforeEach(() => {
-		// Clear all cookies initially to ensure a clean state
-		const sessionCookie = Cypress.env('SESSION_COOKIE');
-		cy.clearCookies();
-
-		// Set the 'session' cookie
-		cy.setCookie('session', sessionCookie).then(() => {
-			cy.getCookie('session').should('have.property', 'value', sessionCookie);
-		});
-
-		cy.visit('http://127.0.0.1:5173/overview');
-		cy.wait(500);
-		cy.reload();
+		loginUser();
 	});
 
 	it('Create course, then create and edit unit, submit reflections and then generate report', () => {
@@ -112,7 +103,7 @@ describe('Check functionality for generating report and then downlaod it', () =>
 
 		// Check that the report is generated
 		cy.wait(10000);
-		cy.contains('Report for unit 4 - Test Unit').should('be.visible');
+		cy.contains('Report for unit 1 - Test Unit').should('be.visible');
 		cy.contains('Summary').should('be.visible');
 		cy.contains(
 			'Please note, this report was generated using AI and may contain errors or inaccuracies.'

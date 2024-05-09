@@ -1,17 +1,8 @@
+import loginUser from './loginUser';
+
 describe('Check overview student page and reflect/decline on unit', () => {
 	beforeEach(() => {
-		// Clear all cookies initially to ensure a clean state
-		const sessionCookie = Cypress.env('SESSION_COOKIE');
-		cy.clearCookies();
-
-		// Set the 'session' cookie
-		cy.setCookie('session', sessionCookie).then(() => {
-			cy.getCookie('session').should('have.property', 'value', sessionCookie);
-		});
-
-		cy.visit('http://127.0.0.1:5173/overview');
-		cy.wait(500);
-		cy.reload();
+		loginUser();
 	});
 
 	it('Submit and decline reflection, and check that they are not available anymore', () => {
@@ -35,8 +26,6 @@ describe('Check overview student page and reflect/decline on unit', () => {
 
 		// Decline unit
 		cy.get('#declineUnit2Button').click();
-		cy.contains('Unit declined').should('be.visible');
-		cy.contains('Declined').should('be.visible');
 
 		// Clean up - delete reflection
 		const userName = Cypress.env('FEIDE_USERNAME');

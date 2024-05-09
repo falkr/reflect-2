@@ -1,17 +1,8 @@
+import loginUser from './loginUser';
+
 describe('Check overview page and create/delete course', () => {
 	beforeEach(() => {
-		// Clear all cookies initially to ensure a clean state
-		const sessionCookie = Cypress.env('SESSION_COOKIE');
-		cy.clearCookies();
-
-		// Set the 'session' cookie
-		cy.setCookie('session', sessionCookie).then(() => {
-			cy.getCookie('session').should('have.property', 'value', sessionCookie);
-		});
-
-		cy.visit('http://127.0.0.1:5173/overview');
-		cy.wait(500);
-		cy.reload();
+		loginUser();
 	});
 
 	it('Try to write invalid input when creating course', () => {

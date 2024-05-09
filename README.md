@@ -129,7 +129,7 @@ To run tests, you have to set up the backend and frontend as described above. Th
 make test-backend
 ```
 
-Or if you are using Windows, you can run the following described in the Makefile [here](./Makefile):
+Or if you are using Windows, you can run the following described in the Makefile [here](./Makefile)
 
 ### Frontend:
 
@@ -140,9 +140,9 @@ npm run test
 
 ### End-to-end tests:
 
-To run end-to-end tests, you have to set up a `cypress.env.json`-file in the `frontend`-folder based on the `cypress.env.template.json`-file. The `SESSION_COOKIE` can be found when running the application locally and logging in found in the cookies. (inspect -> application -> cookies -> session).
+To run end-to-end tests, you have to set up a `cypress.env.json`-file in the `frontend`-folder based on the `cypress.env.template.json`-file. 
 
-Make sure that the backend is running.
+Make sure that the backend and frontend is running. Note: This needs that the `.env`-file in the backend has `UID` and `EMAIL_USER` set to the correct values. And that `reflect.db` is newly created (delete the file and restart the backend).
 Then you can run the following commands:
 
 ```bash
