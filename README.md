@@ -14,11 +14,11 @@ A demo video of the project can be found [here](https://www.youtube.com/watch?v=
 
 The website uses Feide, which is a Norwegian authentication system. This means that in order to use the website, you have to be registrered as a student or a teacher in Norway.
 
-After logging in, you will see a `Create new course +`-button if you are registered as a teacher in Feide. By clickin this button, you'll create a new course, and you will now see a new card-component on the home-screen representing this newly created course. Note: If you are enrolled into a course, the card-component will look the same, other than the badge saying `Student` instead of `Lecturer`.
+After logging in, you will see a `Create new course +`-button if you are registered as a teacher in Feide. By clicking this button, you'll create a new course, and you will now see a new card-component on the home-screen representing this newly created course. Note: If you are enrolled into a course, the card-component will look the same, other than the badge saying `Student` instead of `Lecturer`.
 
 <img src="./docs/Pictures/applicationView/homeScreen.png" width="50%" alt="Home Screen" />
 
-After clickin on a course, you can create new units. Units represents the different lectures of the course. You can create a new unit by clicking the `Create new unit +`-button, and after creating a unit, you will see a new card-component on the course home-screen representing the newly created unit. When on the course home-screen, you can also click on `Invite users` to add students or lecturers to the course. After you've created a unit and the students have submitted some reflections, you can get a view like this:
+After clicking on a course, you can create new units. Units represents the different lectures of the course. You can create a new unit by clicking the `Create new unit +`-button, and after creating a unit, you will see a new card-component on the course home-screen representing the newly created unit. When on the course home-screen, you can also click on `Invite users` to add students or lecturers to the course. After you've created a unit and the students have submitted some reflections, you can get a view like this:
 Note: Here, we can see that the teacher has already generated a previous AI report for this unit, and that a new student has submitted a reflection for this unit since the last time the teacher generated a report.
 
 <img src="./docs/Pictures/applicationView/coursePage.png" width="50%" alt="Course Page" />

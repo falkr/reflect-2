@@ -28,6 +28,10 @@
 	 * @param form - The form data containing the unit title and date available.
 	 */
 	async function editUnit(form: FormData) {
+		if (!unitName || !availableDate) {
+			toast.error('Please fill in all fields');
+			return;
+		}
 		const response = await fetch(`${PUBLIC_API_URL}/update_unit/${data.unit_id}`, {
 			method: 'PATCH',
 			credentials: 'include',

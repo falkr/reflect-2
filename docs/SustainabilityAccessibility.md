@@ -32,7 +32,7 @@ Having a dark mode feature in the application is a great way to reduce energy co
 ## Evaluation Tools
 
 ### Google Chrome Lighthouse
-The Google Lighthouse tool is used to evaluate the performance, accessibility, best practices, and SEO of the application. It identifies issues such as HTML semantics, contrast issues, and keyboard navigation, enabling the team to address them promptly. Link to the tool: [Google Lighthouse](https://developers.google.com/web/tools/lighthouse)
+The Google Lighthouse tool is used to evaluate the performance, accessibility and best practices of the application. It identifies issues such as HTML semantics, contrast issues, and keyboard navigation, enabling the team to address them promptly. Link to the tool: [Google Lighthouse](https://developers.google.com/web/tools/lighthouse)
 
 Using Lighthouse, we found that we got a 100% score in all pages for Accessibility, Best Practices, and Performance. This shows that our application is well-optimized and accessible to all users.
 
